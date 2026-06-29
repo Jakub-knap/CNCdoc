@@ -994,7 +994,7 @@ window.renderDrawingSearch = () => {
     const box  = document.getElementById('drawing-search-results');
     if (!text) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>`; return; }
     const byNum  = drawings.filter(d => d.number.toLowerCase().includes(text));
-    const byProg = drawings.filter(d => !d.number.toLowerCase().includes(text) && d.program.toLowerCase().includes(text));
+    const byProg = drawings.filter(d => !d.number.toLowerCase().includes(text) && (d.program||'').toLowerCase().includes(text));
     const filtered = [...byNum, ...byProg];
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Výkres nenájdený</p></div>`; return; }
@@ -1035,7 +1035,13 @@ window.saveDrawing = async () => {
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
 
     const doSave = async (fileData) => {
-        drawings.push({ machine, number, program, note, fileData: fileData || null });
+        // Compress image if too large (max 800px wide)
+        let finalData = fileData;
+        if (fileData && fileData.startsWith('data:image')) {
+            finalData = await compressImage(fileData, 800);
+        }
+        const newDrawing = { machine, number, program, note, fileData: finalData || null };
+        drawings = [...drawings, newDrawing];
         await saveToFirestore();
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
@@ -1053,6 +1059,22 @@ window.saveDrawing = async () => {
         doSave(null);
     }
 };
+
+// Compress image to max width
+function compressImage(dataUrl, maxWidth) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const ratio = Math.min(1, maxWidth / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width  = img.width  * ratio;
+            canvas.height = img.height * ratio;
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
+        };
+        img.src = dataUrl;
+    });
+}
 
 // ════════ VÝKRESY – VYMAŽ ════════
 window.renderDelDrawing = () => {
