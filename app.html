@@ -628,7 +628,7 @@
     <div class="wrap">
 
         <!-- STROJE -->
-        <div class="section open" id="sec-machines">
+        <div class="section" id="sec-machines">
             <div class="section-head" onclick="toggleSection('sec-machines')">
                 <div class="section-head-left">
                     <div class="section-icon si-orange">🏭</div>
@@ -657,7 +657,7 @@
         </div>
 
         <!-- HĽADAJ VÝKRES -->
-        <div class="section open" id="sec-search-drawing">
+        <div class="section" id="sec-search-drawing">
             <div class="section-head" onclick="toggleSection('sec-search-drawing')">
                 <div class="section-head-left">
                     <div class="section-icon si-blue">🔍</div>
@@ -891,6 +891,98 @@ let drawings = [];
 let tools    = [];
 let unsubscribe = null;
 
+// ════════ KATEGÓRIE NÁSTROJOV ════════
+const TOOL_CATEGORIES = [
+    {
+        id: 'sustr-noz', name: 'Sústružnícke nože',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 17 L14 6 L18 10 L7 21 Z"/><path d="M14 6 L19 3 L21 5 L18 10"/><circle cx="6" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>',
+        subtypes: ['Vonkajší hrubovací','Vonkajší kopírovací','Vonkajší zapichovací','Vonkajší upichovací','Vnútorný hrubovací','Vnútorný kopírovací','Vnútorný zapichovací','Závitový vonkajší','Závitový vnútorný'],
+        diamLabel: 'Označenie / VBD / rozmer'
+    },
+    {
+        id: 'platk-freza', name: 'Plátkové frézy',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 5 L12 2 M19 12 L22 12 M12 19 L12 22 M5 12 L2 12"/><rect x="10" y="10" width="4" height="4" rx="0.5"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
+    },
+    {
+        id: 'tk-freza', name: 'Tvrdokovové frézy',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 14 M9 3 L15 3 M10 14 a2 2 0 0 0 4 0 M9 6 L12 8 M15 6 L12 8 M9 9 L12 11 M15 9 L12 11"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
+    },
+    {
+        id: 'platk-vrtak', name: 'Plátkové vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 16 M9 3 L15 3 M9 16 L12 21 L15 16 Z"/><rect x="10" y="9" width="4" height="3" rx="0.4"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'tk-vrtak', name: 'Tvrdokov vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 15 M9 3 L15 3 M10 15 L12 21 L14 15 M9.5 6 L12 8 M14.5 6 L12 8 M9.5 10 L12 12 M14.5 10 L12 12"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'hss-vrtak', name: 'HSS vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 16 M9 3 L15 3 M10 16 L12 21 L14 16 M9 7 C11 8 13 8 15 7 M9 11 C11 12 13 12 15 11"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'korunk-vrtak', name: 'Korunkové vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M7 4 L17 4 L17 14 a5 4 0 0 1 -10 0 Z M9 4 L9 14 M12 4 L12 14 M15 4 L15 14 M12 18 L12 21"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'hrub-tyc', name: 'Hrubovacie tyče',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L17 12 M17 9 L21 12 L17 15 Z M3 9 L3 15"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'dokonc-tyc', name: 'Dokončovacie tyče',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L18 12 M18 10 L21 12 L18 14 Z M3 10 L3 14"/><circle cx="9" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'ine', name: 'Iné',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9 a2.5 2.5 0 1 1 3.5 2.3 c-0.8 0.5 -1 1 -1 1.7 M12 16.5 L12 16.6"/></svg>',
+        subtypes: [], diamLabel: 'Popis · priemer · dĺžka'
+    }
+];
+
+let selectedCat = null;
+
+function renderToolCategories() {
+    const grid = document.getElementById('tool-cat-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    TOOL_CATEGORIES.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'tool-cat' + (selectedCat === cat.id ? ' selected' : '');
+        div.innerHTML = `${cat.icon}<div class="tool-cat-name">${cat.name}</div>`;
+        div.onclick = () => selectCategory(cat.id);
+        grid.appendChild(div);
+    });
+}
+
+window.selectCategory = (id) => {
+    selectedCat = id;
+    const cat = TOOL_CATEGORIES.find(c => c.id === id);
+    renderToolCategories();
+    // Subtypes
+    const subWrap = document.getElementById('tool-subtype-wrap');
+    const subSel  = document.getElementById('at-subtype');
+    if (cat.subtypes && cat.subtypes.length) {
+        subWrap.style.display = 'block';
+        subSel.innerHTML = '<option value="">— Vyberte typ —</option>';
+        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; subSel.appendChild(o); });
+    } else {
+        subWrap.style.display = 'none';
+        subSel.value = '';
+    }
+    // Diam label
+    document.getElementById('at-diam-label').textContent = cat.diamLabel;
+};
+
+
+
+
 // ════════ AUTH ════════
 window.signInGoogle = async () => {
     try {
@@ -979,6 +1071,7 @@ function showApp(user) {
     document.getElementById('topbar-user').style.display = 'flex';
     document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Používateľ';
     if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+    renderToolCategories();
 }
 
 // ════════ FIRESTORE REALTIME ════════
@@ -1205,95 +1298,6 @@ window._delDrawing = async (idx) => {
     await saveToFirestore();
     showToast('Výkres vymazaný', 'err');
     window.renderDelDrawing();
-};
-
-// ════════ KATEGÓRIE NÁSTROJOV ════════
-const TOOL_CATEGORIES = [
-    {
-        id: 'sustr-noz', name: 'Sústružnícke nože',
-        icon: '<svg viewBox="0 0 24 24"><path d="M3 17 L14 6 L18 10 L7 21 Z"/><path d="M14 6 L19 3 L21 5 L18 10"/><circle cx="6" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>',
-        subtypes: ['Vonkajší hrubovací','Vonkajší kopírovací','Vonkajší zapichovací','Vonkajší upichovací','Vnútorný hrubovací','Vnútorný kopírovací','Vnútorný zapichovací','Závitový vonkajší','Závitový vnútorný'],
-        diamLabel: 'Označenie / VBD / rozmer'
-    },
-    {
-        id: 'platk-freza', name: 'Plátkové frézy',
-        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 5 L12 2 M19 12 L22 12 M12 19 L12 22 M5 12 L2 12"/><rect x="10" y="10" width="4" height="4" rx="0.5"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
-    },
-    {
-        id: 'tk-freza', name: 'Tvrdokovové frézy',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 14 M9 3 L15 3 M10 14 a2 2 0 0 0 4 0 M9 6 L12 8 M15 6 L12 8 M9 9 L12 11 M15 9 L12 11"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
-    },
-    {
-        id: 'platk-vrtak', name: 'Plátkové vrtáky',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 16 M9 3 L15 3 M9 16 L12 21 L15 16 Z"/><rect x="10" y="9" width="4" height="3" rx="0.4"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / dĺžka'
-    },
-    {
-        id: 'tk-vrtak', name: 'Tvrdokov vrtáky',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 15 M9 3 L15 3 M10 15 L12 21 L14 15 M9.5 6 L12 8 M14.5 6 L12 8 M9.5 10 L12 12 M14.5 10 L12 12"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / dĺžka'
-    },
-    {
-        id: 'hss-vrtak', name: 'HSS vrtáky',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 16 M9 3 L15 3 M10 16 L12 21 L14 16 M9 7 C11 8 13 8 15 7 M9 11 C11 12 13 12 15 11"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / dĺžka'
-    },
-    {
-        id: 'korunk-vrtak', name: 'Korunkové vrtáky',
-        icon: '<svg viewBox="0 0 24 24"><path d="M7 4 L17 4 L17 14 a5 4 0 0 1 -10 0 Z M9 4 L9 14 M12 4 L12 14 M15 4 L15 14 M12 18 L12 21"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / dĺžka'
-    },
-    {
-        id: 'hrub-tyc', name: 'Hrubovacie tyče',
-        icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L17 12 M17 9 L21 12 L17 15 Z M3 9 L3 15"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / dĺžka'
-    },
-    {
-        id: 'dokonc-tyc', name: 'Dokončovacie tyče',
-        icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L18 12 M18 10 L21 12 L18 14 Z M3 10 L3 14"/><circle cx="9" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>',
-        subtypes: [], diamLabel: 'Priemer / dĺžka'
-    },
-    {
-        id: 'ine', name: 'Iné',
-        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9 a2.5 2.5 0 1 1 3.5 2.3 c-0.8 0.5 -1 1 -1 1.7 M12 16.5 L12 16.6"/></svg>',
-        subtypes: [], diamLabel: 'Popis · priemer · dĺžka'
-    }
-];
-
-let selectedCat = null;
-
-function renderToolCategories() {
-    const grid = document.getElementById('tool-cat-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    TOOL_CATEGORIES.forEach(cat => {
-        const div = document.createElement('div');
-        div.className = 'tool-cat' + (selectedCat === cat.id ? ' selected' : '');
-        div.innerHTML = `${cat.icon}<div class="tool-cat-name">${cat.name}</div>`;
-        div.onclick = () => selectCategory(cat.id);
-        grid.appendChild(div);
-    });
-}
-
-window.selectCategory = (id) => {
-    selectedCat = id;
-    const cat = TOOL_CATEGORIES.find(c => c.id === id);
-    renderToolCategories();
-    // Subtypes
-    const subWrap = document.getElementById('tool-subtype-wrap');
-    const subSel  = document.getElementById('at-subtype');
-    if (cat.subtypes && cat.subtypes.length) {
-        subWrap.style.display = 'block';
-        subSel.innerHTML = '<option value="">— Vyberte typ —</option>';
-        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; subSel.appendChild(o); });
-    } else {
-        subWrap.style.display = 'none';
-        subSel.value = '';
-    }
-    // Diam label
-    document.getElementById('at-diam-label').textContent = cat.diamLabel;
 };
 
 // ════════ NÁSTROJE – HĽADAJ ════════
