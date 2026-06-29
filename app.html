@@ -390,6 +390,41 @@
 
         .div { height: 1px; background: var(--border); margin: 14px 0; }
 
+        /* ── TOOL CATEGORY GRID ── */
+        .tool-cat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .tool-cat {
+            background: var(--input);
+            border: 1.5px solid var(--border);
+            border-radius: 11px;
+            padding: 12px 10px;
+            cursor: pointer;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 7px;
+            text-align: center;
+            transition: all .15s;
+        }
+        .tool-cat:active { transform: scale(.97); }
+        .tool-cat.selected {
+            border-color: var(--cut);
+            background: rgba(249,115,22,.1);
+        }
+        .tool-cat svg {
+            width: 30px; height: 30px;
+            stroke: var(--light); fill: none;
+            stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .tool-cat.selected svg { stroke: var(--cut); }
+        .tool-cat-name {
+            font-size: 11px; font-weight: 600;
+            color: var(--light); line-height: 1.25;
+        }
+        .tool-cat.selected .tool-cat-name { color: var(--cut); }
+        .r-card .r-title svg { width: 100%; height: 100%; stroke: var(--green); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
         /* ── IN-APP BROWSER WARNING ── */
         .iab-overlay {
             position: fixed; inset: 0;
@@ -634,12 +669,18 @@
                 <div class="chevron">⌄</div>
             </div>
             <div class="section-body">
+                <div class="fg">
+                    <label class="field-label">Stroj (voliteľné)</label>
+                    <select id="search-machine-filter" onchange="renderDrawingSearch()">
+                        <option value="">— Všetky stroje —</option>
+                    </select>
+                </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
                     <input type="text" id="inp-drawing-search" oninput="renderDrawingSearch()" placeholder="Zadajte číslo výkresu...">
                 </div>
                 <div id="drawing-search-results">
-                    <div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>
+                    <div class="empty"><div class="ei">📐</div><p>Vyberte stroj alebo zadajte číslo</p></div>
                 </div>
             </div>
         </div>
@@ -745,16 +786,16 @@
                     <select id="at-machine"><option value="">— Vyberte stroj —</option></select>
                 </div>
                 <div class="fg">
-                    <label class="field-label">Názov nástroja</label>
-                    <input type="text" id="at-name" placeholder="Napr. Vrták, závitník, fréza...">
+                    <label class="field-label">Kategória nástroja</label>
+                    <div class="tool-cat-grid" id="tool-cat-grid"></div>
+                </div>
+                <div class="fg" id="tool-subtype-wrap" style="display:none;">
+                    <label class="field-label">Typ / vyhotovenie</label>
+                    <select id="at-subtype"><option value="">— Vyberte typ —</option></select>
                 </div>
                 <div class="fg">
-                    <label class="field-label">Priemer (D)</label>
-                    <input type="text" id="at-diam" placeholder="Napr. D10, 16.5, d8">
-                </div>
-                <div class="fg">
-                    <label class="field-label">Druh nástroja</label>
-                    <input type="text" id="at-type" placeholder="Napr. tvrdokov, HSS, plátkový...">
+                    <label class="field-label" id="at-diam-label">Priemer / polomer / dĺžka</label>
+                    <input type="text" id="at-diam" placeholder="Napr. D10, R0.8, dĺžka 80">
                 </div>
                 <div class="fg">
                     <label class="field-label">Poznámka / korekcia</label>
@@ -987,6 +1028,7 @@ function renderAll() {
     updateCounts();
     renderDrawingSearch();
     renderToolSearch();
+    renderToolCategories();
 }
 
 // ════════ STROJE ════════
@@ -1005,7 +1047,7 @@ function renderMachines() {
         });
     }
     // Fill all machine selects
-    ['ad-machine','at-machine','del-machine-select'].forEach(id => {
+    ['ad-machine','at-machine','del-machine-select','search-machine-filter'].forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
         const cur = sel.value;
@@ -1048,11 +1090,18 @@ window.deleteMachineConfirm = async () => {
 // ════════ VÝKRESY – HĽADAJ ════════
 window.renderDrawingSearch = () => {
     const text = document.getElementById('inp-drawing-search').value.trim().toLowerCase();
+    const machineF = document.getElementById('search-machine-filter').value;
     const box  = document.getElementById('drawing-search-results');
-    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>`; return; }
-    const byNum  = drawings.filter(d => d.number.toLowerCase().includes(text));
-    const byProg = drawings.filter(d => !d.number.toLowerCase().includes(text) && (d.program||'').toLowerCase().includes(text));
-    const filtered = [...byNum, ...byProg];
+    let pool = machineF ? drawings.filter(d => d.machine === machineF) : drawings;
+    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Vyberte stroj alebo zadajte číslo</p></div>`; return; }
+    let filtered;
+    if (text) {
+        const byNum  = pool.filter(d => d.number.toLowerCase().includes(text));
+        const byProg = pool.filter(d => !d.number.toLowerCase().includes(text) && (d.program||'').toLowerCase().includes(text));
+        filtered = [...byNum, ...byProg];
+    } else {
+        filtered = pool;
+    }
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Výkres nenájdený</p></div>`; return; }
     filtered.forEach(d => {
@@ -1158,18 +1207,109 @@ window._delDrawing = async (idx) => {
     window.renderDelDrawing();
 };
 
+// ════════ KATEGÓRIE NÁSTROJOV ════════
+const TOOL_CATEGORIES = [
+    {
+        id: 'sustr-noz', name: 'Sústružnícke nože',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 17 L14 6 L18 10 L7 21 Z"/><path d="M14 6 L19 3 L21 5 L18 10"/><circle cx="6" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>',
+        subtypes: ['Vonkajší hrubovací','Vonkajší kopírovací','Vonkajší zapichovací','Vonkajší upichovací','Vnútorný hrubovací','Vnútorný kopírovací','Vnútorný zapichovací','Závitový vonkajší','Závitový vnútorný'],
+        diamLabel: 'Označenie / VBD / rozmer'
+    },
+    {
+        id: 'platk-freza', name: 'Plátkové frézy',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 5 L12 2 M19 12 L22 12 M12 19 L12 22 M5 12 L2 12"/><rect x="10" y="10" width="4" height="4" rx="0.5"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
+    },
+    {
+        id: 'tk-freza', name: 'Tvrdokovové frézy',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 14 M9 3 L15 3 M10 14 a2 2 0 0 0 4 0 M9 6 L12 8 M15 6 L12 8 M9 9 L12 11 M15 9 L12 11"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
+    },
+    {
+        id: 'platk-vrtak', name: 'Plátkové vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 16 M9 3 L15 3 M9 16 L12 21 L15 16 Z"/><rect x="10" y="9" width="4" height="3" rx="0.4"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'tk-vrtak', name: 'Tvrdokov vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 15 M9 3 L15 3 M10 15 L12 21 L14 15 M9.5 6 L12 8 M14.5 6 L12 8 M9.5 10 L12 12 M14.5 10 L12 12"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'hss-vrtak', name: 'HSS vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 3 L12 16 M9 3 L15 3 M10 16 L12 21 L14 16 M9 7 C11 8 13 8 15 7 M9 11 C11 12 13 12 15 11"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'korunk-vrtak', name: 'Korunkové vrtáky',
+        icon: '<svg viewBox="0 0 24 24"><path d="M7 4 L17 4 L17 14 a5 4 0 0 1 -10 0 Z M9 4 L9 14 M12 4 L12 14 M15 4 L15 14 M12 18 L12 21"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'hrub-tyc', name: 'Hrubovacie tyče',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L17 12 M17 9 L21 12 L17 15 Z M3 9 L3 15"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'dokonc-tyc', name: 'Dokončovacie tyče',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L18 12 M18 10 L21 12 L18 14 Z M3 10 L3 14"/><circle cx="9" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'ine', name: 'Iné',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9 a2.5 2.5 0 1 1 3.5 2.3 c-0.8 0.5 -1 1 -1 1.7 M12 16.5 L12 16.6"/></svg>',
+        subtypes: [], diamLabel: 'Popis · priemer · dĺžka'
+    }
+];
+
+let selectedCat = null;
+
+function renderToolCategories() {
+    const grid = document.getElementById('tool-cat-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    TOOL_CATEGORIES.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'tool-cat' + (selectedCat === cat.id ? ' selected' : '');
+        div.innerHTML = `${cat.icon}<div class="tool-cat-name">${cat.name}</div>`;
+        div.onclick = () => selectCategory(cat.id);
+        grid.appendChild(div);
+    });
+}
+
+window.selectCategory = (id) => {
+    selectedCat = id;
+    const cat = TOOL_CATEGORIES.find(c => c.id === id);
+    renderToolCategories();
+    // Subtypes
+    const subWrap = document.getElementById('tool-subtype-wrap');
+    const subSel  = document.getElementById('at-subtype');
+    if (cat.subtypes && cat.subtypes.length) {
+        subWrap.style.display = 'block';
+        subSel.innerHTML = '<option value="">— Vyberte typ —</option>';
+        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; subSel.appendChild(o); });
+    } else {
+        subWrap.style.display = 'none';
+        subSel.value = '';
+    }
+    // Diam label
+    document.getElementById('at-diam-label').textContent = cat.diamLabel;
+};
+
 // ════════ NÁSTROJE – HĽADAJ ════════
 window.renderToolSearch = () => {
     const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
     const box  = document.getElementById('tool-search-results');
     if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>`; return; }
-    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text));
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`; return; }
     filtered.forEach(t => {
+        const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
+        const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
         const card = document.createElement('div');
         card.className = 'r-card tool';
-        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine} · Druh: ${t.type||'—'}<br>${t.note?'Poznámka: '+t.note:''}</div>`;
+        card.innerHTML = `<div class="r-title">${iconHtml}${t.diameter}</div><div class="r-meta">${t.name}<br>Stroj: ${t.machine}${t.note?'<br>Poznámka: '+t.note:''}</div>`;
         box.appendChild(card);
     });
 };
@@ -1177,17 +1317,26 @@ window.renderToolSearch = () => {
 // ════════ NÁSTROJE – PRIDAJ ════════
 window.saveTool = async () => {
     const machine = document.getElementById('at-machine').value;
-    const name    = document.getElementById('at-name').value.trim();
     const diam    = document.getElementById('at-diam').value.trim();
-    const type    = document.getElementById('at-type').value.trim();
+    const subtype = document.getElementById('at-subtype').value;
     const note    = document.getElementById('at-note').value.trim();
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
-    if (!name || !diam) { showToast('Vyplňte názov a priemer!', 'err'); return; }
-    tools.push({ machine, name, diameter: diam, type, note });
+    if (!selectedCat) { showToast('Vyberte kategóriu nástroja!', 'err'); return; }
+    const cat = TOOL_CATEGORIES.find(c => c.id === selectedCat);
+    if (cat.subtypes.length && !subtype) { showToast('Vyberte typ nástroja!', 'err'); return; }
+    if (!diam) { showToast('Vyplňte ' + cat.diamLabel.toLowerCase() + '!', 'err'); return; }
+    // name = kategória + podtyp
+    const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
+    tools = [...tools, { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note }];
     await saveToFirestore();
     showToast('Nástroj uložený ✓', 'ok');
-    ['at-name','at-diam','at-type','at-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('at-diam').value = '';
+    document.getElementById('at-note').value = '';
     document.getElementById('at-machine').value = '';
+    document.getElementById('at-subtype').value = '';
+    document.getElementById('tool-subtype-wrap').style.display = 'none';
+    selectedCat = null;
+    renderToolCategories();
     document.getElementById('sec-add-tool').classList.remove('open');
     document.getElementById('sec-search-tool').classList.add('open');
 };
