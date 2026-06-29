@@ -51,85 +51,182 @@
         }
         .logo span { color: var(--cut); }
 
+        .user-info {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 2px solid var(--cut);
+            object-fit: cover;
+        }
+        .user-name {
+            font-size: 13px; font-weight: 600; color: var(--light);
+            max-width: 100px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .btn-signout {
+            background: none; border: 1px solid var(--border);
+            border-radius: 7px; color: var(--muted);
+            font-size: 12px; padding: 5px 8px; cursor: pointer;
+        }
+        .btn-signout:hover { border-color: var(--red); color: var(--red); }
+
+        /* ── LOGIN SCREEN ── */
+        .login-screen {
+            display: none;
+            min-height: calc(100vh - 54px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+        }
+        .login-screen.visible { display: flex; }
+
+        .login-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 36px; font-weight: 700;
+            color: var(--white); margin-bottom: 8px;
+        }
+        .login-logo span { color: var(--cut); }
+
+        .login-sub {
+            font-size: 15px; color: var(--muted);
+            margin-bottom: 48px; line-height: 1.6;
+        }
+
+        .btn-google {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--white); color: #1a1a1a;
+            border: none; border-radius: 12px;
+            padding: 14px 24px; font-size: 16px; font-weight: 700;
+            cursor: pointer; width: 100%; max-width: 320px;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all .2s;
+            margin-bottom: 16px;
+        }
+        .btn-google:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+        .btn-google:active { transform: scale(.98); }
+
+        .btn-google svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+        .login-note {
+            font-size: 12px; color: var(--muted); line-height: 1.6;
+            max-width: 280px;
+        }
+
+        /* ── LOADING ── */
+        .loading-screen {
+            display: none;
+            min-height: calc(100vh - 54px);
+            align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+        }
+        .loading-screen.visible { display: flex; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--cut);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: var(--muted); }
+
+        /* ── APP ── */
+        .app-screen { display: none; }
+        .app-screen.visible { display: block; }
+
+        /* ── SYNC INDICATOR ── */
+        .sync-bar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px;
+            font-size: 12px; color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            background: var(--steel);
+        }
+        .sync-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green); flex-shrink: 0;
+        }
+        .sync-dot.offline { background: var(--muted); }
+        .sync-dot.syncing {
+            background: var(--cut);
+            animation: pulse 1s ease infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        /* ── INSTALL BANNER ── */
+        .install-banner {
+            display: none;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            padding: 12px 16px;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .install-banner.visible { display: flex; }
+        .install-banner-left { display: flex; align-items: center; gap: 10px; }
+        .install-banner-left img { width: 36px; height: 36px; border-radius: 8px; }
+        .install-banner-text { font-size: 13px; font-weight: 600; color: white; line-height: 1.3; }
+        .install-banner-text span { font-size: 11px; font-weight: 400; opacity: .85; display: block; }
+        .install-btn {
+            background: white; color: #f97316;
+            border: none; border-radius: 8px;
+            padding: 8px 14px; font-size: 13px; font-weight: 800;
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
+        }
+        .install-dismiss {
+            background: none; border: none;
+            color: rgba(255,255,255,.7); font-size: 20px;
+            cursor: pointer; padding: 0 2px; flex-shrink: 0;
+        }
+
         /* ── WRAP ── */
         .wrap { max-width: 540px; margin: 0 auto; padding: 0 14px; }
 
         /* ── SECTION ── */
         .section {
-            margin-top: 24px;
+            margin-top: 16px;
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
+            border-radius: 16px; overflow: hidden;
         }
-
         .section-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            cursor: pointer; user-select: none;
         }
-
-        .section-head-left {
-            display: flex; align-items: center; gap: 10px;
-        }
-
+        .section-head-left { display: flex; align-items: center; gap: 10px; }
         .section-icon {
-            width: 36px; height: 36px;
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
+            width: 36px; height: 36px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
         .si-orange { background: rgba(249,115,22,.15); }
         .si-blue   { background: rgba(59,130,246,.15); }
         .si-green  { background: rgba(16,185,129,.15); }
         .si-red    { background: rgba(239,68,68,.13); }
-
-        .section-title {
-            font-size: 15px; font-weight: 700; color: var(--white);
-        }
-        .section-sub {
-            font-size: 12px; color: var(--muted); margin-top: 1px;
-        }
-
-        .chevron {
-            color: var(--muted); font-size: 18px;
-            transition: transform .25s;
-        }
+        .section-title { font-size: 15px; font-weight: 700; color: var(--white); }
+        .section-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
+        .chevron { color: var(--muted); font-size: 18px; transition: transform .25s; }
         .section.open .chevron { transform: rotate(180deg); }
-
-        .section-body {
-            display: none;
-            padding: 16px;
-        }
+        .section-body { display: none; padding: 16px; }
         .section.open .section-body { display: block; }
 
         /* ── FORMS ── */
         .field-label {
-            display: block;
-            font-size: 12px; font-weight: 600; color: var(--muted);
-            letter-spacing: .3px; margin-bottom: 5px;
+            display: block; font-size: 12px; font-weight: 600;
+            color: var(--muted); letter-spacing: .3px; margin-bottom: 5px;
         }
         .fg { margin-bottom: 12px; }
-
         input[type=text], input[type=file], textarea, select {
-            width: 100%;
-            padding: 12px 13px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--input);
-            color: var(--white);
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            transition: border-color .2s;
-            -webkit-appearance: none;
+            width: 100%; padding: 12px 13px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--input); color: var(--white);
+            font-family: 'Inter', sans-serif; font-size: 15px;
+            transition: border-color .2s; -webkit-appearance: none;
         }
         input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--cut);
+            outline: none; border-color: var(--cut);
             box-shadow: 0 0 0 3px rgba(249,115,22,.1);
         }
         input::placeholder, textarea::placeholder { color: #2d4460; }
@@ -138,12 +235,10 @@
 
         /* ── BUTTONS ── */
         .btn {
-            display: block; width: 100%;
-            padding: 13px; border: none; border-radius: 10px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px; font-weight: 700;
-            cursor: pointer; margin-bottom: 8px;
-            transition: all .2s;
+            display: block; width: 100%; padding: 13px; border: none;
+            border-radius: 12px; font-family: 'Inter', sans-serif;
+            font-size: 15px; font-weight: 700; cursor: pointer;
+            margin-bottom: 8px; transition: all .2s;
         }
         .btn:active { transform: scale(.98); }
         .btn-success { background: var(--green); color: #fff; }
@@ -152,72 +247,42 @@
         .btn-danger:hover  { background: #dc2626; }
         .btn-blue    { background: var(--blue);  color: #fff; }
         .btn-blue:hover    { background: #2563eb; }
-        .btn-orange  { background: var(--cut);   color: #fff; }
-        .btn-orange:hover  { background: #ea6c0b; }
         .btn-ghost {
-            background: transparent;
-            border: 1px solid var(--border);
+            background: transparent; border: 1px solid var(--border);
             color: var(--muted); font-size: 13px;
         }
         .btn-ghost:hover { border-color: var(--muted); color: var(--white); }
-        .btn-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-        }
-        .btn-row .btn { margin-bottom: 0; }
+        .btn-sm { display: inline-block; width: auto; padding: 8px 14px; font-size: 13px; margin: 8px 0 0 0; }
 
         /* ── SEARCH ── */
         .search-wrap { position: relative; margin-bottom: 12px; }
         .search-wrap input { padding-left: 38px; }
         .s-icon {
             position: absolute; left: 13px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--muted); font-size: 14px; pointer-events: none;
+            transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none;
         }
 
-        /* ── CHIPS (stroje) ── */
-        .chip-list {
-            display: flex; flex-wrap: wrap; gap: 8px;
-            margin-bottom: 12px;
-        }
+        /* ── CHIPS ── */
+        .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
         .chip {
             display: flex; align-items: center; gap: 6px;
-            background: var(--input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 7px 12px;
+            background: var(--input); border: 1px solid var(--border);
+            border-radius: 8px; padding: 7px 12px;
             font-size: 13px; font-weight: 600; color: var(--light);
-            cursor: default;
         }
-        .chip .chip-del {
-            color: var(--red); cursor: pointer; font-size: 15px;
-            line-height: 1;
-        }
-        .chip .chip-del:hover { color: #ff6b6b; }
-
-        .add-chip-row {
-            display: flex; gap: 8px;
-        }
-        .add-chip-row input {
-            flex: 1; padding: 10px 12px; font-size: 14px;
-        }
+        .chip .chip-del { color: var(--red); cursor: pointer; font-size: 15px; line-height: 1; }
+        .add-chip-row { display: flex; gap: 8px; }
+        .add-chip-row input { flex: 1; padding: 10px 12px; font-size: 14px; }
         .add-chip-row button {
-            padding: 10px 16px;
-            background: var(--cut); color: #fff;
-            border: none; border-radius: 10px;
-            font-size: 14px; font-weight: 700; cursor: pointer;
-            white-space: nowrap;
+            padding: 10px 16px; background: var(--cut); color: #fff;
+            border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
         }
 
         /* ── RESULT CARDS ── */
         .r-card {
-            background: var(--input);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--blue);
-            border-radius: 10px;
-            padding: 13px 14px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all .18s;
+            background: var(--input); border: 1px solid var(--border);
+            border-left: 4px solid var(--blue); border-radius: 10px;
+            padding: 13px 14px; margin-bottom: 8px; cursor: pointer; transition: all .18s;
         }
         .r-card:hover { border-left-color: var(--cut); }
         .r-card.tool  { border-left-color: var(--green); }
@@ -230,85 +295,49 @@
             background: rgba(249,115,22,.13); color: var(--cut); margin-top: 5px;
         }
 
-        /* ── DIVIDER ── */
-        .div { height: 1px; background: var(--border); margin: 14px 0; }
-
-        /* ── EMPTY ── */
-        .empty {
-            text-align: center; padding: 30px 12px; color: var(--muted);
-        }
-        .empty .ei { font-size: 32px; margin-bottom: 8px; }
-        .empty p { font-size: 13px; line-height: 1.6; }
-
-        /* ── MODAL (detail výkresu) ── */
+        /* ── MODAL ── */
         .modal-bg {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.75);
-            display: none; justify-content: center; align-items: flex-end;
-            z-index: 300;
+            position: fixed; inset: 0; background: rgba(0,0,0,.75);
+            display: none; justify-content: center; align-items: flex-end; z-index: 300;
         }
         .modal-bg.open { display: flex; }
         .modal {
-            background: var(--steel);
-            border: 1px solid var(--border);
-            border-radius: 20px 20px 0 0;
-            padding: 22px 18px 36px;
-            width: 100%; max-width: 540px;
-            max-height: 92vh; overflow-y: auto;
+            background: var(--steel); border: 1px solid var(--border);
+            border-radius: 20px 20px 0 0; padding: 22px 18px 36px;
+            width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto;
             animation: slideUp .22s ease;
         }
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to   { transform: translateY(0);    opacity: 1; }
-        }
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px;
-        }
-        .modal-title { font-size: 17px; font-weight: 800; color: var(--white); }
-        .modal-close {
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-title  { font-size: 17px; font-weight: 800; color: var(--white); }
+        .modal-close  {
             width: 32px; height: 32px; border-radius: 50%;
-            background: var(--input); border: none;
-            color: var(--muted); font-size: 16px; cursor: pointer;
+            background: var(--input); border: none; color: var(--muted);
+            font-size: 16px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* ── DETAIL VÝKRESU ── */
+        /* ── DETAIL ── */
         .detail-img-wrap {
-            border-radius: 10px; overflow: hidden;
-            border: 1px solid var(--border); margin-bottom: 12px;
-            text-align: center; background: var(--input);
+            border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+            margin-bottom: 12px; text-align: center; background: var(--input);
         }
         .detail-img-wrap img { max-width: 100%; height: auto; cursor: zoom-in; display: block; }
         .zoom-hint { font-size: 11px; color: var(--muted); padding: 6px; font-family: 'JetBrains Mono', monospace; }
-
-        .d-field {
-            background: var(--input); border: 1px solid var(--border);
-            border-radius: 10px; padding: 11px 13px; margin-bottom: 8px;
-        }
-        .d-key {
-            font-size: 10px; font-weight: 700; color: var(--cut);
-            letter-spacing: 1.5px; text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace; margin-bottom: 2px;
-        }
+        .d-field { background: var(--input); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; }
+        .d-key { font-size: 10px; font-weight: 700; color: var(--cut); letter-spacing: 1.5px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin-bottom: 2px; }
         .d-val { font-size: 15px; font-weight: 600; color: var(--white); }
 
         /* ── ZOOM ── */
-        .zoom-ov {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.97);
-            display: none; justify-content: center; align-items: center;
-            z-index: 500;
-        }
+        .zoom-ov { position: fixed; inset: 0; background: rgba(0,0,0,.97); display: none; justify-content: center; align-items: center; z-index: 500; }
         .zoom-ov.open { display: flex; }
         .zoom-ov img { max-width: 95%; max-height: 90vh; object-fit: contain; }
-        .zoom-x {
-            position: absolute; top: 14px; right: 14px;
-            width: 38px; height: 38px; border-radius: 50%;
-            background: rgba(255,255,255,.15); border: none;
-            color: #fff; font-size: 17px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .zoom-x { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* ── EMPTY ── */
+        .empty { text-align: center; padding: 30px 12px; color: var(--muted); }
+        .empty .ei { font-size: 32px; margin-bottom: 8px; }
+        .empty p { font-size: 13px; line-height: 1.6; }
 
         /* ── TOAST ── */
         .toast {
@@ -324,281 +353,260 @@
         .toast.ok  { border-color: var(--green); color: var(--green); }
         .toast.err { border-color: var(--red);   color: var(--red); }
 
-        /* ── BTN SM ── */
-        .btn-sm {
-            display: inline-block; width: auto;
-            padding: 8px 14px; font-size: 13px; margin: 8px 0 0 0;
-        }
-    /* ── INSTALL BANNER ── */
-        .install-banner {
-            display: none;
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            padding: 12px 16px;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .install-banner.visible { display: flex; }
-        .install-banner-left {
-            display: flex; align-items: center; gap: 10px;
-        }
-        .install-banner-left img {
-            width: 36px; height: 36px; border-radius: 8px;
-        }
-        .install-banner-text { font-size: 13px; font-weight: 600; color: white; line-height: 1.3; }
-        .install-banner-text span { font-size: 11px; font-weight: 400; opacity: .85; display: block; }
-        .install-btn {
-            background: white; color: #f97316;
-            border: none; border-radius: 8px;
-            padding: 8px 14px; font-size: 13px; font-weight: 800;
-            cursor: pointer; white-space: nowrap; flex-shrink: 0;
-        }
-        .install-dismiss {
-            background: none; border: none;
-            color: rgba(255,255,255,.7); font-size: 20px;
-            cursor: pointer; padding: 0 2px; flex-shrink: 0;
-        }
+        .div { height: 1px; background: var(--border); margin: 14px 0; }
     </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
     <a href="index.html" class="logo">CNC<span>dok</span></a>
+    <div class="user-info" id="topbar-user" style="display:none">
+        <img class="user-avatar" id="user-avatar" src="" alt="">
+        <span class="user-name" id="user-name"></span>
+        <button class="btn-signout" onclick="signOut()">Odhlásiť</button>
+    </div>
 </div>
 
-<!-- INSTALL BANNER -->
-<div class="install-banner" id="install-banner">
-    <div class="install-banner-left">
-        <img src="/icon-192.png" alt="CNCdok">
-        <div class="install-banner-text">
-            Nainštalovať CNCdok
-            <span>Pridať na plochu · funguje offline</span>
-        </div>
-    </div>
-    <button class="install-btn" id="install-btn">⬇ Inštalovať</button>
-    <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+<!-- LOADING -->
+<div class="loading-screen visible" id="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text">Načítavam...</div>
 </div>
 
-<div class="wrap">
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+    <div class="login-logo">CNC<span>dok</span></div>
+    <div class="login-sub">Digitálna dielňa<br>Prihláste sa pre prístup k výkresom</div>
 
-    <!-- ══════════════════════════════
-         1. STROJE
-    ══════════════════════════════ -->
-    <div class="section open" id="sec-machines">
-        <div class="section-head" onclick="toggleSection('sec-machines')">
-            <div class="section-head-left">
-                <div class="section-icon si-orange">🏭</div>
-                <div>
-                    <div class="section-title">Stroje</div>
-                    <div class="section-sub" id="sub-machines">0 strojov</div>
-                </div>
-            </div>
-            <div class="chevron">⌄</div>
-        </div>
-        <div class="section-body">
-            <div class="chip-list" id="machine-chips">
-                <div class="empty"><div class="ei">🏭</div><p>Pridajte prvý stroj</p></div>
-            </div>
-            <div class="add-chip-row">
-                <input type="text" id="new-machine" placeholder="Napr. Fréza 1, Sústruh 2...">
-                <button onclick="addMachine()">＋ Pridať</button>
-            </div>
-        </div>
+    <button class="btn-google" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Prihlásiť cez Google
+    </button>
+
+    <p class="login-note">Vaše dáta sú uložené bezpečne na vašom účte. Prístup majú len vy.</p>
+</div>
+
+<!-- APP -->
+<div class="app-screen" id="app-screen">
+
+    <!-- SYNC BAR -->
+    <div class="sync-bar">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-text">Pripojený · dáta synchronizované</span>
     </div>
 
-    <!-- ══════════════════════════════
-         2. VÝKRESY — HĽADAJ
-    ══════════════════════════════ -->
-    <div class="section open" id="sec-search-drawing">
-        <div class="section-head" onclick="toggleSection('sec-search-drawing')">
-            <div class="section-head-left">
-                <div class="section-icon si-blue">🔍</div>
-                <div>
-                    <div class="section-title">Hľadaj výkres</div>
-                    <div class="section-sub" id="sub-drawings">0 výkresov</div>
-                </div>
-            </div>
-            <div class="chevron">⌄</div>
-        </div>
-        <div class="section-body">
-            <div class="search-wrap">
-                <span class="s-icon">🔍</span>
-                <input type="text" id="inp-drawing-search"
-                       oninput="renderDrawingSearch()"
-                       placeholder="Zadajte číslo výkresu...">
-            </div>
-            <div id="drawing-search-results">
-                <div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>
+    <!-- INSTALL BANNER -->
+    <div class="install-banner" id="install-banner">
+        <div class="install-banner-left">
+            <img src="/icon-192.png" alt="CNCdok">
+            <div class="install-banner-text">
+                Nainštalovať CNCdok
+                <span>Pridať na plochu · funguje offline</span>
             </div>
         </div>
+        <button class="install-btn" id="install-btn">⬇ Inštalovať</button>
+        <button class="install-dismiss" onclick="dismissInstall()">✕</button>
     </div>
 
-    <!-- ══════════════════════════════
-         3. VÝKRES — PRIDAJ
-    ══════════════════════════════ -->
-    <div class="section" id="sec-add-drawing">
-        <div class="section-head" onclick="toggleSection('sec-add-drawing')">
-            <div class="section-head-left">
-                <div class="section-icon si-green">➕</div>
-                <div>
-                    <div class="section-title">Pridaj výkres</div>
-                    <div class="section-sub">Nový výkres do databázy</div>
+    <div class="wrap">
+
+        <!-- STROJE -->
+        <div class="section open" id="sec-machines">
+            <div class="section-head" onclick="toggleSection('sec-machines')">
+                <div class="section-head-left">
+                    <div class="section-icon si-orange">🏭</div>
+                    <div>
+                        <div class="section-title">Stroje</div>
+                        <div class="section-sub" id="sub-machines">0 strojov</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="chip-list" id="machine-chips"></div>
+                <div class="add-chip-row">
+                    <input type="text" id="new-machine" placeholder="Napr. Fréza 1, Sústruh 2...">
+                    <button onclick="addMachine()">＋ Pridať</button>
                 </div>
             </div>
-            <div class="chevron">⌄</div>
         </div>
-        <div class="section-body">
-            <div class="fg">
-                <label class="field-label">Stroj</label>
-                <select id="ad-machine">
-                    <option value="">— Vyberte stroj —</option>
-                </select>
-            </div>
-            <div class="fg">
-                <label class="field-label">Číslo výkresu</label>
-                <input type="text" id="ad-number" placeholder="Napr. V-2026-001">
-            </div>
-            <div class="fg">
-                <label class="field-label">Číslo programu</label>
-                <input type="text" id="ad-program" placeholder="Napr. O1001">
-            </div>
-            <div class="fg">
-                <label class="field-label">Poznámka / revízia</label>
-                <textarea id="ad-note" rows="2" placeholder="Dôležité info, revízie..."></textarea>
-            </div>
-            <div class="fg">
-                <label class="field-label">Fotka / sken výkresu</label>
-                <input type="file" id="ad-file" accept="image/*">
-            </div>
-            <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
-        </div>
-    </div>
 
-    <!-- ══════════════════════════════
-         4. VÝKRES — VYMAŽ
-    ══════════════════════════════ -->
-    <div class="section" id="sec-del-drawing">
-        <div class="section-head" onclick="toggleSection('sec-del-drawing')">
-            <div class="section-head-left">
-                <div class="section-icon si-red">🗑️</div>
-                <div>
-                    <div class="section-title">Vymaž výkres</div>
-                    <div class="section-sub">Vyhľadaj a odstráň</div>
+        <!-- HĽADAJ VÝKRES -->
+        <div class="section open" id="sec-search-drawing">
+            <div class="section-head" onclick="toggleSection('sec-search-drawing')">
+                <div class="section-head-left">
+                    <div class="section-icon si-blue">🔍</div>
+                    <div>
+                        <div class="section-title">Hľadaj výkres</div>
+                        <div class="section-sub" id="sub-drawings">0 výkresov</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="search-wrap">
+                    <span class="s-icon">🔍</span>
+                    <input type="text" id="inp-drawing-search" oninput="renderDrawingSearch()" placeholder="Zadajte číslo výkresu...">
+                </div>
+                <div id="drawing-search-results">
+                    <div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>
                 </div>
             </div>
-            <div class="chevron">⌄</div>
         </div>
-        <div class="section-body">
-            <div class="search-wrap">
-                <span class="s-icon">🔍</span>
-                <input type="text" id="inp-del-drawing"
-                       oninput="renderDelDrawing()"
-                       placeholder="Číslo výkresu...">
-            </div>
-            <div id="del-drawing-results">
-                <div class="empty"><div class="ei">🗑️</div><p>Zadajte číslo výkresu na vymazanie</p></div>
-            </div>
-        </div>
-    </div>
 
-    <!-- ══════════════════════════════
-         5. NÁSTROJE — HĽADAJ
-    ══════════════════════════════ -->
-    <div class="section" id="sec-search-tool">
-        <div class="section-head" onclick="toggleSection('sec-search-tool')">
-            <div class="section-head-left">
-                <div class="section-icon si-blue">🔍</div>
-                <div>
-                    <div class="section-title">Hľadaj nástroj</div>
-                    <div class="section-sub" id="sub-tools">0 nástrojov</div>
+        <!-- PRIDAJ VÝKRES -->
+        <div class="section" id="sec-add-drawing">
+            <div class="section-head" onclick="toggleSection('sec-add-drawing')">
+                <div class="section-head-left">
+                    <div class="section-icon si-green">➕</div>
+                    <div>
+                        <div class="section-title">Pridaj výkres</div>
+                        <div class="section-sub">Nový výkres do databázy</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="fg">
+                    <label class="field-label">Stroj</label>
+                    <select id="ad-machine"><option value="">— Vyberte stroj —</option></select>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Číslo výkresu</label>
+                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Číslo programu</label>
+                    <input type="text" id="ad-program" placeholder="Napr. O1001">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Poznámka / revízia</label>
+                    <textarea id="ad-note" rows="2" placeholder="Dôležité info, revízie..."></textarea>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Fotka / sken výkresu</label>
+                    <input type="file" id="ad-file" accept="image/*">
+                </div>
+                <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
+            </div>
+        </div>
+
+        <!-- VYMAŽ VÝKRES -->
+        <div class="section" id="sec-del-drawing">
+            <div class="section-head" onclick="toggleSection('sec-del-drawing')">
+                <div class="section-head-left">
+                    <div class="section-icon si-red">🗑️</div>
+                    <div>
+                        <div class="section-title">Vymaž výkres</div>
+                        <div class="section-sub">Vyhľadaj a odstráň</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="search-wrap">
+                    <span class="s-icon">🔍</span>
+                    <input type="text" id="inp-del-drawing" oninput="renderDelDrawing()" placeholder="Číslo výkresu...">
+                </div>
+                <div id="del-drawing-results">
+                    <div class="empty"><div class="ei">🗑️</div><p>Zadajte číslo výkresu</p></div>
                 </div>
             </div>
-            <div class="chevron">⌄</div>
         </div>
-        <div class="section-body">
-            <div class="search-wrap">
-                <span class="s-icon">🔍</span>
-                <input type="text" id="inp-tool-search"
-                       oninput="renderToolSearch()"
-                       placeholder="Priemer alebo názov (D10, vrták...)">
-            </div>
-            <div id="tool-search-results">
-                <div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>
-            </div>
-        </div>
-    </div>
 
-    <!-- ══════════════════════════════
-         6. NÁSTROJ — PRIDAJ
-    ══════════════════════════════ -->
-    <div class="section" id="sec-add-tool">
-        <div class="section-head" onclick="toggleSection('sec-add-tool')">
-            <div class="section-head-left">
-                <div class="section-icon si-green">➕</div>
-                <div>
-                    <div class="section-title">Pridaj nástroj</div>
-                    <div class="section-sub">Nový nástroj do databázy</div>
+        <!-- HĽADAJ NÁSTROJ -->
+        <div class="section" id="sec-search-tool">
+            <div class="section-head" onclick="toggleSection('sec-search-tool')">
+                <div class="section-head-left">
+                    <div class="section-icon si-blue">🔍</div>
+                    <div>
+                        <div class="section-title">Hľadaj nástroj</div>
+                        <div class="section-sub" id="sub-tools">0 nástrojov</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="search-wrap">
+                    <span class="s-icon">🔍</span>
+                    <input type="text" id="inp-tool-search" oninput="renderToolSearch()" placeholder="Priemer alebo názov (D10, vrták...)">
+                </div>
+                <div id="tool-search-results">
+                    <div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>
                 </div>
             </div>
-            <div class="chevron">⌄</div>
         </div>
-        <div class="section-body">
-            <div class="fg">
-                <label class="field-label">Stroj</label>
-                <select id="at-machine">
-                    <option value="">— Vyberte stroj —</option>
-                </select>
-            </div>
-            <div class="fg">
-                <label class="field-label">Názov nástroja</label>
-                <input type="text" id="at-name" placeholder="Napr. Vrták, závitník, fréza...">
-            </div>
-            <div class="fg">
-                <label class="field-label">Priemer (D)</label>
-                <input type="text" id="at-diam" placeholder="Napr. D10, 16.5, d8">
-            </div>
-            <div class="fg">
-                <label class="field-label">Druh nástroja</label>
-                <input type="text" id="at-type" placeholder="Napr. tvrdokov, HSS, plátkový...">
-            </div>
-            <div class="fg">
-                <label class="field-label">Poznámka / korekcia</label>
-                <textarea id="at-note" rows="2" placeholder="Dĺžková korekcia, otáčky, posuv..."></textarea>
-            </div>
-            <button class="btn btn-success" onclick="saveTool()">✓ Uložiť nástroj</button>
-        </div>
-    </div>
 
-    <!-- ══════════════════════════════
-         7. NÁSTROJ — VYMAŽ
-    ══════════════════════════════ -->
-    <div class="section" id="sec-del-tool">
-        <div class="section-head" onclick="toggleSection('sec-del-tool')">
-            <div class="section-head-left">
-                <div class="section-icon si-red">🗑️</div>
-                <div>
-                    <div class="section-title">Vymaž nástroj</div>
-                    <div class="section-sub">Vyhľadaj a odstráň</div>
+        <!-- PRIDAJ NÁSTROJ -->
+        <div class="section" id="sec-add-tool">
+            <div class="section-head" onclick="toggleSection('sec-add-tool')">
+                <div class="section-head-left">
+                    <div class="section-icon si-green">➕</div>
+                    <div>
+                        <div class="section-title">Pridaj nástroj</div>
+                        <div class="section-sub">Nový nástroj do databázy</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="fg">
+                    <label class="field-label">Stroj</label>
+                    <select id="at-machine"><option value="">— Vyberte stroj —</option></select>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Názov nástroja</label>
+                    <input type="text" id="at-name" placeholder="Napr. Vrták, závitník, fréza...">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Priemer (D)</label>
+                    <input type="text" id="at-diam" placeholder="Napr. D10, 16.5, d8">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Druh nástroja</label>
+                    <input type="text" id="at-type" placeholder="Napr. tvrdokov, HSS, plátkový...">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Poznámka / korekcia</label>
+                    <textarea id="at-note" rows="2" placeholder="Dĺžková korekcia, otáčky, posuv..."></textarea>
+                </div>
+                <button class="btn btn-success" onclick="saveTool()">✓ Uložiť nástroj</button>
+            </div>
+        </div>
+
+        <!-- VYMAŽ NÁSTROJ -->
+        <div class="section" id="sec-del-tool">
+            <div class="section-head" onclick="toggleSection('sec-del-tool')">
+                <div class="section-head-left">
+                    <div class="section-icon si-red">🗑️</div>
+                    <div>
+                        <div class="section-title">Vymaž nástroj</div>
+                        <div class="section-sub">Vyhľadaj a odstráň</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="search-wrap">
+                    <span class="s-icon">🔍</span>
+                    <input type="text" id="inp-del-tool" oninput="renderDelTool()" placeholder="Priemer alebo názov...">
+                </div>
+                <div id="del-tool-results">
+                    <div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov</p></div>
                 </div>
             </div>
-            <div class="chevron">⌄</div>
         </div>
-        <div class="section-body">
-            <div class="search-wrap">
-                <span class="s-icon">🔍</span>
-                <input type="text" id="inp-del-tool"
-                       oninput="renderDelTool()"
-                       placeholder="Priemer alebo názov...">
-            </div>
-            <div id="del-tool-results">
-                <div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov na vymazanie</p></div>
-            </div>
-        </div>
-    </div>
 
-</div><!-- /wrap -->
+    </div><!-- /wrap -->
+</div><!-- /app-screen -->
 
-<!-- ══ MODAL: Detail výkresu ══ -->
+<!-- MODAL: Detail výkresu -->
 <div id="modal-detail" class="modal-bg" onclick="closeModal()">
     <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -609,43 +617,142 @@
     </div>
 </div>
 
-<!-- ══ ZOOM ══ -->
+<!-- ZOOM -->
 <div id="zoom-ov" class="zoom-ov" onclick="closeZoom()">
     <img id="zoom-img" src="" alt="">
     <button class="zoom-x">✕</button>
 </div>
 
-<!-- ══ TOAST ══ -->
+<!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<script>
-// ════════════════════════════════
-//  DÁTA
-// ════════════════════════════════
-let machines = JSON.parse(localStorage.getItem('cnc_machines') || '[]');
-let drawings = JSON.parse(localStorage.getItem('cnc_drawings') || '[]');
-let tools    = JSON.parse(localStorage.getItem('cnc_tools')    || '[]');
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-function save() {
-    localStorage.setItem('cnc_machines', JSON.stringify(machines));
-    localStorage.setItem('cnc_drawings', JSON.stringify(drawings));
-    localStorage.setItem('cnc_tools',    JSON.stringify(tools));
+const firebaseConfig = {
+    apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
+    authDomain: "cncdoc-827bf.firebaseapp.com",
+    projectId: "cncdoc-827bf",
+    storageBucket: "cncdoc-827bf.firebasestorage.app",
+    messagingSenderId: "27352328550",
+    appId: "1:27352328550:web:3d8d13f3e1230744d900a7"
+};
+
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// Offline persistence
+enableIndexedDbPersistence(db).catch(() => {});
+
+// ════════ STAV ════════
+let currentUser = null;
+let machines = [];
+let drawings = [];
+let tools    = [];
+let unsubscribe = null;
+
+// ════════ AUTH ════════
+window.signInGoogle = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch(e) {
+        showToast('Chyba prihlásenia: ' + e.message, 'err');
+    }
+};
+
+window.signOut = async () => {
+    if (!confirm('Odhlásiť sa?')) return;
+    if (unsubscribe) unsubscribe();
+    await fbSignOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+    if (user) {
+        currentUser = user;
+        showApp(user);
+        listenData(user.uid);
+    } else {
+        currentUser = null;
+        showLogin();
+    }
+});
+
+function showLogin() {
+    document.getElementById('loading-screen').classList.remove('visible');
+    document.getElementById('login-screen').classList.add('visible');
+    document.getElementById('app-screen').classList.remove('visible');
+    document.getElementById('topbar-user').style.display = 'none';
 }
 
-// ════════════════════════════════
-//  SEKCIE – accordion
-// ════════════════════════════════
-function toggleSection(id) {
-    document.getElementById(id).classList.toggle('open');
+function showApp(user) {
+    document.getElementById('loading-screen').classList.remove('visible');
+    document.getElementById('login-screen').classList.remove('visible');
+    document.getElementById('app-screen').classList.add('visible');
+    document.getElementById('topbar-user').style.display = 'flex';
+    document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Používateľ';
+    if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
 }
 
-// ════════════════════════════════
-//  STROJE
-// ════════════════════════════════
+// ════════ FIRESTORE REALTIME ════════
+function listenData(uid) {
+    setSyncState('syncing');
+    const ref = doc(db, 'users', uid);
+    unsubscribe = onSnapshot(ref, snap => {
+        if (snap.exists()) {
+            const d = snap.data();
+            machines = d.machines || [];
+            drawings = d.drawings || [];
+            tools    = d.tools    || [];
+        } else {
+            machines = []; drawings = []; tools = [];
+        }
+        renderAll();
+        setSyncState('online');
+    }, err => {
+        setSyncState('offline');
+        showToast('Offline režim', '');
+    });
+}
+
+async function saveToFirestore() {
+    if (!currentUser) return;
+    setSyncState('syncing');
+    try {
+        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools });
+        setSyncState('online');
+    } catch(e) {
+        setSyncState('offline');
+        showToast('Uložené lokálne, synchronizuje sa...', '');
+    }
+}
+
+function setSyncState(state) {
+    const dot  = document.getElementById('sync-dot');
+    const text = document.getElementById('sync-text');
+    if (state === 'online')  { dot.className = 'sync-dot'; text.textContent = 'Pripojený · dáta synchronizované'; }
+    if (state === 'offline') { dot.className = 'sync-dot offline'; text.textContent = 'Offline · dáta uložené lokálne'; }
+    if (state === 'syncing') { dot.className = 'sync-dot syncing'; text.textContent = 'Synchronizujem...'; }
+}
+
+// ════════ RENDER ALL ════════
+function renderAll() {
+    renderMachines();
+    updateCounts();
+    renderDrawingSearch();
+    renderToolSearch();
+}
+
+// ════════ STROJE ════════
 function renderMachines() {
     const box = document.getElementById('machine-chips');
     document.getElementById('sub-machines').textContent = machines.length + ' strojov';
-
     if (!machines.length) {
         box.innerHTML = `<div class="empty"><div class="ei">🏭</div><p>Pridajte prvý stroj</p></div>`;
     } else {
@@ -653,38 +760,31 @@ function renderMachines() {
         machines.forEach((m, i) => {
             const chip = document.createElement('div');
             chip.className = 'chip';
-            chip.innerHTML = `<span>⚙️ ${m}</span><span class="chip-del" onclick="deleteMachine(${i})" title="Vymazať stroj">✕</span>`;
+            chip.innerHTML = `<span>⚙️ ${m}</span><span class="chip-del" onclick="window._delMachine(${i})">✕</span>`;
             box.appendChild(chip);
         });
     }
-
-    // Naplniť select-y pre pridávanie
-    ['ad-machine', 'at-machine'].forEach(id => {
+    ['ad-machine','at-machine'].forEach(id => {
         const sel = document.getElementById(id);
         const cur = sel.value;
         sel.innerHTML = '<option value="">— Vyberte stroj —</option>';
-        machines.forEach(m => {
-            const o = document.createElement('option');
-            o.value = o.textContent = m;
-            sel.appendChild(o);
-        });
+        machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
         sel.value = cur;
     });
 }
 
-function addMachine() {
+window.addMachine = async () => {
     const inp = document.getElementById('new-machine');
     const name = inp.value.trim();
     if (!name) { showToast('Zadajte názov stroja!', 'err'); return; }
     if (machines.includes(name)) { showToast('Stroj už existuje!', 'err'); return; }
     machines.push(name);
-    save();
     inp.value = '';
-    renderMachines();
+    await saveToFirestore();
     showToast('Stroj pridaný ✓', 'ok');
-}
+};
 
-function deleteMachine(i) {
+window._delMachine = async (i) => {
     const name = machines[i];
     const dCnt = drawings.filter(d => d.machine === name).length;
     const tCnt = tools.filter(t => t.machine === name).length;
@@ -693,60 +793,33 @@ function deleteMachine(i) {
     machines.splice(i, 1);
     drawings = drawings.filter(d => d.machine !== name);
     tools    = tools.filter(t => t.machine !== name);
-    save();
-    renderMachines();
-    updateCounts();
+    await saveToFirestore();
     showToast('Stroj vymazaný', 'err');
-}
+};
 
-// ════════════════════════════════
-//  VÝKRESY – HĽADAJ
-// ════════════════════════════════
-function renderDrawingSearch() {
+// ════════ VÝKRESY – HĽADAJ ════════
+window.renderDrawingSearch = () => {
     const text = document.getElementById('inp-drawing-search').value.trim().toLowerCase();
     const box  = document.getElementById('drawing-search-results');
-
-    if (!text) {
-        box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>`;
-        return;
-    }
-
-    // Primárne hľadáme podľa čísla výkresu
-    const byNumber = drawings.filter(d => d.number.toLowerCase().includes(text));
-    // Sekundárne podľa programu
-    const byProg   = drawings.filter(d => !d.number.toLowerCase().includes(text) && d.program.toLowerCase().includes(text));
-    const filtered = [...byNumber, ...byProg];
-
+    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Zadajte číslo výkresu</p></div>`; return; }
+    const byNum  = drawings.filter(d => d.number.toLowerCase().includes(text));
+    const byProg = drawings.filter(d => !d.number.toLowerCase().includes(text) && d.program.toLowerCase().includes(text));
+    const filtered = [...byNum, ...byProg];
     box.innerHTML = '';
-    if (!filtered.length) {
-        box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Výkres nenájdený</p></div>`;
-        return;
-    }
-
+    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Výkres nenájdený</p></div>`; return; }
     filtered.forEach(d => {
         const card = document.createElement('div');
         card.className = 'r-card';
-        card.innerHTML = `
-            <div class="r-title">${d.number}</div>
-            <div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div>
-            <span class="r-tag">zobraziť detail →</span>
-        `;
+        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><span class="r-tag">zobraziť detail →</span>`;
         card.onclick = () => openDetail(d.number);
         box.appendChild(card);
     });
-}
+};
 
-function openDetail(number) {
+window.openDetail = (number) => {
     const d = drawings.find(x => x.number === number);
     if (!d) return;
-
-    const imgHtml = d.fileData
-        ? `<div class="detail-img-wrap">
-               <img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres">
-               <div class="zoom-hint">👆 Kliknutím priblížite</div>
-           </div>`
-        : '';
-
+    const imgHtml = d.fileData ? `<div class="detail-img-wrap"><img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
     document.getElementById('modal-content').innerHTML = `
         ${imgHtml}
         <div class="d-field"><div class="d-key">Číslo výkresu</div><div class="d-val">${d.number}</div></div>
@@ -755,37 +828,28 @@ function openDetail(number) {
         <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${d.note || '—'}</div></div>
     `;
     document.getElementById('modal-detail').classList.add('open');
-}
+};
 
-function closeModal() {
-    document.getElementById('modal-detail').classList.remove('open');
-}
+window.closeModal = () => document.getElementById('modal-detail').classList.remove('open');
 
-// ════════════════════════════════
-//  VÝKRESY – PRIDAJ
-// ════════════════════════════════
-function saveDrawing() {
+// ════════ VÝKRESY – PRIDAJ ════════
+window.saveDrawing = async () => {
     const machine = document.getElementById('ad-machine').value;
     const number  = document.getElementById('ad-number').value.trim();
     const program = document.getElementById('ad-program').value.trim();
     const note    = document.getElementById('ad-note').value.trim();
     const fi      = document.getElementById('ad-file');
-
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
     if (!number)  { showToast('Zadajte číslo výkresu!', 'err'); return; }
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
 
-    const doSave = (fileData) => {
+    const doSave = async (fileData) => {
         drawings.push({ machine, number, program, note, fileData: fileData || null });
-        save();
-        updateCounts();
+        await saveToFirestore();
         showToast('Výkres uložený ✓', 'ok');
+        ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('ad-machine').value = '';
-        document.getElementById('ad-number').value  = '';
-        document.getElementById('ad-program').value = '';
-        document.getElementById('ad-note').value    = '';
         fi.value = '';
-        // Zatvoriť sekciu po uložení
         document.getElementById('sec-add-drawing').classList.remove('open');
         document.getElementById('sec-search-drawing').classList.add('open');
     };
@@ -797,227 +861,133 @@ function saveDrawing() {
     } else {
         doSave(null);
     }
-}
+};
 
-// ════════════════════════════════
-//  VÝKRESY – VYMAŽ
-// ════════════════════════════════
-function renderDelDrawing() {
+// ════════ VÝKRESY – VYMAŽ ════════
+window.renderDelDrawing = () => {
     const text = document.getElementById('inp-del-drawing').value.trim().toLowerCase();
     const box  = document.getElementById('del-drawing-results');
-
-    if (!text) {
-        box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte číslo výkresu na vymazanie</p></div>`;
-        return;
-    }
-
-    const filtered = drawings.filter(d =>
-        d.number.toLowerCase().includes(text) ||
-        d.program.toLowerCase().includes(text));
-
+    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte číslo výkresu</p></div>`; return; }
+    const filtered = drawings.filter(d => d.number.toLowerCase().includes(text) || d.program.toLowerCase().includes(text));
     box.innerHTML = '';
-    if (!filtered.length) {
-        box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`;
-        return;
-    }
-
+    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(d => {
         const idx = drawings.findIndex(x => x.number === d.number);
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `
-            <div class="r-title">${d.number}</div>
-            <div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div>
-            <button class="btn btn-danger btn-sm" onclick="delDrawing(${idx})">🗑 Vymazať</button>
-        `;
+        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing(${idx})">🗑 Vymazať</button>`;
         box.appendChild(card);
     });
-}
+};
 
-function delDrawing(idx) {
-    if (!confirm('Vymazať výkres "' + drawings[idx].number + '"?')) return;
+window._delDrawing = async (idx) => {
+    if (!confirm(`Vymazať výkres "${drawings[idx].number}"?`)) return;
     drawings.splice(idx, 1);
-    save();
-    updateCounts();
+    await saveToFirestore();
     showToast('Výkres vymazaný', 'err');
-    renderDelDrawing();
-}
+    window.renderDelDrawing();
+};
 
-// ════════════════════════════════
-//  NÁSTROJE – HĽADAJ
-// ════════════════════════════════
-function renderToolSearch() {
+// ════════ NÁSTROJE – HĽADAJ ════════
+window.renderToolSearch = () => {
     const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
     const box  = document.getElementById('tool-search-results');
-
-    if (!text) {
-        box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>`;
-        return;
-    }
-
-    const filtered = tools.filter(t =>
-        t.diameter.toLowerCase().includes(text) ||
-        t.name.toLowerCase().includes(text) ||
-        (t.type || '').toLowerCase().includes(text));
-
+    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>`; return; }
+    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
     box.innerHTML = '';
-    if (!filtered.length) {
-        box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`;
-        return;
-    }
-
+    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`; return; }
     filtered.forEach(t => {
         const card = document.createElement('div');
         card.className = 'r-card tool';
-        card.innerHTML = `
-            <div class="r-title">${t.name} — ${t.diameter}</div>
-            <div class="r-meta">Stroj: ${t.machine} · Druh: ${t.type || '—'}<br>${t.note ? 'Poznámka: ' + t.note : ''}</div>
-        `;
+        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine} · Druh: ${t.type||'—'}<br>${t.note?'Poznámka: '+t.note:''}</div>`;
         box.appendChild(card);
     });
-}
+};
 
-// ════════════════════════════════
-//  NÁSTROJE – PRIDAJ
-// ════════════════════════════════
-function saveTool() {
+// ════════ NÁSTROJE – PRIDAJ ════════
+window.saveTool = async () => {
     const machine = document.getElementById('at-machine').value;
     const name    = document.getElementById('at-name').value.trim();
     const diam    = document.getElementById('at-diam').value.trim();
     const type    = document.getElementById('at-type').value.trim();
     const note    = document.getElementById('at-note').value.trim();
-
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
     if (!name || !diam) { showToast('Vyplňte názov a priemer!', 'err'); return; }
-
     tools.push({ machine, name, diameter: diam, type, note });
-    save();
-    updateCounts();
+    await saveToFirestore();
     showToast('Nástroj uložený ✓', 'ok');
     ['at-name','at-diam','at-type','at-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('at-machine').value = '';
     document.getElementById('sec-add-tool').classList.remove('open');
     document.getElementById('sec-search-tool').classList.add('open');
-}
+};
 
-// ════════════════════════════════
-//  NÁSTROJE – VYMAŽ
-// ════════════════════════════════
-function renderDelTool() {
+// ════════ NÁSTROJE – VYMAŽ ════════
+window.renderDelTool = () => {
     const text = document.getElementById('inp-del-tool').value.trim().toLowerCase();
     const box  = document.getElementById('del-tool-results');
-
-    if (!text) {
-        box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov</p></div>`;
-        return;
-    }
-
-    const filtered = tools.filter(t =>
-        t.diameter.toLowerCase().includes(text) ||
-        t.name.toLowerCase().includes(text));
-
+    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov</p></div>`; return; }
+    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text));
     box.innerHTML = '';
-    if (!filtered.length) {
-        box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`;
-        return;
-    }
-
+    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(t => {
         const idx = tools.findIndex(x => x.machine === t.machine && x.name === t.name && x.diameter === t.diameter);
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `
-            <div class="r-title">${t.name} — ${t.diameter}</div>
-            <div class="r-meta">Stroj: ${t.machine}</div>
-            <button class="btn btn-danger btn-sm" onclick="delTool(${idx})">🗑 Vymazať</button>
-        `;
+        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool(${idx})">🗑 Vymazať</button>`;
         box.appendChild(card);
     });
-}
+};
 
-function delTool(idx) {
-    if (!confirm('Vymazať nástroj "' + tools[idx].name + '"?')) return;
+window._delTool = async (idx) => {
+    if (!confirm(`Vymazať nástroj "${tools[idx].name}"?`)) return;
     tools.splice(idx, 1);
-    save();
-    updateCounts();
+    await saveToFirestore();
     showToast('Nástroj vymazaný', 'err');
-    renderDelTool();
-}
+    window.renderDelTool();
+};
 
-// ════════════════════════════════
-//  ZOOM
-// ════════════════════════════════
-function zoomImage(src) {
-    document.getElementById('zoom-img').src = src;
-    document.getElementById('zoom-ov').classList.add('open');
-}
-function closeZoom() { document.getElementById('zoom-ov').classList.remove('open'); }
-let _ty = 0;
-document.getElementById('zoom-ov').addEventListener('touchstart', e => _ty = e.touches[0].clientY);
-document.getElementById('zoom-ov').addEventListener('touchend',   e => {
-    if (Math.abs(e.changedTouches[0].clientY - _ty) > 60) closeZoom();
-});
-
-// ════════════════════════════════
-//  TOAST
-// ════════════════════════════════
-let _tt;
-function showToast(msg, type = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (type ? ' ' + type : '');
-    clearTimeout(_tt);
-    _tt = setTimeout(() => t.className = 'toast', 3000);
-}
-
-// ════════════════════════════════
-//  POČÍTADLÁ
-// ════════════════════════════════
+// ════════ HELPERS ════════
 function updateCounts() {
     document.getElementById('sub-drawings').textContent = drawings.length + ' výkresov';
     document.getElementById('sub-tools').textContent    = tools.length    + ' nástrojov';
     document.getElementById('sub-machines').textContent = machines.length + ' strojov';
 }
 
-// Enter na pridanie stroja
-document.getElementById('new-machine').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addMachine();
-});
+window.toggleSection = (id) => document.getElementById(id).classList.toggle('open');
 
-// ── ŠTART ──
-renderMachines();
-updateCounts();
+window.zoomImage = (src) => { document.getElementById('zoom-img').src = src; document.getElementById('zoom-ov').classList.add('open'); };
+window.closeZoom = () => document.getElementById('zoom-ov').classList.remove('open');
 
-// ── PWA INSTALL ──
+let _ty = 0;
+document.getElementById('zoom-ov').addEventListener('touchstart', e => _ty = e.touches[0].clientY);
+document.getElementById('zoom-ov').addEventListener('touchend',   e => { if (Math.abs(e.changedTouches[0].clientY - _ty) > 60) closeZoom(); });
+
+document.getElementById('new-machine').addEventListener('keydown', e => { if (e.key === 'Enter') addMachine(); });
+
+// ════════ PWA INSTALL ════════
 let _installPrompt = null;
-
 window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    _installPrompt = e;
-    if (!localStorage.getItem('cnc_install_dismissed')) {
-        document.getElementById('install-banner').classList.add('visible');
-    }
+    e.preventDefault(); _installPrompt = e;
+    if (!localStorage.getItem('cnc_install_dismissed')) document.getElementById('install-banner').classList.add('visible');
 });
-
 document.getElementById('install-btn').addEventListener('click', async () => {
     if (!_installPrompt) return;
     _installPrompt.prompt();
-    const result = await _installPrompt.userChoice;
-    if (result.outcome === 'accepted') {
-        document.getElementById('install-banner').classList.remove('visible');
-        _installPrompt = null;
-    }
+    const r = await _installPrompt.userChoice;
+    if (r.outcome === 'accepted') { document.getElementById('install-banner').classList.remove('visible'); _installPrompt = null; }
 });
+window.dismissInstall = () => { document.getElementById('install-banner').classList.remove('visible'); localStorage.setItem('cnc_install_dismissed','1'); };
+window.addEventListener('appinstalled', () => { document.getElementById('install-banner').classList.remove('visible'); showToast('Aplikácia nainštalovaná ✓','ok'); });
 
-function dismissInstall() {
-    document.getElementById('install-banner').classList.remove('visible');
-    localStorage.setItem('cnc_install_dismissed', '1');
-}
+// ════════ TOAST ════════
+let _tt;
+window.showToast = (msg, type='') => {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show' + (type?' '+type:'');
+    clearTimeout(_tt); _tt = setTimeout(() => t.className = 'toast', 3000);
+};
 
-window.addEventListener('appinstalled', () => {
-    document.getElementById('install-banner').classList.remove('visible');
-    showToast('Aplikácia nainštalovaná ✓', 'ok');
-});
 </script>
 </body>
 </html>
