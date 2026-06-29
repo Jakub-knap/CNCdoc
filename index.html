@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNCdok – Digitálne výkresy pre dielňu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --steel:   #1a2332;
+            --iron:    #0f1a27;
+            --cut:     #f97316;   /* oranžová – CNC rezná hrana */
+            --chip:    #fb923c;
+            --light:   #e2e8f0;
+            --muted:   #94a3b8;
+            --white:   #ffffff;
+            --card-bg: #1e2d3d;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--iron);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px 60px;
+            text-align: center;
+            position: relative;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(249,115,22,0.15) 0%, transparent 70%),
+                var(--iron);
+        }
+
+        /* Dekoratívna mriežka – ako technický výkres */
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 48px;
+            position: relative;
+        }
+
+        .logo-icon {
+            width: 52px;
+            height: 52px;
+            background: var(--cut);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 24px rgba(249,115,22,0.5);
+        }
+
+        .logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .logo-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: -1px;
+        }
+
+        .logo-text span {
+            color: var(--cut);
+        }
+
+        .hero-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--cut);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 8vw, 58px);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--white);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .hero h1 em {
+            font-style: normal;
+            color: var(--cut);
+        }
+
+        .hero-sub {
+            font-size: clamp(15px, 4vw, 18px);
+            color: var(--muted);
+            max-width: 400px;
+            line-height: 1.65;
+            margin-bottom: 48px;
+            position: relative;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--cut);
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            padding: 18px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 4px 24px rgba(249,115,22,0.45);
+            transition: all 0.2s ease;
+            position: relative;
+            letter-spacing: -0.3px;
+        }
+
+        .cta-btn:hover {
+            background: var(--chip);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(249,115,22,0.55);
+        }
+
+        .cta-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 16px;
+            position: relative;
+        }
+
+        /* ─── FEATURES ─── */
+        .features {
+            padding: 80px 24px;
+            background: var(--steel);
+        }
+
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--cut);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(22px, 5vw, 32px);
+            font-weight: 700;
+            text-align: center;
+            color: var(--white);
+            margin-bottom: 48px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .feat-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 24px;
+            display: flex;
+            gap: 18px;
+            align-items: flex-start;
+            transition: border-color 0.2s;
+        }
+
+        .feat-card:hover {
+            border-color: rgba(249,115,22,0.35);
+        }
+
+        .feat-icon {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 10px;
+            background: rgba(249,115,22,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .feat-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 6px;
+        }
+
+        .feat-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        /* ─── HOW IT WORKS ─── */
+        .how {
+            padding: 80px 24px;
+            background: var(--iron);
+        }
+
+        .steps {
+            max-width: 560px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            position: relative;
+        }
+
+        .step-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            background: var(--cut);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-line {
+            width: 2px;
+            flex: 1;
+            min-height: 32px;
+            background: linear-gradient(to bottom, var(--cut), transparent);
+            margin: 4px auto;
+            opacity: 0.3;
+        }
+
+        .step:last-child .step-line { display: none; }
+
+        .step-body {
+            padding-bottom: 36px;
+        }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 6px;
+            margin-top: 6px;
+        }
+
+        .step-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        /* ─── STORAGE INFO ─── */
+        .storage {
+            padding: 60px 24px;
+            background: var(--steel);
+        }
+
+        .storage-cards {
+            max-width: 560px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .storage-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .storage-card .icon { font-size: 28px; margin-bottom: 10px; }
+        .storage-card h3 { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+        .storage-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+        .storage-card .badge {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(249,115,22,0.15);
+            color: var(--cut);
+        }
+
+        /* ─── FOOTER CTA ─── */
+        .footer-cta {
+            padding: 80px 24px;
+            background: var(--iron);
+            text-align: center;
+            position: relative;
+        }
+
+        .footer-cta::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(249,115,22,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .footer-cta h2 {
+            font-size: clamp(24px, 6vw, 38px);
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .footer-cta p {
+            color: var(--muted);
+            font-size: 16px;
+            margin-bottom: 36px;
+            position: relative;
+        }
+
+        .footer-note {
+            margin-top: 60px;
+            font-size: 13px;
+            color: #475569;
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+    <div class="logo-wrap">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                <path d="M14 2v6h6" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                <line x1="8" y1="13" x2="16" y2="13" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="8" y1="17" x2="13" y2="17" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div class="logo-text">CNC<span>dok</span></div>
+    </div>
+
+    <p class="hero-tag">Digitálna dielňa</p>
+    <h1>Koniec so<br><em>šanónmi</em> pri stroji</h1>
+    <p class="hero-sub">
+        Všetky výkresy, nástroje a programy prehľadne v mobile — 
+        vždy po ruke, aj keď máte ruky od oleja.
+    </p>
+
+    <a href="app.html" class="cta-btn">▶ Otvoriť aplikáciu</a>
+    <p class="cta-sub">Funguje bez internetu · Ukladá dáta lokálne</p>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features">
+    <p class="section-label">Čo CNCdok rieši</p>
+    <h2 class="section-title">Všetko čo dielňa potrebuje</h2>
+
+    <div class="features-grid">
+        <div class="feat-card">
+            <div class="feat-icon">📐</div>
+            <div>
+                <div class="feat-title">Výkresy so skenmi</div>
+                <div class="feat-desc">Odfotte alebo nahrajte sken výkresu. Číslo, program, poznámky — všetko na jednom mieste. Žiadne hľadanie v šanónoch.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">🔍</div>
+            <div>
+                <div class="feat-title">Rýchle vyhľadávanie</div>
+                <div class="feat-desc">Zadáte číslo výkresu alebo programu a máte detail do 2 sekúnd. Filtrujete podľa stroja.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">🔧</div>
+            <div>
+                <div class="feat-title">Databáza nástrojov</div>
+                <div class="feat-desc">Vrták D10, závitník M8, korekcie — evidujte nástroje per stroj. Nikdy viac zbytočné hľadanie.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">📱</div>
+            <div>
+                <div class="feat-title">Navrhnuté pre mobil</div>
+                <div class="feat-desc">Veľké tlačidlá, čitateľný text, zoom výkresu jedným kliknutím. Dizajnované pre pracovníka pri stroji.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="how">
+    <p class="section-label">Ako to funguje</p>
+    <h2 class="section-title">Tri kroky a hotovo</h2>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-left">
+                <div class="step-num">1</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-title">Odfotíte alebo naskenujete výkres</div>
+                <div class="step-desc">Stačí fotka mobilom. Pridáte číslo výkresu, číslo CNC programu a poznámku.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-left">
+                <div class="step-num">2</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-title">Aplikácia uloží dáta</div>
+                <div class="step-desc">Lokálne do mobilu — funguje bez Wi-Fi. Alebo na váš server — synchronizácia pre celú dielňu.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-left">
+                <div class="step-num">3</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-title">Pri stroji hľadáte sekundy</div>
+                <div class="step-desc">Zadáte číslo, zobrazí sa výkres so všetkými parametrami. Žiadne šanóny, žiadne zdĺhavé hľadanie.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ STORAGE ═══ -->
+<section class="storage">
+    <p class="section-label">Kde sa ukladajú dáta</p>
+    <h2 class="section-title">Vy si vyberiete</h2>
+
+    <div class="storage-cards">
+        <div class="storage-card">
+            <div class="icon">📱</div>
+            <h3>Lokálne<br>v mobile</h3>
+            <p>Dáta zostávajú vo vašom zariadení. Funguje bez internetu.</p>
+            <div class="badge">Predvolené</div>
+        </div>
+        <div class="storage-card">
+            <div class="icon">🌐</div>
+            <h3>Na vlastnom<br>serveri</h3>
+            <p>Zadáte URL vášho API. Celá dielňa zdieľa jednu databázu.</p>
+            <div class="badge">Nastavenia</div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FOOTER CTA ═══ -->
+<section class="footer-cta">
+    <h2>Pripravený začať?</h2>
+    <p>Otvorte aplikáciu a pridajte prvý výkres — trvá to 30 sekúnd.</p>
+    <a href="app.html" class="cta-btn">▶ Otvoriť CNCdok</a>
+    <div class="footer-note">// vyrobené strojárom pre strojárov</div>
+</section>
+
+</body>
+</html>
