@@ -615,6 +615,14 @@
                     <input type="text" id="new-machine" placeholder="Napr. Fréza 1, Sústruh 2...">
                     <button onclick="addMachine()">＋ Pridať</button>
                 </div>
+                <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">⚠️ Vymazanie stroja — nebezpečná zóna</div>
+                    <select id="del-machine-select" style="margin-bottom:8px;">
+                        <option value="">— Vyberte stroj na vymazanie —</option>
+                    </select>
+                    <button class="btn btn-danger" onclick="deleteMachineConfirm()" style="font-size:13px;padding:10px;">🗑 Vymazať vybraný stroj</button>
+                    <div style="font-size:11px;color:var(--red);margin-top:6px;line-height:1.5;">Pozor: vymaže sa aj všetky výkresy a nástroje daného stroja!</div>
+                </div>
             </div>
         </div>
 
@@ -992,17 +1000,21 @@ function renderMachines() {
         box.innerHTML = `<div class="empty"><div class="ei">🏭</div><p>Pridajte prvý stroj</p></div>`;
     } else {
         box.innerHTML = '';
-        machines.forEach((m, i) => {
+        machines.forEach(m => {
             const chip = document.createElement('div');
             chip.className = 'chip';
-            chip.innerHTML = `<span>⚙️ ${m}</span><span class="chip-del" onclick="window._delMachine(${i})">✕</span>`;
+            chip.innerHTML = `<span>⚙️ ${m}</span>`;
             box.appendChild(chip);
         });
     }
-    ['ad-machine','at-machine'].forEach(id => {
+    // Fill all machine selects
+    ['ad-machine','at-machine','del-machine-select'].forEach(id => {
         const sel = document.getElementById(id);
+        if (!sel) return;
         const cur = sel.value;
-        sel.innerHTML = '<option value="">— Vyberte stroj —</option>';
+        sel.innerHTML = id === 'del-machine-select'
+            ? '<option value="">— Vyberte stroj na vymazanie —</option>'
+            : '<option value="">— Vyberte stroj —</option>';
         machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
         sel.value = cur;
     });
@@ -1019,16 +1031,28 @@ window.addMachine = async () => {
     showToast('Stroj pridaný ✓', 'ok');
 };
 
-window._delMachine = async (i) => {
-    const name = machines[i];
+window.deleteMachineConfirm = async () => {
+    const sel = document.getElementById('del-machine-select');
+    const name = sel.value;
+    if (!name) { showToast('Vyberte stroj!', 'err'); return; }
     const dCnt = drawings.filter(d => d.machine === name).length;
     const tCnt = tools.filter(t => t.machine === name).length;
-    const warn = (dCnt || tCnt) ? `\nVymažú sa aj ${dCnt} výkresov a ${tCnt} nástrojov!` : '';
-    if (!confirm(`Vymazať stroj "${name}"?${warn}`)) return;
-    machines.splice(i, 1);
+    // First confirm
+    if (!confirm(`Vymazať stroj "${name}"?
+
+Výkresy: ${dCnt}
+Nástroje: ${tCnt}
+
+Táto akcia sa nedá vrátiť!`)) return;
+    // Second confirm - type name
+    const typed = prompt(`Pre potvrdenie napíšte presný názov stroja:
+"${name}"`);
+    if (typed !== name) { showToast('Názov nesedí — stroj NEBOL vymazaný', 'err'); return; }
+    machines = machines.filter(m => m !== name);
     drawings = drawings.filter(d => d.machine !== name);
     tools    = tools.filter(t => t.machine !== name);
     await saveToFirestore();
+    sel.value = '';
     showToast('Stroj vymazaný', 'err');
 };
 
@@ -1226,7 +1250,8 @@ window.zoomImage = (src) => {
 window.closeZoom = () => {
     document.getElementById('zoom-ov').classList.remove('open');
     document.body.style.overflow = '';
-    resetZoom();
+    // Reset after short delay so animation is clean
+    setTimeout(resetZoom, 100);
 };
 
 window.resetZoom = () => {
