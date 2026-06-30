@@ -1099,7 +1099,7 @@ async function saveToFirestore() {
     if (!currentUser) return;
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools });
+        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
         setSyncState('online');
     } catch(e) {
         setSyncState('offline');
@@ -1495,5 +1495,7 @@ window.showToast = (msg, type='') => {
     }
 })();
 </script>
+<!-- SUBSCRIPTION GATE (Trial / Free / Premium) -->
+<script type="module" src="subscription.js"></script>
 </body>
 </html>
