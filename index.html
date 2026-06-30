@@ -337,6 +337,184 @@
             color: var(--cut);
         }
 
+        /* ─── PRICING ─── */
+        .pricing {
+            padding: 80px 24px;
+            background: var(--iron);
+            position: relative;
+        }
+
+        .pricing::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(249,115,22,0.10) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .free-banner {
+            max-width: 440px;
+            margin: 0 auto 28px;
+            text-align: center;
+            background: rgba(249,115,22,0.12);
+            border: 1px solid rgba(249,115,22,0.35);
+            color: var(--cut);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 12px 18px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .price-cards {
+            max-width: 440px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            position: relative;
+        }
+
+        .price-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 26px 24px;
+            position: relative;
+        }
+
+        .price-card.featured {
+            border-color: var(--cut);
+            box-shadow: 0 0 0 1px var(--cut), 0 8px 40px rgba(249,115,22,0.18);
+        }
+
+        .price-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--cut);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(249,115,22,0.45);
+        }
+
+        .price-plan {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--cut);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .price-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--white);
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .price-amount .per {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: 0;
+        }
+
+        .price-note {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .price-note strong { color: var(--chip); font-weight: 600; }
+
+        .price-list {
+            list-style: none;
+            margin: 20px 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .price-list li {
+            font-size: 14px;
+            color: var(--light);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+        }
+
+        .price-list li::before {
+            content: '✓';
+            color: var(--cut);
+            font-weight: 800;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .price-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: var(--cut);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: -0.3px;
+        }
+
+        .price-btn:hover {
+            background: var(--chip);
+            transform: translateY(-2px);
+        }
+
+        .price-btn.ghost {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--light);
+        }
+
+        .price-btn.ghost:hover {
+            border-color: var(--cut);
+            background: rgba(249,115,22,0.08);
+            color: var(--white);
+        }
+
+        .price-footnote {
+            text-align: center;
+            font-size: 12px;
+            color: #475569;
+            margin-top: 24px;
+            position: relative;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @media (min-width: 620px) {
+            .price-cards {
+                max-width: 680px;
+                grid-template-columns: 1fr 1fr;
+                align-items: start;
+            }
+            .free-banner { max-width: 680px; }
+        }
+
         /* ─── FOOTER CTA ─── */
         .footer-cta {
             padding: 80px 24px;
@@ -498,6 +676,45 @@
             <div class="badge">Nastavenia</div>
         </div>
     </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section class="pricing">
+    <p class="section-label">Cena</p>
+    <h2 class="section-title">Jednoduché predplatné</h2>
+
+    <div class="free-banner">🎁 Prvý mesiac zadarmo · bez platobnej karty</div>
+
+    <div class="price-cards">
+        <!-- Mesačne -->
+        <div class="price-card">
+            <div class="price-plan">Mesačne</div>
+            <div class="price-amount">10 €<span class="per"> / mesiac</span></div>
+            <div class="price-note">Po prvom mesiaci zadarmo. Zruš kedykoľvek.</div>
+            <ul class="price-list">
+                <li>Neobmedzené výkresy a nástroje</li>
+                <li>Funguje aj bez internetu</li>
+                <li>Bez záväzku</li>
+            </ul>
+            <a href="app.html" class="price-btn ghost">Začať zadarmo</a>
+        </div>
+
+        <!-- Ročne -->
+        <div class="price-card featured">
+            <div class="price-badge">Najvýhodnejšie</div>
+            <div class="price-plan">Ročne</div>
+            <div class="price-amount">100 €<span class="per"> / rok</span></div>
+            <div class="price-note">≈ <strong>8,30 € / mesiac</strong> · ušetríš 2 mesiace</div>
+            <ul class="price-list">
+                <li>Všetko z mesačného plánu</li>
+                <li>2 mesiace zadarmo oproti mesačnému</li>
+                <li>Jedna platba na celý rok</li>
+            </ul>
+            <a href="app.html" class="price-btn">Vybrať ročne</a>
+        </div>
+    </div>
+
+    <p class="price-footnote">// platby zabezpečené cez Stripe</p>
 </section>
 
 <!-- ═══ FOOTER CTA ═══ -->
