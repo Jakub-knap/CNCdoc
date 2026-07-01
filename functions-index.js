@@ -22,17 +22,15 @@ const DAY_MS = 86400000;
 const stripe = Stripe(functions.config().stripe.secret);
 const WEBHOOK_SECRET = functions.config().stripe.webhook;
 
-// ── Mapovanie Stripe price ID → tarif (solo / firma) ───────────────
-// Nájdeš ich v Stripe → Products → daný produkt → cena → "price_...".
-// Vlož price ID pre všetky 4 varianty (solo/firma × mes/rok).
-const PRICE_TIER = {
-    "price_SOLO_MONTHLY":  "solo",
-    "price_SOLO_YEARLY":   "solo",
-    "price_FIRMA_MONTHLY": "firma",
-    "price_FIRMA_YEARLY":  "firma",
+// ── Mapovanie Stripe produktu (prod_...) → tarif (solo / firma) ────
+const PRODUCT_TIER = {
+    "prod_UnyBSRQhtpJsCs": "solo",   // Solo 1 €/mes
+    "prod_UnyCCCcHrcxN7h": "solo",   // Solo 10 €/rok
+    "prod_UndxuayUAcVp61": "firma",  // Firma 10 €/mes
+    "prod_UndyUu2paKLbgO": "firma",  // Firma 100 €/rok
 };
-function tierForPrice(priceId) {
-    return PRICE_TIER[priceId] || null;
+function tierForProduct(productId) {
+    return PRODUCT_TIER[productId] || null;
 }
 
 // ── 1) TRIAL pri registrácii ──────────────────────────────────────
@@ -92,7 +90,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                     periodEnd = new Date(sub.current_period_end * 1000).toISOString();
                     const priceObj = sub.items?.data?.[0]?.price;
                     plan = priceObj?.recurring?.interval || null; // "month"/"year"
-                    tier = tierForPrice(priceObj?.id);            // "solo"/"firma"
+                    tier = tierForProduct(priceObj?.product);     // "solo"/"firma"
                 }
                 await setSubscription(uid, {
                     active: true,
@@ -115,7 +113,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                     active,
                     currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
                     plan: priceObj?.recurring?.interval || null,
-                    tier: tierForPrice(priceObj?.id),
+                    tier: tierForProduct(priceObj?.product),
                 });
                 break;
             }

@@ -43,14 +43,12 @@ const TRIAL_DAYS = 30;        // dĺžka skúšobnej doby pre nových
 const DAY_MS     = 86400000;
 
 // Stripe Payment Links — jeden link pre každý tarif a obdobie.
-// Firma linky sú tvoje pôvodné (10 €/mes, 100 €/rok).
-// Solo linky VYTVOR v Stripe (1 €/mes, 10 €/rok) a vlož sem.
-// Pre OSTRÚ prevádzku vymeň test_ linky za live linky.
+// (Sandbox / test linky. Pre OSTRÚ prevádzku vymeň za live linky.)
 const CHECKOUT_LINKS = {
     firma_monthly: "https://buy.stripe.com/test_14AcN6ed5fTl9zFdYC3Je00",
     firma_yearly:  "https://buy.stripe.com/test_28E9AU8SL6iL5jpdYC3Je01",
-    solo_monthly:  "TODO_STRIPE_LINK_SOLO_MESACNE",   // ← vlož Payment Link 1 €/mes
-    solo_yearly:   "TODO_STRIPE_LINK_SOLO_ROCNE",      // ← vlož Payment Link 10 €/rok
+    solo_monthly:  "https://buy.stripe.com/test_5kQ4gAd914aDdPV9Im3Je02",
+    solo_yearly:   "https://buy.stripe.com/test_9B6cN61qjdLdbHNaMq3Je03",
 };
 // Kam smeruje "Aktivovať" v appke (nech si používateľ vyberie plán).
 const UPGRADE_URL = "index.html#cennik";
