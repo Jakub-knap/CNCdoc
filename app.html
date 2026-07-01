@@ -1029,6 +1029,7 @@ const provider = new GoogleAuthProvider();
 
 // Offline persistence
 enableIndexedDbPersistence(db).catch(() => {});
+alert('DIAG2 načítaná — beží nová verzia');
 
 // ════════ STAV ════════
 let currentUser = null;
@@ -1289,28 +1290,23 @@ function listenData(uid) {
 }
 
 async function saveToFirestore() {
-    // === DIAGNOSTIKA ZÁPISU ===
+    // === DIAGNOSTIKA v2 — vyskočí VŽDY ===
     const authUid = auth.currentUser ? auth.currentUser.uid : null;
-    const info =
-        'uid (currentUser): ' + (currentUser ? currentUser.uid : 'NULL') +
-        '\nuid (auth.currentUser): ' + (authUid || 'NULL — appka nie je prihlásená!') +
-        '\nmail: ' + (currentUser && currentUser.email ? currentUser.email : 'NULL');
+    const cuUid   = currentUser ? currentUser.uid : null;
+    const mail    = (currentUser && currentUser.email) ? currentUser.email : '?';
 
-    if (!currentUser || !authUid) {
-        alert('ZÁPIS SA NESPUSTIL\n' + info);
+    if (!cuUid || !authUid) {
+        alert('DIAG2: ZÁPIS SA NESPUSTIL\ncurrentUser uid: ' + cuUid + '\nauth uid: ' + authUid + '\nmail: ' + mail);
         return;
     }
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
+        await setDoc(doc(db, 'users', cuUid), { machines, drawings, tools }, { merge: true });
         setSyncState('online');
+        alert('DIAG2: ZAPÍSANÉ OK ✓\nDokument uid:\n' + cuUid + '\nmail: ' + mail + '\n\nNájdi TENTO uid vo Firestore → users.');
     } catch(e) {
-        const msg = 'CHYBA ZÁPISU: ' + (e.code || '?') + ' — ' + (e.message || e);
-        const dot = document.getElementById('sync-dot');
-        const text = document.getElementById('sync-text');
-        if (dot)  dot.className = 'sync-dot offline';
-        if (text) text.textContent = msg;
-        alert(msg + '\n\n' + info);
+        setSyncState('offline');
+        alert('DIAG2: CHYBA ZÁPISU\n' + (e.code || '?') + ' — ' + (e.message || e) + '\nuid: ' + cuUid + '\nmail: ' + mail);
     }
 }
 
