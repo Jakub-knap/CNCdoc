@@ -42,11 +42,15 @@ const db   = getFirestore(app);
 const TRIAL_DAYS = 30;        // dĺžka skúšobnej doby pre nových
 const DAY_MS     = 86400000;
 
-// Stripe Payment Links (rovnaké ako na index.html).
+// Stripe Payment Links — jeden link pre každý tarif a obdobie.
+// Firma linky sú tvoje pôvodné (10 €/mes, 100 €/rok).
+// Solo linky VYTVOR v Stripe (1 €/mes, 10 €/rok) a vlož sem.
 // Pre OSTRÚ prevádzku vymeň test_ linky za live linky.
 const CHECKOUT_LINKS = {
-    monthly: "https://buy.stripe.com/test_14AcN6ed5fTl9zFdYC3Je00",
-    yearly:  "https://buy.stripe.com/test_28E9AU8SL6iL5jpdYC3Je01",
+    firma_monthly: "https://buy.stripe.com/test_14AcN6ed5fTl9zFdYC3Je00",
+    firma_yearly:  "https://buy.stripe.com/test_28E9AU8SL6iL5jpdYC3Je01",
+    solo_monthly:  "TODO_STRIPE_LINK_SOLO_MESACNE",   // ← vlož Payment Link 1 €/mes
+    solo_yearly:   "TODO_STRIPE_LINK_SOLO_ROCNE",      // ← vlož Payment Link 10 €/rok
 };
 // Kam smeruje "Aktivovať" v appke (nech si používateľ vyberie plán).
 const UPGRADE_URL = "index.html#cennik";
@@ -229,12 +233,7 @@ function ensureUpgradeModal() {
                 Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
                 strojom a nástrojom si vyberte plán.
             </p>
-            <button class="sub-up-btn" data-plan="yearly">
-                Ročne — 100 € <span>/ rok · ušetríš 2 mesiace</span>
-            </button>
-            <button class="sub-up-btn ghost" data-plan="monthly">
-                Mesačne — 10 € <span>/ mesiac</span>
-            </button>
+            <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
             <button class="sub-up-signout" type="button">Odhlásiť sa</button>
             <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
         </div>`;
@@ -242,8 +241,8 @@ function ensureUpgradeModal() {
 
     el.addEventListener("click", (e) => { if (e.target === el) closeUpgrade(); });
     el.querySelector(".sub-up-x").addEventListener("click", closeUpgrade);
-    el.querySelectorAll(".sub-up-btn").forEach(b =>
-        b.addEventListener("click", () => startCheckout(b.dataset.plan)));
+    el.querySelector('[data-goto="cennik"]')
+      .addEventListener("click", () => { window.location.href = UPGRADE_URL; });
     el.querySelector(".sub-up-signout").addEventListener("click", () => {
         if (typeof window.signOut === "function") window.signOut();
         else auth.signOut();
