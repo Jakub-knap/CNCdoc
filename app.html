@@ -1029,7 +1029,6 @@ const provider = new GoogleAuthProvider();
 
 // Offline persistence
 enableIndexedDbPersistence(db).catch(() => {});
-alert('DIAG2 načítaná — beží nová verzia');
 
 // ════════ STAV ════════
 let currentUser = null;
@@ -1290,23 +1289,14 @@ function listenData(uid) {
 }
 
 async function saveToFirestore() {
-    // === DIAGNOSTIKA v2 — vyskočí VŽDY ===
-    const authUid = auth.currentUser ? auth.currentUser.uid : null;
-    const cuUid   = currentUser ? currentUser.uid : null;
-    const mail    = (currentUser && currentUser.email) ? currentUser.email : '?';
-
-    if (!cuUid || !authUid) {
-        alert('DIAG2: ZÁPIS SA NESPUSTIL\ncurrentUser uid: ' + cuUid + '\nauth uid: ' + authUid + '\nmail: ' + mail);
-        return;
-    }
+    if (!currentUser) return;
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', cuUid), { machines, drawings, tools }, { merge: true });
+        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
         setSyncState('online');
-        alert('DIAG2: ZAPÍSANÉ OK ✓\nDokument uid:\n' + cuUid + '\nmail: ' + mail + '\n\nNájdi TENTO uid vo Firestore → users.');
     } catch(e) {
         setSyncState('offline');
-        alert('DIAG2: CHYBA ZÁPISU\n' + (e.code || '?') + ' — ' + (e.message || e) + '\nuid: ' + cuUid + '\nmail: ' + mail);
+        showToast('Uložené lokálne, synchronizuje sa...', '');
     }
 }
 
