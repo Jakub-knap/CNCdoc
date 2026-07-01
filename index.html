@@ -405,14 +405,22 @@
             box-shadow: 0 4px 16px rgba(249,115,22,0.45);
         }
 
+        .price-badge.muted {
+            background: var(--card-bg);
+            color: var(--muted);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: none;
+        }
         .price-plan {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--cut);
-            letter-spacing: 2px;
+            font-size: 23px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-bottom: 14px;
+            margin-bottom: 4px;
         }
+        .price-card.featured .price-plan { color: var(--cut); }
 
         .price-amount {
             font-family: 'JetBrains Mono', monospace;
@@ -688,13 +696,14 @@
 <!-- ═══ PRICING ═══ -->
 <section class="pricing" id="cennik">
     <p class="section-label">Cena</p>
-    <h2 class="section-title">Jednoduché predplatné</h2>
+    <h2 class="section-title">30 dní zadarmo, potom si vyber plán</h2>
 
-    <div class="free-banner">🎁 Prvý mesiac zadarmo · bez platobnej karty</div>
+    <div class="free-banner">🎁 30 dní všetko neobmedzené · bez platobnej karty</div>
 
     <div class="price-cards">
         <!-- JEDNOTLIVEC -->
         <div class="price-card">
+            <div class="price-badge muted">Pre jedného</div>
             <div class="price-plan">Jednotlivec</div>
             <div class="price-amount">10 €<span class="per"> / rok</span></div>
             <div class="price-sub">alebo 1 € / mesiac</div>
