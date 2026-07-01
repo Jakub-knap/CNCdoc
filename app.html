@@ -642,7 +642,7 @@
     <div class="user-info" id="topbar-user" style="display:none">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
-        <button class="btn-signout" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px;">🔑</button>
+        <button class="btn-signout" id="admin-key-btn" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px; display:none;">🔑</button>
         <button class="btn-signout" onclick="signOut()">Odhlásiť</button>
     </div>
 </div>
@@ -1276,6 +1276,8 @@ function listenData(uid) {
         updateSyncReminder();
 
         // Kladku (admin heslo) má len Firma. Trial aj Jednotlivec = voľné ruky.
+        const keyBtn = document.getElementById('admin-key-btn');
+        if (keyBtn) keyBtn.style.display = (subTier === 'firma') ? '' : 'none';
         if (!adminChecked) {
             adminChecked = true;
             if (!adminHash && subTier === 'firma') setTimeout(setupAdminPassword, 400);
