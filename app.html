@@ -1289,14 +1289,28 @@ function listenData(uid) {
 }
 
 async function saveToFirestore() {
-    if (!currentUser) return;
+    // === DIAGNOSTIKA ZÁPISU ===
+    const authUid = auth.currentUser ? auth.currentUser.uid : null;
+    const info =
+        'uid (currentUser): ' + (currentUser ? currentUser.uid : 'NULL') +
+        '\nuid (auth.currentUser): ' + (authUid || 'NULL — appka nie je prihlásená!') +
+        '\nmail: ' + (currentUser && currentUser.email ? currentUser.email : 'NULL');
+
+    if (!currentUser || !authUid) {
+        alert('ZÁPIS SA NESPUSTIL\n' + info);
+        return;
+    }
     setSyncState('syncing');
     try {
         await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
         setSyncState('online');
     } catch(e) {
-        setSyncState('offline');
-        showToast('Uložené lokálne, synchronizuje sa...', '');
+        const msg = 'CHYBA ZÁPISU: ' + (e.code || '?') + ' — ' + (e.message || e);
+        const dot = document.getElementById('sync-dot');
+        const text = document.getElementById('sync-text');
+        if (dot)  dot.className = 'sync-dot offline';
+        if (text) text.textContent = msg;
+        alert(msg + '\n\n' + info);
     }
 }
 
