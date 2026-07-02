@@ -405,14 +405,22 @@
             box-shadow: 0 4px 16px rgba(249,115,22,0.45);
         }
 
+        .price-badge.muted {
+            background: var(--card-bg);
+            color: var(--muted);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: none;
+        }
         .price-plan {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--cut);
-            letter-spacing: 2px;
+            font-size: 23px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-bottom: 14px;
+            margin-bottom: 4px;
         }
+        .price-card.featured .price-plan { color: var(--cut); }
 
         .price-amount {
             font-family: 'JetBrains Mono', monospace;
@@ -495,6 +503,13 @@
             border-color: var(--cut);
             background: rgba(249,115,22,0.08);
             color: var(--white);
+        }
+
+        .price-btns { display: flex; flex-direction: column; gap: 10px; }
+        .price-btns .price-btn { padding: 13px; font-size: 15px; }
+        .price-sub {
+            font-size: 12px; color: var(--muted);
+            margin-top: 4px; font-family: 'JetBrains Mono', monospace;
         }
 
         .price-footnote {
@@ -679,38 +694,51 @@
 </section>
 
 <!-- ═══ PRICING ═══ -->
-<section class="pricing">
+<section class="pricing" id="cennik">
     <p class="section-label">Cena</p>
-    <h2 class="section-title">Jednoduché predplatné</h2>
+    <h2 class="section-title">30 dní zadarmo, potom si vyber plán</h2>
 
-    <div class="free-banner">🎁 Prvý mesiac zadarmo · bez platobnej karty</div>
+    <div class="free-banner">🎁 30 dní všetko neobmedzené · bez platobnej karty</div>
 
     <div class="price-cards">
-        <!-- Mesačne -->
+        <!-- JEDNOTLIVEC -->
         <div class="price-card">
-            <div class="price-plan">Mesačne</div>
-            <div class="price-amount">10 €<span class="per"> / mesiac</span></div>
-            <div class="price-note">Po prvom mesiaci zadarmo. Zruš kedykoľvek.</div>
+            <div class="price-badge muted">Pre jedného</div>
+            <div class="price-plan">Jednotlivec</div>
+            <div class="price-amount">10 €<span class="per"> / rok</span></div>
+            <div class="price-sub">alebo 1 € / mesiac</div>
+            <div class="price-note">Pre jedného chlapa pri stroji. Prvý mesiac zadarmo.</div>
             <ul class="price-list">
-                <li>Neobmedzené výkresy a nástroje</li>
+                <li>1 stroj</li>
+                <li>Max 100 výkresov</li>
+                <li>Max 60 nástrojov</li>
                 <li>Funguje aj bez internetu</li>
-                <li>Bez záväzku</li>
             </ul>
-            <a href="app.html" class="price-btn ghost">Začať zadarmo</a>
+            <div class="price-btns">
+                <a href="app.html?checkout=solo_yearly" class="price-btn">Ročne — 10 €</a>
+                <a href="app.html?checkout=solo_monthly" class="price-btn ghost">Mesačne — 1 €</a>
+            </div>
         </div>
 
-        <!-- Ročne -->
+        <!-- FIRMA -->
         <div class="price-card featured">
-            <div class="price-badge">Najvýhodnejšie</div>
-            <div class="price-plan">Ročne</div>
+            <div class="price-badge">Pre dielne</div>
+            <div class="price-plan">Firma</div>
             <div class="price-amount">100 €<span class="per"> / rok</span></div>
-            <div class="price-note">≈ <strong>8,30 € / mesiac</strong> · ušetríš 2 mesiace</div>
+            <div class="price-sub">alebo 10 € / mesiac · ≈ 8,30 €/mes</div>
+            <div class="price-note">Pre celú dielňu. Prvý mesiac zadarmo.</div>
             <ul class="price-list">
-                <li>Všetko z mesačného plánu</li>
-                <li>2 mesiace zadarmo oproti mesačnému</li>
-                <li>Jedna platba na celý rok</li>
+                <li>Až 10 strojov</li>
+                <li>Max 150 výkresov</li>
+                <li>Max 90 nástrojov</li>
+                <li>Ochrana mazania admin heslom</li>
+                <li>Záložný obnovovací kód</li>
+                <li>Funguje aj bez internetu</li>
             </ul>
-            <a href="app.html" class="price-btn">Vybrať ročne</a>
+            <div class="price-btns">
+                <a href="app.html?checkout=firma_yearly" class="price-btn">Ročne — 100 €</a>
+                <a href="app.html?checkout=firma_monthly" class="price-btn ghost">Mesačne — 10 €</a>
+            </div>
         </div>
     </div>
 

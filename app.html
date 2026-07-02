@@ -157,6 +157,88 @@
         }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
+        /* ── SYNC REMINDER BANNER ── */
+        .sync-reminder {
+            display: none;
+            padding: 12px 16px;
+            align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 600; line-height: 1.35;
+        }
+        .sync-reminder.visible { display: flex; }
+        .sync-reminder.warn { background: #78350f; color: #fde68a; }
+        .sync-reminder.danger {
+            background: var(--red); color: #fff;
+            animation: reminderPulse 1.4s ease infinite;
+        }
+        @keyframes reminderPulse { 0%,100%{opacity:1} 50%{opacity:.75} }
+        .sync-reminder .sr-icon { font-size: 18px; flex-shrink: 0; }
+
+        /* ── ADMIN MODAL ── */
+        .modal-ov {
+            display: none;
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(0,0,0,.72);
+            align-items: center; justify-content: center;
+            padding: 24px;
+        }
+        .modal-ov.visible { display: flex; }
+        .modal-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px 22px;
+            width: 100%; max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+        }
+        .modal-title {
+            font-size: 18px; font-weight: 700; color: var(--white);
+            margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+        }
+        .modal-desc {
+            font-size: 13px; color: var(--muted);
+            line-height: 1.5; margin-bottom: 16px;
+        }
+        .modal-box input {
+            width: 100%; background: var(--input);
+            border: 1px solid var(--border); border-radius: 10px;
+            color: var(--light); font-size: 16px;
+            padding: 12px 14px; margin-bottom: 10px;
+        }
+        .modal-box input:focus { outline: none; border-color: var(--cut); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+        .modal-actions button {
+            flex: 1; border: none; border-radius: 10px;
+            padding: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
+        }
+        .modal-btn-cancel { background: var(--input); color: var(--muted); border: 1px solid var(--border) !important; }
+        .modal-btn-ok { background: var(--cut); color: #fff; }
+        .modal-btn-ok.danger { background: var(--red); }
+        .modal-warn {
+            background: rgba(239,68,68,.12);
+            border: 1px solid rgba(239,68,68,.3);
+            border-radius: 10px; padding: 10px 12px;
+            font-size: 12px; color: #fca5a5; line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .modal-choice {
+            width: 100%; text-align: left;
+            background: var(--input); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--light);
+            padding: 14px; font-size: 15px; font-weight: 600;
+            cursor: pointer; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .modal-choice:hover { border-color: var(--cut); }
+        .modal-choice small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+        .code-display {
+            background: var(--iron); border: 2px dashed var(--cut);
+            border-radius: 12px; padding: 18px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px; font-weight: 700; letter-spacing: 2px;
+            color: var(--cut); text-align: center;
+            margin: 14px 0; word-break: break-all; user-select: all;
+        }
+
         /* ── INSTALL BANNER ── */
         .install-banner {
             display: none;
@@ -560,6 +642,7 @@
     <div class="user-info" id="topbar-user" style="display:none">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
+        <button class="btn-signout" id="admin-key-btn" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px; display:none;">🔑</button>
         <button class="btn-signout" onclick="signOut()">Odhlásiť</button>
     </div>
 </div>
@@ -610,6 +693,12 @@
     <div class="sync-bar">
         <div class="sync-dot" id="sync-dot"></div>
         <span id="sync-text">Pripojený · dáta synchronizované</span>
+    </div>
+
+    <!-- SYNC REMINDER -->
+    <div class="sync-reminder" id="sync-reminder">
+        <span class="sr-icon">⚠️</span>
+        <span id="sync-reminder-text"></span>
     </div>
 
     <!-- INSTALL BANNER -->
@@ -855,6 +944,63 @@
 </div>
 
 <!-- TOAST -->
+<!-- ADMIN PASSWORD MODAL -->
+<div class="modal-ov" id="admin-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="admin-modal-title">🔒 Admin heslo</div>
+        <div class="modal-desc" id="admin-modal-desc"></div>
+        <div class="modal-warn" id="admin-modal-warn" style="display:none;"></div>
+        <input type="password" id="admin-modal-input" placeholder="Heslo" autocomplete="off">
+        <input type="password" id="admin-modal-input2" placeholder="Zopakujte heslo" autocomplete="off" style="display:none;">
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" id="admin-modal-cancel">Zrušiť</button>
+            <button class="modal-btn-ok" id="admin-modal-ok">Potvrdiť</button>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN SETTINGS MODAL -->
+<div class="modal-ov" id="settings-modal">
+    <div class="modal-box">
+        <div class="modal-title">🔑 Admin heslo</div>
+        <div class="modal-desc">Správa hesla na mazanie dát.</div>
+        <button class="modal-choice" onclick="doChangePassword()">
+            <span>✏️</span><span>Zmeniť heslo<small>Potrebujete súčasné heslo</small></span>
+        </button>
+        <button class="modal-choice" onclick="doRecoverPassword()">
+            <span>🆘</span><span>Zabudol som heslo<small>Obnova cez záložný kód</small></span>
+        </button>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="document.getElementById('settings-modal').classList.remove('visible')">Zavrieť</button>
+        </div>
+    </div>
+</div>
+
+<!-- RECOVERY CODE DISPLAY MODAL -->
+<div class="modal-ov" id="code-modal">
+    <div class="modal-box">
+        <div class="modal-title">🗝️ Záložný obnovovací kód</div>
+        <div class="modal-warn">Zapíšte si tento kód a uložte ho MIMO tabletu (peňaženka, trezor). Zobrazí sa iba teraz. Slúži na obnovenie hesla, ak ho zabudnete.</div>
+        <div class="code-display" id="code-display-text"></div>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="copyRecoveryCode()">📋 Kopírovať</button>
+            <button class="modal-btn-ok" id="code-modal-ok">Zapísal som si ho</button>
+        </div>
+    </div>
+</div>
+
+<!-- LIMIT REACHED MODAL -->
+<div class="modal-ov" id="limit-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="limit-modal-title">🔒 Limit plánu</div>
+        <div class="modal-desc" id="limit-modal-text"></div>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="document.getElementById('limit-modal').classList.remove('visible')">Zavrieť</button>
+            <button class="modal-btn-ok" id="limit-modal-upgrade" onclick="window.location.href='index.html#cennik'">Prejsť na Firmu</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <!-- FIREBASE -->
@@ -890,6 +1036,40 @@ let machines = [];
 let drawings = [];
 let tools    = [];
 let unsubscribe = null;
+let adminHash = null;          // hash admin hesla (z Firestore)
+let recoveryHash = null;       // hash záložného obnovovacieho kódu
+let subTier = null;            // tarif: 'solo' | 'firma' | null (trial/neznámy)
+
+// Limity plánu Jednotlivec. Firma / trial / neznámy = bez limitu.
+// Limity plánov. Trial sa správa ako Jednotlivec (najprísnejší).
+// Firma má tiež strop — bráni to zdieľaniu jedného účtu viacerými firmami.
+const PLAN_LIMITS = {
+    solo:  { machines: 1,  drawings: 100, tools: 60 },
+    firma: { machines: 10, drawings: 150, tools: 90 },
+};
+function planLimit(kind) {
+    return (subTier === 'firma') ? PLAN_LIMITS.firma[kind] : PLAN_LIMITS.solo[kind];
+}
+// Vráti true a ukáže hlášku, ak je limit dosiahnutý.
+function limitReached(kind, count) {
+    if (count < planLimit(kind)) return false;
+    const label = { machines: 'strojov', drawings: 'výkresov', tools: 'nástrojov' }[kind];
+    const isFirma = (subTier === 'firma');
+    const kto = isFirma ? 'Plán Firma' : (subTier === 'solo' ? 'Plán Jednotlivec' : 'Skúšobná verzia');
+    let msg = `${kto} je obmedzený na ${planLimit(kind)} ${label}.`;
+    if (!isFirma) msg += ' Pre viac zvoľte plán Firma.';
+    showLimitModal(msg, isFirma);
+    return true;
+}
+window.showLimitModal = (msg, isFirma) => {
+    document.getElementById('limit-modal-title').textContent = isFirma ? '🔒 Limit plánu Firma' : '🔒 Limit plánu';
+    document.getElementById('limit-modal-text').textContent = msg;
+    const up = document.getElementById('limit-modal-upgrade');
+    if (up) up.style.display = isFirma ? 'none' : '';   // Firma už nemá kam „upgradovať"
+    document.getElementById('limit-modal').classList.add('visible');
+};
+let adminChecked = false;      // či sme už po prihlásení riešili nastavenie hesla
+const LAST_SYNC_KEY = 'cnc_last_sync';
 
 // ════════ KATEGÓRIE NÁSTROJOV ════════
 const TOOL_CATEGORIES = [
@@ -1078,20 +1258,42 @@ function showApp(user) {
 function listenData(uid) {
     setSyncState('syncing');
     const ref = doc(db, 'users', uid);
-    unsubscribe = onSnapshot(ref, snap => {
+    unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, snap => {
         if (snap.exists()) {
             const d = snap.data();
-            machines = d.machines || [];
-            drawings = d.drawings || [];
-            tools    = d.tools    || [];
+            machines  = d.machines || [];
+            drawings  = d.drawings || [];
+            tools     = d.tools    || [];
+            adminHash = d.adminHash || null;
+            recoveryHash = d.recoveryHash || null;
+            subTier = (d.subscription && d.subscription.tier) || null;
         } else {
-            machines = []; drawings = []; tools = [];
+            machines = []; drawings = []; tools = []; adminHash = null; recoveryHash = null; subTier = null;
         }
         renderAll();
-        setSyncState('online');
+
+        // Skutočná synchronizácia so serverom = dáta NEsú z cache a nič nečaká na zápis
+        const reallySynced = !snap.metadata.fromCache && !snap.metadata.hasPendingWrites;
+        if (reallySynced) {
+            localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
+            setSyncState('online');
+        } else if (snap.metadata.fromCache) {
+            setSyncState('offline');
+        } else {
+            setSyncState('syncing');
+        }
+        updateSyncReminder();
+
+        // Kladku (admin heslo) má len Firma. Trial aj Jednotlivec = voľné ruky.
+        const keyBtn = document.getElementById('admin-key-btn');
+        if (keyBtn) keyBtn.style.display = (subTier === 'firma') ? '' : 'none';
+        if (!adminChecked) {
+            adminChecked = true;
+            if (!adminHash && subTier === 'firma') setTimeout(setupAdminPassword, 400);
+        }
     }, err => {
         setSyncState('offline');
-        showToast('Offline režim', '');
+        updateSyncReminder();
     });
 }
 
@@ -1099,7 +1301,7 @@ async function saveToFirestore() {
     if (!currentUser) return;
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools });
+        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
         setSyncState('online');
     } catch(e) {
         setSyncState('offline');
@@ -1113,6 +1315,176 @@ function setSyncState(state) {
     if (state === 'online')  { dot.className = 'sync-dot'; text.textContent = 'Pripojený · dáta synchronizované'; }
     if (state === 'offline') { dot.className = 'sync-dot offline'; text.textContent = 'Offline · dáta uložené lokálne'; }
     if (state === 'syncing') { dot.className = 'sync-dot syncing'; text.textContent = 'Synchronizujem...'; }
+}
+
+// ════════ ADMIN HESLO (KLADKA) ════════
+async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Univerzálne modálne okno. Vráti zadané heslo (string) alebo null pri zrušení.
+function showAdminModal({ title, desc, warn, okText, danger, confirm }) {
+    return new Promise(resolve => {
+        const ov    = document.getElementById('admin-modal');
+        const inp   = document.getElementById('admin-modal-input');
+        const inp2  = document.getElementById('admin-modal-input2');
+        const warnB = document.getElementById('admin-modal-warn');
+        const okB   = document.getElementById('admin-modal-ok');
+        const cancB = document.getElementById('admin-modal-cancel');
+        document.getElementById('admin-modal-title').textContent = title;
+        document.getElementById('admin-modal-desc').textContent  = desc;
+        inp.value = ''; inp2.value = '';
+        inp2.style.display = confirm ? 'block' : 'none';
+        okB.textContent = okText || 'Potvrdiť';
+        okB.classList.toggle('danger', !!danger);
+        if (warn) { warnB.style.display = 'block'; warnB.textContent = warn; }
+        else       { warnB.style.display = 'none'; }
+        ov.classList.add('visible');
+        setTimeout(() => inp.focus(), 100);
+
+        const cleanup = () => {
+            ov.classList.remove('visible');
+            okB.onclick = null; cancB.onclick = null; inp.onkeydown = null;
+        };
+        const done = (val) => { cleanup(); resolve(val); };
+        okB.onclick = () => {
+            if (confirm && inp.value !== inp2.value) { showToast('Heslá sa nezhodujú!', 'err'); return; }
+            if (confirm && inp.value.length < 4)     { showToast('Heslo musí mať aspoň 4 znaky!', 'err'); return; }
+            if (!inp.value) { showToast('Zadajte heslo!', 'err'); return; }
+            done(inp.value);
+        };
+        cancB.onclick = () => done(null);
+        inp.onkeydown = (e) => { if (e.key === 'Enter' && !confirm) okB.onclick(); };
+    });
+}
+
+// Prvé nastavenie admin hesla (majster pri prvom prihlásení)
+async function setupAdminPassword() {
+    const pass = await showAdminModal({
+        title: '🔒 Vytvorte admin heslo',
+        desc: 'Toto heslo bude potrebné pri každom mazaní výkresov, nástrojov a strojov.',
+        warn: 'DÔLEŽITÉ: Chráňte si toto heslo. Kto ho pozná, môže natrvalo mazať dáta z dielne. Za jeho ochranu zodpovedáte vy.',
+        okText: 'Vytvoriť heslo',
+        confirm: true
+    });
+    if (!pass) { showToast('Admin heslo nebolo nastavené', 'err'); return false; }
+    await saveNewPassword(pass);   // uloží heslo + vygeneruje a ukáže obnovovací kód
+    return true;
+}
+
+// Vygeneruje náhodný obnovovací kód (bez zameniteľných znakov 0/O/1/I/L)
+function genRecoveryCode() {
+    const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    let out = '';
+    for (let i = 0; i < 16; i++) {
+        out += abc[bytes[i] % abc.length];
+        if (i % 4 === 3 && i < 15) out += '-';
+    }
+    return out;
+}
+
+let _lastCode = '';
+window.copyRecoveryCode = () => {
+    navigator.clipboard?.writeText(_lastCode).then(
+        () => showToast('Kód skopírovaný ✓', 'ok'),
+        () => showToast('Kopírovanie zlyhalo — prepíšte ručne', 'err')
+    );
+};
+
+// Ukáže obnovovací kód (iba raz). Vráti Promise, keď používateľ potvrdí.
+function showRecoveryCode(code) {
+    return new Promise(resolve => {
+        _lastCode = code;
+        document.getElementById('code-display-text').textContent = code;
+        const ov = document.getElementById('code-modal');
+        ov.classList.add('visible');
+        document.getElementById('code-modal-ok').onclick = () => {
+            ov.classList.remove('visible'); _lastCode = ''; resolve();
+        };
+    });
+}
+
+// Uloží nové heslo + nový obnovovací kód (obidva ako hash) a kód ukáže
+async function saveNewPassword(pass) {
+    adminHash = await sha256(pass);
+    const code = genRecoveryCode();
+    recoveryHash = await sha256(code.replace(/-/g, ''));  // hash bez pomlčiek = zadávanie je zhovievavé
+    try {
+        await setDoc(doc(db, 'users', currentUser.uid), { adminHash, recoveryHash }, { merge: true });
+    } catch(e) { /* uloží sa lokálne, syncne neskôr */ }
+    await showRecoveryCode(code);
+    showToast('Heslo nastavené ✓', 'ok');
+}
+
+// Vyžiadanie hesla pred mazaním. Vráti true ak je heslo správne.
+async function requireAdminPassword() {
+    if (subTier !== 'firma') return true;   // Trial + Jednotlivec = voľné ruky, bez kladky
+    if (!adminHash) {
+        showToast('Najprv nastavte admin heslo', 'err');
+        return await setupAdminPassword();
+    }
+    const entered = await showAdminModal({
+        title: '🗑 Potvrďte mazanie',
+        desc: 'Táto akcia natrvalo vymaže dáta. Zadajte admin heslo.',
+        okText: 'Vymazať',
+        danger: true
+    });
+    if (entered === null) return false;
+    if (await sha256(entered) === adminHash) return true;
+    showToast('Nesprávne heslo — mazanie zrušené', 'err');
+    return false;
+}
+
+// ── SPRÁVA HESLA (tlačidlo 🔑 v hlavičke) ──
+window.openAdminSettings = () => {
+    if (!adminHash) { setupAdminPassword(); return; }
+    document.getElementById('settings-modal').classList.add('visible');
+};
+
+window.doChangePassword = async () => {
+    document.getElementById('settings-modal').classList.remove('visible');
+    const cur = await showAdminModal({ title: '✏️ Zmena hesla', desc: 'Zadajte súčasné admin heslo.', okText: 'Pokračovať' });
+    if (cur === null) return;
+    if (await sha256(cur) !== adminHash) { showToast('Nesprávne súčasné heslo', 'err'); return; }
+    const neu = await showAdminModal({ title: '✏️ Nové heslo', desc: 'Zadajte nové admin heslo.', okText: 'Uložiť', confirm: true });
+    if (!neu) return;
+    await saveNewPassword(neu);   // uloží nové heslo + NOVÝ obnovovací kód
+};
+
+window.doRecoverPassword = async () => {
+    document.getElementById('settings-modal').classList.remove('visible');
+    if (!recoveryHash) { showToast('Pre tento účet nie je nastavený obnovovací kód', 'err'); return; }
+    const code = await showAdminModal({
+        title: '🆘 Obnova hesla',
+        desc: 'Zadajte záložný obnovovací kód, ktorý ste dostali pri vytvorení hesla.',
+        okText: 'Overiť kód'
+    });
+    if (code === null) return;
+    const norm = code.replace(/[^A-Za-z0-9]/g, '').toUpperCase();  // odstráni pomlčky/medzery
+    if (await sha256(norm) !== recoveryHash) { showToast('Neplatný obnovovací kód', 'err'); return; }
+    const neu = await showAdminModal({ title: '🔒 Nové heslo', desc: 'Kód overený. Nastavte nové admin heslo.', okText: 'Uložiť', confirm: true });
+    if (!neu) return;
+    await saveNewPassword(neu);   // nové heslo + nový obnovovací kód
+};
+
+// ════════ UPOMIENKA NA SYNCHRONIZÁCIU ════════
+function updateSyncReminder() {
+    const box  = document.getElementById('sync-reminder');
+    const txt  = document.getElementById('sync-reminder-text');
+    const iso  = localStorage.getItem(LAST_SYNC_KEY);
+    if (!iso) { box.className = 'sync-reminder'; return; }
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (days < 2) {
+        box.className = 'sync-reminder';
+    } else if (days < 7) {
+        box.className = 'sync-reminder warn visible';
+        txt.textContent = `Nesynchronizované ${days} dni. Pripojte sa na wifi, nech sa dáta zálohujú.`;
+    } else {
+        box.className = 'sync-reminder danger visible';
+        txt.textContent = `POZOR: dáta neboli zálohované už ${days} dní! Pripojte tablet na wifi, inak hrozí strata dát pri poruche.`;
+    }
 }
 
 // ════════ RENDER ALL ════════
@@ -1157,6 +1529,7 @@ window.addMachine = async () => {
     const name = inp.value.trim();
     if (!name) { showToast('Zadajte názov stroja!', 'err'); return; }
     if (machines.includes(name)) { showToast('Stroj už existuje!', 'err'); return; }
+    if (limitReached('machines', machines.length)) return;
     machines.push(name);
     inp.value = '';
     await saveToFirestore();
@@ -1170,6 +1543,7 @@ window.deleteMachineConfirm = async () => {
     const dCnt = drawings.filter(d => d.machine === name).length;
     const tCnt = tools.filter(t => t.machine === name).length;
     if (!confirm(`Vymazať stroj "${name}"?\nVýkresy: ${dCnt} · Nástroje: ${tCnt}\nAkcia sa nedá vrátiť!`)) return;
+    if (!await requireAdminPassword()) return;
     machines = machines.filter(m => m !== name);
     drawings = drawings.filter(d => d.machine !== name);
     tools    = tools.filter(t => t.machine !== name);
@@ -1232,6 +1606,7 @@ window.saveDrawing = async () => {
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
     if (!number)  { showToast('Zadajte číslo výkresu!', 'err'); return; }
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
+    if (limitReached('drawings', drawings.length)) return;
 
     const doSave = async (fileData) => {
         // Compress image if too large (max 800px wide)
@@ -1294,6 +1669,7 @@ window.renderDelDrawing = () => {
 
 window._delDrawing = async (idx) => {
     if (!confirm(`Vymazať výkres "${drawings[idx].number}"?`)) return;
+    if (!await requireAdminPassword()) return;
     drawings.splice(idx, 1);
     await saveToFirestore();
     showToast('Výkres vymazaný', 'err');
@@ -1329,6 +1705,7 @@ window.saveTool = async () => {
     const cat = TOOL_CATEGORIES.find(c => c.id === selectedCat);
     if (cat.subtypes.length && !subtype) { showToast('Vyberte typ nástroja!', 'err'); return; }
     if (!diam) { showToast('Vyplňte ' + cat.diamLabel.toLowerCase() + '!', 'err'); return; }
+    if (limitReached('tools', tools.length)) return;
     // name = kategória + podtyp
     const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
     tools = [...tools, { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note }];
@@ -1364,6 +1741,7 @@ window.renderDelTool = () => {
 
 window._delTool = async (idx) => {
     if (!confirm(`Vymazať nástroj "${tools[idx].name}"?`)) return;
+    if (!await requireAdminPassword()) return;
     tools.splice(idx, 1);
     await saveToFirestore();
     showToast('Nástroj vymazaný', 'err');
@@ -1495,5 +1873,7 @@ window.showToast = (msg, type='') => {
     }
 })();
 </script>
+<!-- SUBSCRIPTION GATE (Trial / Free / Premium) -->
+<script type="module" src="subscription.js"></script>
 </body>
 </html>
