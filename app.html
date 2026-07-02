@@ -1010,7 +1010,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
     onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
     sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence }
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
+    collection, addDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1036,6 +1037,8 @@ let machines = [];
 let drawings = [];
 let tools    = [];
 let unsubscribe = null;
+let unsubscribeDrawings = null;
+let migrationChecked = false;
 let adminHash = null;          // hash admin hesla (z Firestore)
 let recoveryHash = null;       // hash záložného obnovovacieho kódu
 let subTier = null;            // tarif: 'solo' | 'firma' | null (trial/neznámy)
@@ -1223,6 +1226,7 @@ window.forgotPassword = async () => {
 window.signOut = async () => {
     if (!confirm('Odhlásiť sa?')) return;
     if (unsubscribe) unsubscribe();
+    if (unsubscribeDrawings) unsubscribeDrawings();
     await fbSignOut(auth);
 };
 
@@ -1257,18 +1261,29 @@ function showApp(user) {
 // ════════ FIRESTORE REALTIME ════════
 function listenData(uid) {
     setSyncState('syncing');
+    if (unsubscribe) unsubscribe();
+    if (unsubscribeDrawings) unsubscribeDrawings();
+    migrationChecked = false;
+
+    // ── Hlavný dokument účtu: stroje, nástroje, predplatné, heslá ──
     const ref = doc(db, 'users', uid);
     unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, snap => {
         if (snap.exists()) {
             const d = snap.data();
             machines  = d.machines || [];
-            drawings  = d.drawings || [];
             tools     = d.tools    || [];
             adminHash = d.adminHash || null;
             recoveryHash = d.recoveryHash || null;
             subTier = (d.subscription && d.subscription.tier) || null;
+
+            // Migrácia starého formátu: výkresy z poľa -> do podkolekcie
+            const oldDrawings = d.drawings || [];
+            if (!migrationChecked && oldDrawings.length) {
+                migrationChecked = true;
+                migrateDrawings(uid, oldDrawings);
+            }
         } else {
-            machines = []; drawings = []; tools = []; adminHash = null; recoveryHash = null; subTier = null;
+            machines = []; tools = []; adminHash = null; recoveryHash = null; subTier = null;
         }
         renderAll();
 
@@ -1295,13 +1310,40 @@ function listenData(uid) {
         setSyncState('offline');
         updateSyncReminder();
     });
+
+    // ── Podkolekcia výkresov: každý výkres = vlastný dokument ──
+    const dref = collection(db, 'users', uid, 'drawings');
+    unsubscribeDrawings = onSnapshot(dref, { includeMetadataChanges: true }, snap => {
+        drawings = snap.docs.map(ds => ({ _id: ds.id, ...ds.data() }));
+        renderAll();
+    }, err => { /* offline / chyba – ponecháme, čo máme */ });
+}
+
+// Presun starých výkresov (pole) do podkolekcie. Spustí sa raz.
+async function migrateDrawings(uid, arr) {
+    try {
+        for (const dr of arr) {
+            await addDoc(collection(db, 'users', uid, 'drawings'), {
+                machine: dr.machine || '',
+                number:  dr.number  || '',
+                program: dr.program || '',
+                note:    dr.note    || '',
+                fileData: dr.fileData || null,
+                createdAt: Date.now()
+            });
+        }
+        await setDoc(doc(db, 'users', uid), { drawings: [] }, { merge: true });
+        showToast('Výkresy prevedené do nového formátu ✓', 'ok');
+    } catch (e) {
+        migrationChecked = false; // skús znova pri ďalšom načítaní
+    }
 }
 
 async function saveToFirestore() {
     if (!currentUser) return;
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
+        await setDoc(doc(db, 'users', currentUser.uid), { machines, tools }, { merge: true });
         setSyncState('online');
     } catch(e) {
         setSyncState('offline');
@@ -1544,8 +1586,12 @@ window.deleteMachineConfirm = async () => {
     const tCnt = tools.filter(t => t.machine === name).length;
     if (!confirm(`Vymazať stroj "${name}"?\nVýkresy: ${dCnt} · Nástroje: ${tCnt}\nAkcia sa nedá vrátiť!`)) return;
     if (!await requireAdminPassword()) return;
+    // Zmaž výkresy tohto stroja (každý je vlastný dokument)
+    const toDel = drawings.filter(d => d.machine === name);
+    for (const d of toDel) {
+        deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', d._id)).catch(() => {});
+    }
     machines = machines.filter(m => m !== name);
-    drawings = drawings.filter(d => d.machine !== name);
     tools    = tools.filter(t => t.machine !== name);
     await saveToFirestore();
     sel.value = '';
@@ -1614,9 +1660,11 @@ window.saveDrawing = async () => {
         if (fileData && fileData.startsWith('data:image')) {
             finalData = await compressImage(fileData, 800);
         }
-        const newDrawing = { machine, number, program, note, fileData: finalData || null };
-        drawings = [...drawings, newDrawing];
-        await saveToFirestore();
+        const newDrawing = { machine, number, program, note, fileData: finalData || null, createdAt: Date.now() };
+        // Zápis do podkolekcie. Offline sa uloží lokálne a nahrá pri wifi.
+        // Nečakáme na server – zoznam sa aktualizuje cez realtime listener.
+        addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing)
+            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('ad-machine').value = '';
@@ -1659,19 +1707,20 @@ window.renderDelDrawing = () => {
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(d => {
-        const idx = drawings.findIndex(x => x.number === d.number);
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing(${idx})">🗑 Vymazať</button>`;
+        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing('${d._id}')">🗑 Vymazať</button>`;
         box.appendChild(card);
     });
 };
 
-window._delDrawing = async (idx) => {
-    if (!confirm(`Vymazať výkres "${drawings[idx].number}"?`)) return;
+window._delDrawing = async (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    if (!confirm(`Vymazať výkres "${d.number}"?`)) return;
     if (!await requireAdminPassword()) return;
-    drawings.splice(idx, 1);
-    await saveToFirestore();
+    deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', id))
+        .catch(() => showToast('Zmena sa uloží pri wifi', ''));
     showToast('Výkres vymazaný', 'err');
     window.renderDelDrawing();
 };
