@@ -992,11 +992,11 @@
 <!-- LIMIT REACHED MODAL -->
 <div class="modal-ov" id="limit-modal">
     <div class="modal-box">
-        <div class="modal-title">🔒 Limit plánu Jednotlivec</div>
+        <div class="modal-title" id="limit-modal-title">🔒 Limit plánu</div>
         <div class="modal-desc" id="limit-modal-text"></div>
         <div class="modal-actions">
             <button class="modal-btn-cancel" onclick="document.getElementById('limit-modal').classList.remove('visible')">Zavrieť</button>
-            <button class="modal-btn-ok" onclick="window.location.href='index.html#cennik'">Prejsť na Firmu</button>
+            <button class="modal-btn-ok" id="limit-modal-upgrade" onclick="window.location.href='index.html#cennik'">Prejsť na Firmu</button>
         </div>
     </div>
 </div>
@@ -1041,22 +1041,31 @@ let recoveryHash = null;       // hash záložného obnovovacieho kódu
 let subTier = null;            // tarif: 'solo' | 'firma' | null (trial/neznámy)
 
 // Limity plánu Jednotlivec. Firma / trial / neznámy = bez limitu.
-// Limity plánu Jednotlivec — platia aj počas skúšobnej doby (trial).
-// Iba Firma je neobmedzená. Tým sa zabráni "nahromadeniu" dát v triale.
-const PLAN_LIMITS = { solo: { machines: 1, drawings: 50, tools: 30 } };
+// Limity plánov. Trial sa správa ako Jednotlivec (najprísnejší).
+// Firma má tiež strop — bráni to zdieľaniu jedného účtu viacerými firmami.
+const PLAN_LIMITS = {
+    solo:  { machines: 1,  drawings: 100, tools: 60 },
+    firma: { machines: 10, drawings: 150, tools: 90 },
+};
 function planLimit(kind) {
-    return (subTier === 'firma') ? Infinity : PLAN_LIMITS.solo[kind];
+    return (subTier === 'firma') ? PLAN_LIMITS.firma[kind] : PLAN_LIMITS.solo[kind];
 }
-// Vráti true a ukáže ponuku na Firmu, ak je limit dosiahnutý.
+// Vráti true a ukáže hlášku, ak je limit dosiahnutý.
 function limitReached(kind, count) {
     if (count < planLimit(kind)) return false;
     const label = { machines: 'strojov', drawings: 'výkresov', tools: 'nástrojov' }[kind];
-    const kto = (subTier === 'solo') ? 'Plán Jednotlivec' : 'Skúšobná verzia';
-    showLimitModal(`${kto} je obmedzená na ${planLimit(kind)} ${label}. Pre neobmedzený počet zvoľte plán Firma.`);
+    const isFirma = (subTier === 'firma');
+    const kto = isFirma ? 'Plán Firma' : (subTier === 'solo' ? 'Plán Jednotlivec' : 'Skúšobná verzia');
+    let msg = `${kto} je obmedzený na ${planLimit(kind)} ${label}.`;
+    if (!isFirma) msg += ' Pre viac zvoľte plán Firma.';
+    showLimitModal(msg, isFirma);
     return true;
 }
-window.showLimitModal = (msg) => {
+window.showLimitModal = (msg, isFirma) => {
+    document.getElementById('limit-modal-title').textContent = isFirma ? '🔒 Limit plánu Firma' : '🔒 Limit plánu';
     document.getElementById('limit-modal-text').textContent = msg;
+    const up = document.getElementById('limit-modal-upgrade');
+    if (up) up.style.display = isFirma ? 'none' : '';   // Firma už nemá kam „upgradovať"
     document.getElementById('limit-modal').classList.add('visible');
 };
 let adminChecked = false;      // či sme už po prihlásení riešili nastavenie hesla
