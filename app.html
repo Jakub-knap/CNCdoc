@@ -335,6 +335,12 @@
         }
         .btn-ghost:hover { border-color: var(--muted); color: var(--white); }
         .btn-sm { display: inline-block; width: auto; padding: 8px 14px; font-size: 13px; margin: 8px 0 0 0; }
+        .btn-photo {
+            flex: 1; padding: 12px; border: 1px solid var(--border);
+            border-radius: 10px; background: var(--input); color: var(--light);
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .btn-photo:active { transform: scale(.98); border-color: var(--cut); }
 
         /* ── SEARCH ── */
         .search-wrap { position: relative; margin-bottom: 12px; }
@@ -805,7 +811,13 @@
                 </div>
                 <div class="fg">
                     <label class="field-label">Fotka / sken výkresu</label>
-                    <input type="file" id="ad-file" accept="image/*">
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-cam').click()">📷 Odfotiť</button>
+                        <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-lib').click()">📁 Zo zariadenia</button>
+                    </div>
+                    <input type="file" id="ad-file-cam" accept="image/*" capture="environment" style="display:none" onchange="onDrawingFile(this)">
+                    <input type="file" id="ad-file-lib" accept="image/*" style="display:none" onchange="onDrawingFile(this)">
+                    <div id="ad-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
                 </div>
                 <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
             </div>
@@ -1643,12 +1655,20 @@ window.openDetail = (number) => {
 window.closeModal = () => document.getElementById('modal-detail').classList.remove('open');
 
 // ════════ VÝKRESY – PRIDAJ ════════
+let pendingDrawingFile = null;
+window.onDrawingFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingDrawingFile = f;
+    const st = document.getElementById('ad-file-status');
+    if (st) st.textContent = '✓ Fotka pripravená: ' + (f.name || 'obrázok');
+};
+
 window.saveDrawing = async () => {
     const machine = document.getElementById('ad-machine').value;
     const number  = document.getElementById('ad-number').value.trim();
     const program = document.getElementById('ad-program').value.trim();
     const note    = document.getElementById('ad-note').value.trim();
-    const fi      = document.getElementById('ad-file');
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
     if (!number)  { showToast('Zadajte číslo výkresu!', 'err'); return; }
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
@@ -1668,15 +1688,18 @@ window.saveDrawing = async () => {
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('ad-machine').value = '';
-        fi.value = '';
+        document.getElementById('ad-file-cam').value = '';
+        document.getElementById('ad-file-lib').value = '';
+        document.getElementById('ad-file-status').textContent = '';
+        pendingDrawingFile = null;
         document.getElementById('sec-add-drawing').classList.remove('open');
         document.getElementById('sec-search-drawing').classList.add('open');
     };
 
-    if (fi.files && fi.files[0]) {
+    if (pendingDrawingFile) {
         const reader = new FileReader();
         reader.onload = e => doSave(e.target.result);
-        reader.readAsDataURL(fi.files[0]);
+        reader.readAsDataURL(pendingDrawingFile);
     } else {
         doSave(null);
     }
