@@ -859,12 +859,18 @@
                 <div class="chevron">⌄</div>
             </div>
             <div class="section-body">
+                <div class="fg">
+                    <label class="field-label">Stroj (voliteľné)</label>
+                    <select id="tool-machine-filter" onchange="renderToolSearch()">
+                        <option value="">— Všetky stroje —</option>
+                    </select>
+                </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
                     <input type="text" id="inp-tool-search" oninput="renderToolSearch()" placeholder="Priemer alebo názov (D10, vrták...)">
                 </div>
                 <div id="tool-search-results">
-                    <div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>
+                    <div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>
                 </div>
             </div>
         </div>
@@ -902,6 +908,16 @@
                     <label class="field-label">Poznámka / korekcia</label>
                     <textarea id="at-note" rows="2" placeholder="Dĺžková korekcia, otáčky, posuv..."></textarea>
                 </div>
+                <div class="fg">
+                    <label class="field-label">Fotka nástroja (voliteľné)</label>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-photo" onclick="document.getElementById('at-file-cam').click()">📷 Odfotiť</button>
+                        <button type="button" class="btn-photo" onclick="document.getElementById('at-file-lib').click()">📁 Zo zariadenia</button>
+                    </div>
+                    <input type="file" id="at-file-cam" accept="image/*" capture="environment" style="display:none" onchange="onToolFile(this)">
+                    <input type="file" id="at-file-lib" accept="image/*" style="display:none" onchange="onToolFile(this)">
+                    <div id="at-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+                </div>
                 <button class="btn btn-success" onclick="saveTool()">✓ Uložiť nástroj</button>
             </div>
         </div>
@@ -936,7 +952,7 @@
 <div id="modal-detail" class="modal-bg" onclick="closeModal()">
     <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div class="modal-title">Detail výkresu</div>
+            <div class="modal-title" id="modal-detail-title">Detail výkresu</div>
             <button class="modal-close" onclick="closeModal()">✕</button>
         </div>
         <div id="modal-content"></div>
@@ -1050,7 +1066,9 @@ let drawings = [];
 let tools    = [];
 let unsubscribe = null;
 let unsubscribeDrawings = null;
+let unsubscribeTools = null;
 let migrationChecked = false;
+let migrationToolsChecked = false;
 let adminHash = null;          // hash admin hesla (z Firestore)
 let recoveryHash = null;       // hash záložného obnovovacieho kódu
 let subTier = null;            // tarif: 'solo' | 'firma' | null (trial/neznámy)
@@ -1239,6 +1257,7 @@ window.signOut = async () => {
     if (!confirm('Odhlásiť sa?')) return;
     if (unsubscribe) unsubscribe();
     if (unsubscribeDrawings) unsubscribeDrawings();
+    if (unsubscribeTools) unsubscribeTools();
     await fbSignOut(auth);
 };
 
@@ -1275,15 +1294,16 @@ function listenData(uid) {
     setSyncState('syncing');
     if (unsubscribe) unsubscribe();
     if (unsubscribeDrawings) unsubscribeDrawings();
+    if (unsubscribeTools) unsubscribeTools();
     migrationChecked = false;
+    migrationToolsChecked = false;
 
-    // ── Hlavný dokument účtu: stroje, nástroje, predplatné, heslá ──
+    // ── Hlavný dokument účtu: stroje, predplatné, heslá ──
     const ref = doc(db, 'users', uid);
     unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, snap => {
         if (snap.exists()) {
             const d = snap.data();
             machines  = d.machines || [];
-            tools     = d.tools    || [];
             adminHash = d.adminHash || null;
             recoveryHash = d.recoveryHash || null;
             subTier = (d.subscription && d.subscription.tier) || null;
@@ -1294,8 +1314,14 @@ function listenData(uid) {
                 migrationChecked = true;
                 migrateDrawings(uid, oldDrawings);
             }
+            // Migrácia starého formátu: nástroje z poľa -> do podkolekcie
+            const oldTools = d.tools || [];
+            if (!migrationToolsChecked && oldTools.length) {
+                migrationToolsChecked = true;
+                migrateTools(uid, oldTools);
+            }
         } else {
-            machines = []; tools = []; adminHash = null; recoveryHash = null; subTier = null;
+            machines = []; adminHash = null; recoveryHash = null; subTier = null;
         }
         renderAll();
 
@@ -1329,6 +1355,13 @@ function listenData(uid) {
         drawings = snap.docs.map(ds => ({ _id: ds.id, ...ds.data() }));
         renderAll();
     }, err => { /* offline / chyba – ponecháme, čo máme */ });
+
+    // ── Podkolekcia nástrojov: každý nástroj = vlastný dokument ──
+    const tref = collection(db, 'users', uid, 'tools');
+    unsubscribeTools = onSnapshot(tref, { includeMetadataChanges: true }, snap => {
+        tools = snap.docs.map(ts => ({ _id: ts.id, ...ts.data() }));
+        renderAll();
+    }, err => { /* offline / chyba – ponecháme, čo máme */ });
 }
 
 // Presun starých výkresov (pole) do podkolekcie. Spustí sa raz.
@@ -1351,11 +1384,34 @@ async function migrateDrawings(uid, arr) {
     }
 }
 
+// Presun starých nástrojov (pole) do podkolekcie. Spustí sa raz.
+async function migrateTools(uid, arr) {
+    try {
+        for (const t of arr) {
+            await addDoc(collection(db, 'users', uid, 'tools'), {
+                machine: t.machine || '',
+                name: t.name || '',
+                diameter: t.diameter || '',
+                type: t.type || '',
+                category: t.category || '',
+                catName: t.catName || '',
+                note: t.note || '',
+                fileData: t.fileData || null,
+                createdAt: Date.now()
+            });
+        }
+        await setDoc(doc(db, 'users', uid), { tools: [] }, { merge: true });
+        showToast('Nástroje prevedené do nového formátu ✓', 'ok');
+    } catch (e) {
+        migrationToolsChecked = false;
+    }
+}
+
 async function saveToFirestore() {
     if (!currentUser) return;
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', currentUser.uid), { machines, tools }, { merge: true });
+        await setDoc(doc(db, 'users', currentUser.uid), { machines }, { merge: true });
         setSyncState('online');
     } catch(e) {
         setSyncState('offline');
@@ -1566,13 +1622,14 @@ function renderMachines() {
         });
     }
     // Fill all machine selects
-    ['ad-machine','at-machine','del-machine-select','search-machine-filter'].forEach(id => {
+    ['ad-machine','at-machine','del-machine-select','search-machine-filter','tool-machine-filter'].forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
         const cur = sel.value;
+        const isFilter = (id === 'search-machine-filter' || id === 'tool-machine-filter');
         sel.innerHTML = id === 'del-machine-select'
             ? '<option value="">— Vyberte stroj na vymazanie —</option>'
-            : '<option value="">— Vyberte stroj —</option>';
+            : (isFilter ? '<option value="">— Všetky stroje —</option>' : '<option value="">— Vyberte stroj —</option>');
         machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
         sel.value = cur;
     });
@@ -1603,8 +1660,12 @@ window.deleteMachineConfirm = async () => {
     for (const d of toDel) {
         deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', d._id)).catch(() => {});
     }
+    // Zmaž nástroje tohto stroja (každý je vlastný dokument)
+    const toolsDel = tools.filter(t => t.machine === name);
+    for (const t of toolsDel) {
+        deleteDoc(doc(db, 'users', currentUser.uid, 'tools', t._id)).catch(() => {});
+    }
     machines = machines.filter(m => m !== name);
-    tools    = tools.filter(t => t.machine !== name);
     await saveToFirestore();
     sel.value = '';
     renderMachines();
@@ -1641,6 +1702,8 @@ window.renderDrawingSearch = () => {
 window.openDetail = (number) => {
     const d = drawings.find(x => x.number === number);
     if (!d) return;
+    const titleEl = document.getElementById('modal-detail-title');
+    if (titleEl) titleEl.textContent = 'Detail výkresu';
     const imgHtml = d.fileData ? `<div class="detail-img-wrap"><img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
     document.getElementById('modal-content').innerHTML = `
         ${imgHtml}
@@ -1751,22 +1814,54 @@ window._delDrawing = async (id) => {
 // ════════ NÁSTROJE – HĽADAJ ════════
 window.renderToolSearch = () => {
     const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
+    const machineF = document.getElementById('tool-machine-filter').value;
     const box  = document.getElementById('tool-search-results');
-    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>`; return; }
-    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text));
+    let pool = machineF ? tools.filter(t => t.machine === machineF) : tools;
+    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>`; return; }
+    const filtered = text
+        ? pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text))
+        : pool;
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`; return; }
     filtered.forEach(t => {
         const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
         const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
+        const photoTag = t.fileData ? ' 📷' : '';
         const card = document.createElement('div');
         card.className = 'r-card tool';
-        card.innerHTML = `<div class="r-title">${iconHtml}${t.diameter}</div><div class="r-meta">${t.name}<br>Stroj: ${t.machine}${t.note?'<br>Poznámka: '+t.note:''}</div>`;
+        card.style.cursor = 'pointer';
+        card.innerHTML = `<div class="r-title">${iconHtml}${t.diameter}${photoTag}</div><div class="r-meta">${t.name}<br>Stroj: ${t.machine}${t.note?'<br>Poznámka: '+t.note:''}</div>`;
+        card.onclick = () => openToolDetail(t._id);
         box.appendChild(card);
     });
 };
 
+window.openToolDetail = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    const imgHtml = t.fileData ? `<div class="detail-img-wrap"><img src="${t.fileData}" onclick="zoomImage('${t.fileData}')" alt="Nástroj"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
+    const titleEl = document.getElementById('modal-detail-title');
+    if (titleEl) titleEl.textContent = 'Detail nástroja';
+    document.getElementById('modal-content').innerHTML = `
+        ${imgHtml}
+        <div class="d-field"><div class="d-key">Nástroj</div><div class="d-val">${t.name}</div></div>
+        <div class="d-field"><div class="d-key">Priemer / rozmer</div><div class="d-val">${t.diameter}</div></div>
+        <div class="d-field"><div class="d-key">Stroj</div><div class="d-val">${t.machine}</div></div>
+        <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${t.note || '—'}</div></div>
+    `;
+    document.getElementById('modal-detail').classList.add('open');
+};
+
 // ════════ NÁSTROJE – PRIDAJ ════════
+let pendingToolFile = null;
+window.onToolFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingToolFile = f;
+    const st = document.getElementById('at-file-status');
+    if (st) st.textContent = '✓ Fotka pripravená: ' + (f.name || 'obrázok');
+};
+
 window.saveTool = async () => {
     const machine = document.getElementById('at-machine').value;
     const diam    = document.getElementById('at-diam').value.trim();
@@ -1780,18 +1875,38 @@ window.saveTool = async () => {
     if (limitReached('tools', tools.length)) return;
     // name = kategória + podtyp
     const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
-    tools = [...tools, { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note }];
-    await saveToFirestore();
-    showToast('Nástroj uložený ✓', 'ok');
-    document.getElementById('at-diam').value = '';
-    document.getElementById('at-note').value = '';
-    document.getElementById('at-machine').value = '';
-    document.getElementById('at-subtype').value = '';
-    document.getElementById('tool-subtype-wrap').style.display = 'none';
-    selectedCat = null;
-    renderToolCategories();
-    document.getElementById('sec-add-tool').classList.remove('open');
-    document.getElementById('sec-search-tool').classList.add('open');
+
+    const doSaveTool = async (fileData) => {
+        let finalData = fileData;
+        if (fileData && fileData.startsWith('data:image')) {
+            finalData = await compressImage(fileData, 800);
+        }
+        const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalData || null, createdAt: Date.now() };
+        addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool)
+            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
+        showToast('Nástroj uložený ✓', 'ok');
+        document.getElementById('at-diam').value = '';
+        document.getElementById('at-note').value = '';
+        document.getElementById('at-machine').value = '';
+        document.getElementById('at-subtype').value = '';
+        document.getElementById('tool-subtype-wrap').style.display = 'none';
+        document.getElementById('at-file-cam').value = '';
+        document.getElementById('at-file-lib').value = '';
+        document.getElementById('at-file-status').textContent = '';
+        pendingToolFile = null;
+        selectedCat = null;
+        renderToolCategories();
+        document.getElementById('sec-add-tool').classList.remove('open');
+        document.getElementById('sec-search-tool').classList.add('open');
+    };
+
+    if (pendingToolFile) {
+        const reader = new FileReader();
+        reader.onload = e => doSaveTool(e.target.result);
+        reader.readAsDataURL(pendingToolFile);
+    } else {
+        doSaveTool(null);
+    }
 };
 
 // ════════ NÁSTROJE – VYMAŽ ════════
@@ -1803,19 +1918,20 @@ window.renderDelTool = () => {
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(t => {
-        const idx = tools.findIndex(x => x.machine === t.machine && x.name === t.name && x.diameter === t.diameter);
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool(${idx})">🗑 Vymazať</button>`;
+        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool('${t._id}')">🗑 Vymazať</button>`;
         box.appendChild(card);
     });
 };
 
-window._delTool = async (idx) => {
-    if (!confirm(`Vymazať nástroj "${tools[idx].name}"?`)) return;
+window._delTool = async (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    if (!confirm(`Vymazať nástroj "${t.name}"?`)) return;
     if (!await requireAdminPassword()) return;
-    tools.splice(idx, 1);
-    await saveToFirestore();
+    deleteDoc(doc(db, 'users', currentUser.uid, 'tools', id))
+        .catch(() => showToast('Zmena sa uloží pri wifi', ''));
     showToast('Nástroj vymazaný', 'err');
     window.renderDelTool();
 };
