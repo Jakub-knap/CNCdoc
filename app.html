@@ -1272,6 +1272,23 @@ onAuthStateChanged(auth, user => {
     }
 });
 
+// ── Strážca "Späť": systémové Späť zatvorí otvorené okno, appku nezavrie ──
+history.pushState({ cnc: 1 }, '');
+window.addEventListener('popstate', () => {
+    const zoom = document.getElementById('zoom-ov');
+    const md   = document.getElementById('modal-detail');
+    const ov   = document.querySelector('.modal-ov.visible');
+    if (zoom && zoom.classList.contains('open')) {
+        if (window.closeZoom) window.closeZoom(); else zoom.classList.remove('open');
+    } else if (md && md.classList.contains('open')) {
+        md.classList.remove('open');
+    } else if (ov) {
+        ov.classList.remove('visible');
+    }
+    // Vždy ostaň v appke (von len cez domovské tlačidlo)
+    history.pushState({ cnc: 1 }, '');
+});
+
 function showLogin() {
     document.getElementById('loading-screen').classList.remove('visible');
     document.getElementById('login-screen').classList.add('visible');
