@@ -646,6 +646,70 @@
             font-size: 12px; color: var(--muted); text-align: center;
             cursor: pointer; text-decoration: underline; margin-top: -4px;
         }
+        /* ═══ DLAŽDICOVÁ NAVIGÁCIA (redizajn) ═══ */
+        .wrap .section { display: none; }
+        .wrap .section.active { display: block; margin-top: 4px; }
+        .wrap .section.active .chevron { display: none; }
+        .home-tiles.hidden { display: none; }
+
+        #app-back { display: none; padding: 6px 0 10px; }
+        #app-back.show { display: block; }
+        .backbtn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--card2, #1e2c3d); border: 1px solid var(--border);
+            color: var(--light); font-size: 17px; font-weight: 700;
+            padding: 12px 18px; border-radius: 12px; cursor: pointer;
+            font-family: inherit;
+        }
+        .backbtn:active { transform: scale(.98); }
+
+        .m-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-left: 5px solid var(--cut); border-radius: 16px;
+            padding: 14px 16px 16px; margin-bottom: 18px;
+        }
+        .m-card-lbl { font-size: 12px; font-weight: 700; color: var(--cut); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+        .m-card-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
+        .m-card-name { font-size: 18px; font-weight: 700; }
+        .m-card-go { color: var(--muted); font-size: 22px; }
+
+        .tile-hero {
+            width: 100%; text-align: left; border: none; cursor: pointer;
+            background: linear-gradient(135deg,#1d4ed8,#1e3a8a); border-radius: 20px;
+            padding: 24px 22px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(29,78,216,.3);
+            display: flex; align-items: center; gap: 16px; color: #fff; font-family: inherit;
+        }
+        .tile-hero .ic { font-size: 42px; }
+        .tile-hero .tt { font-size: 26px; font-weight: 800; line-height: 1.05; }
+        .tile-hero .sb { font-size: 14px; color: #bfdbfe; margin-top: 4px; font-weight: 600; }
+
+        .tile-wide {
+            width: 100%; text-align: left; cursor: pointer; border: 1px solid rgba(22,163,74,.4);
+            background: rgba(22,163,74,.10); border-radius: 18px; padding: 18px 20px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 14px; color: var(--light); font-family: inherit;
+        }
+        .tile-wide .ic { width: 48px; height: 48px; border-radius: 12px; background: rgba(22,163,74,.18); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .tile-wide .tt { font-size: 20px; font-weight: 700; }
+
+        .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .tile {
+            border: 1px solid var(--border); cursor: pointer; background: var(--card);
+            border-radius: 18px; padding: 18px 16px; min-height: 118px; text-align: left;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+            color: var(--light); font-family: inherit;
+        }
+        .tile:active { transform: scale(.98); }
+        .tile .ic { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .tile .tt { font-size: 17px; font-weight: 700; line-height: 1.15; }
+        .tile .ic.blue  { background: rgba(37,99,235,.15);  border: 1px solid rgba(37,99,235,.4); }
+        .tile .ic.green { background: rgba(22,163,74,.15);  border: 1px solid rgba(22,163,74,.4); }
+        .tile-del-row { display: flex; gap: 12px; }
+        .tile-del {
+            flex: 1; border: 1px solid var(--border); background: transparent; cursor: pointer;
+            border-radius: 12px; padding: 13px; color: var(--muted); font-size: 13.5px; font-weight: 600;
+            font-family: inherit;
+        }
+        .tile-del:active { border-color: #7f1d1d; color: #fca5a5; }
     </style>
 </head>
 <body>
@@ -756,6 +820,45 @@
     </div>
 
     <div class="wrap">
+
+        <!-- LIŠTA SPÄŤ (viditeľná len v úlohe) -->
+        <div id="app-back">
+            <button class="backbtn" onclick="backToTiles()">← Späť na hlavnú</button>
+        </div>
+
+        <!-- ÚVODNÉ DLAŽDICE -->
+        <div class="home-tiles" id="home-tiles">
+            <div class="m-card">
+                <div class="m-card-lbl">⚙️ Stroje — základ všetkého</div>
+                <div class="m-card-row" onclick="openSection('sec-machines')">
+                    <div class="m-card-name" id="tile-machines">0 strojov</div>
+                    <div class="m-card-go">›</div>
+                </div>
+            </div>
+
+            <button class="tile-hero" onclick="openSection('sec-search-drawing')">
+                <span class="ic">🔍</span>
+                <span><div class="tt">Nájsť výkres</div><div class="sb" id="tile-d-count">0 výkresov</div></span>
+            </button>
+
+            <button class="tile-wide" onclick="openSection('sec-add-drawing')">
+                <span class="ic">➕</span><span class="tt">Pridať výkres</span>
+            </button>
+
+            <div class="tile-grid">
+                <button class="tile" onclick="openSection('sec-search-tool')">
+                    <div class="ic blue">🔧</div><div class="tt" id="tile-t-count">Nájsť nástroj</div>
+                </button>
+                <button class="tile" onclick="openSection('sec-add-tool')">
+                    <div class="ic green">➕</div><div class="tt">Pridať nástroj</div>
+                </button>
+            </div>
+
+            <div class="tile-del-row">
+                <button class="tile-del" onclick="openSection('sec-del-drawing')">🗑 Vymazať výkres</button>
+                <button class="tile-del" onclick="openSection('sec-del-tool')">🗑 Vymazať nástroj</button>
+            </div>
+        </div>
 
         <!-- STROJE -->
         <div class="section" id="sec-machines">
@@ -1353,6 +1456,8 @@ window.addEventListener('popstate', () => {
         md.classList.remove('open');
     } else if (ov) {
         ov.classList.remove('visible');
+    } else if (document.querySelector('.wrap .section.active')) {
+        backToTiles();
     }
     // Vždy ostaň v appke (von len cez domovské tlačidlo)
     history.pushState({ cnc: 1 }, '');
@@ -1926,7 +2031,7 @@ window.saveDrawing = async () => {
         selectedToolIds = [];
         renderDrawingToolPicker();
         document.getElementById('sec-add-drawing').classList.remove('open');
-        document.getElementById('sec-search-drawing').classList.add('open');
+        openSection('sec-search-drawing');
     };
 
     if (pendingDrawingFile) {
@@ -2135,7 +2240,7 @@ window.saveTool = async () => {
         selectedCat = null;
         renderToolCategories();
         document.getElementById('sec-add-tool').classList.remove('open');
-        document.getElementById('sec-search-tool').classList.add('open');
+        openSection('sec-search-tool');
     };
 
     if (pendingToolFile) {
@@ -2181,9 +2286,31 @@ function updateCounts() {
     document.getElementById('sub-drawings').textContent = drawings.length + ' výkresov' + dPend;
     document.getElementById('sub-tools').textContent    = tools.length    + ' nástrojov' + tPend;
     document.getElementById('sub-machines').textContent = machines.length + ' strojov';
+    // dlaždice na úvode
+    const tm = document.getElementById('tile-machines'); if (tm) tm.textContent = machines.length + (machines.length === 1 ? ' stroj' : ' strojov');
+    const td = document.getElementById('tile-d-count');  if (td) td.textContent = drawings.length + ' výkresov' + dPend;
+    const tt = document.getElementById('tile-t-count');  if (tt) tt.textContent = 'Nájsť nástroj';
 }
 
-window.toggleSection = (id) => document.getElementById(id).classList.toggle('open');
+// ═══ DLAŽDICOVÁ NAVIGÁCIA ═══
+// Hlavička sekcie už nezbaľuje (v úlohe je vždy otvorená)
+window.toggleSection = (id) => document.getElementById(id).classList.add('open');
+
+window.openSection = (id) => {
+    document.getElementById('home-tiles').classList.add('hidden');
+    document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
+    const sec = document.getElementById(id);
+    sec.classList.add('active'); sec.classList.add('open');
+    document.getElementById('app-back').classList.add('show');
+    window.scrollTo(0, 0);
+    history.pushState({ cnc: 1 }, '');
+};
+window.backToTiles = () => {
+    document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
+    document.getElementById('home-tiles').classList.remove('hidden');
+    document.getElementById('app-back').classList.remove('show');
+    window.scrollTo(0, 0);
+};
 
 // ════════ PINCH ZOOM ════════
 let _z = { scale: 1, x: 0, y: 0, startX: 0, startY: 0, lastDist: 0, dragging: false, lastTap: 0 };
