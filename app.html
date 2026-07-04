@@ -1909,7 +1909,7 @@ window.saveDrawing = async () => {
         // Compress image if too large (max 800px wide)
         let finalData = fileData;
         if (fileData && fileData.startsWith('data:image')) {
-            finalData = await compressImage(fileData, 800);
+            finalData = await compressImage(fileData, 1800);
         }
         const newDrawing = { machine, number, program, note, fileData: finalData || null, toolIds: [...selectedToolIds], createdAt: Date.now() };
         // Zápis do podkolekcie. Offline sa uloží lokálne a nahrá pri wifi.
@@ -1940,15 +1940,28 @@ window.saveDrawing = async () => {
 
 // Compress image to max width
 function compressImage(dataUrl, maxWidth) {
+    // Vyuzijeme takmer cely 1 MB na jeden dokument -> ostrejsia fotka (citanie kot).
+    // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod 1 MB.
+    const MAX_CHARS = 950000; // bezpecne pod limit Firestore 1 MB/dokument
     return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
-            const ratio = Math.min(1, maxWidth / img.width);
-            const canvas = document.createElement('canvas');
-            canvas.width  = img.width  * ratio;
-            canvas.height = img.height * ratio;
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', 0.75));
+            const render = (w, q) => {
+                const ratio = Math.min(1, w / img.width);
+                const canvas = document.createElement('canvas');
+                canvas.width  = Math.round(img.width  * ratio);
+                canvas.height = Math.round(img.height * ratio);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', q);
+            };
+            let width = Math.min(img.width, maxWidth);
+            let q = 0.85;
+            let out = render(width, q);
+            // 1) najprv znizuj kvalitu
+            while (out.length > MAX_CHARS && q > 0.4) { q = Math.round((q - 0.1) * 100) / 100; out = render(width, q); }
+            // 2) ak stale velke, znizuj aj rozmer
+            while (out.length > MAX_CHARS && width > 700) { width = Math.round(width * 0.85); out = render(width, 0.7); }
+            resolve(out);
         };
         img.src = dataUrl;
     });
@@ -2104,7 +2117,7 @@ window.saveTool = async () => {
     const doSaveTool = async (fileData) => {
         let finalData = fileData;
         if (fileData && fileData.startsWith('data:image')) {
-            finalData = await compressImage(fileData, 800);
+            finalData = await compressImage(fileData, 1800);
         }
         const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalData || null, createdAt: Date.now() };
         addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool)
