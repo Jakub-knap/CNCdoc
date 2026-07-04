@@ -423,8 +423,8 @@
         }
 
         /* ── Nástroj otvorený Z VÝKRESU: menšie plávajúce okno, výkres vidno v pozadí ── */
-        #modal-tool { background: rgba(0,0,0,.45); align-items: center; }
-        #modal-tool .modal {
+        #modal-tool, #modal-edittools { background: rgba(0,0,0,.45); align-items: center; }
+        #modal-tool .modal, #modal-edittools .modal {
             width: calc(100% - 32px); max-width: 440px; max-height: 82vh;
             border-radius: 18px; border: 1px solid var(--cut);
             box-shadow: 0 20px 60px rgba(0,0,0,.6);
@@ -999,6 +999,19 @@
     </div>
 </div>
 
+<!-- MODAL: Upraviť nástroje k výkresu -->
+<div id="modal-edittools" class="modal-bg" style="z-index:400;" onclick="closeEditTools()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Upraviť nástroje</div>
+            <button class="modal-close" onclick="closeEditTools()">✕</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Ťuknutím pridáte alebo odoberiete nástroj. Označené sú priradené k výkresu.</div>
+        <div id="edittools-pick" class="tool-pick" style="margin-bottom:16px;"></div>
+        <button class="btn btn-success" onclick="saveEditTools()">✓ Uložiť nástroje</button>
+    </div>
+</div>
+
 <!-- ZOOM -->
 <div id="zoom-ov" class="zoom-ov">
     <div id="zoom-touch-area">
@@ -1316,11 +1329,14 @@ onAuthStateChanged(auth, user => {
 history.pushState({ cnc: 1 }, '');
 window.addEventListener('popstate', () => {
     const zoom = document.getElementById('zoom-ov');
+    const medit = document.getElementById('modal-edittools');
     const mtool = document.getElementById('modal-tool');
     const md   = document.getElementById('modal-detail');
     const ov   = document.querySelector('.modal-ov.visible');
     if (zoom && zoom.classList.contains('open')) {
         if (window.closeZoom) window.closeZoom(); else zoom.classList.remove('open');
+    } else if (medit && medit.classList.contains('open')) {
+        medit.classList.remove('open');
     } else if (mtool && mtool.classList.contains('open')) {
         mtool.classList.remove('open');
     } else if (md && md.classList.contains('open')) {
@@ -1767,18 +1783,20 @@ window.openDetail = (number) => {
     if (titleEl) titleEl.textContent = 'Detail výkresu';
     const imgHtml = d.fileData ? `<div class="detail-img-wrap"><img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
 
-    // Priradené nástroje (klik -> detail nástroja)
-    let toolsHtml = '';
+    // Priradené nástroje (klik -> detail nástroja) + tlačidlo na úpravu
     const ids = d.toolIds || [];
     const linked = ids.map(id => tools.find(t => t._id === id)).filter(Boolean);
+    let toolsHtml = '<div class="det-tools"><div class="dt-head">🔧 Nástroje k výkresu</div>';
     if (linked.length) {
-        toolsHtml = '<div class="det-tools"><div class="dt-head">🔧 Nástroje k výkresu (klikni pre detail)</div>';
         linked.forEach(t => {
             const thumb = t.fileData ? `<img class="dtc-thumb" src="${t.fileData}" alt="">` : '<div class="dtc-thumb"></div>';
             toolsHtml += `<div class="det-tool-card" onclick="openToolFromDrawing('${t._id}')">${thumb}<div><div style="font-weight:600;">${t.diameter || t.name || 'nástroj'}</div><div style="font-size:12px;color:var(--muted);">${t.name || ''}</div></div></div>`;
         });
-        toolsHtml += '</div>';
+    } else {
+        toolsHtml += '<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Žiadne priradené nástroje</div>';
     }
+    toolsHtml += `<button class="btn btn-sm" style="width:100%;margin-top:4px;background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="openEditTools('${d._id}')">✏️ Upraviť nástroje</button>`;
+    toolsHtml += '</div>';
 
     document.getElementById('modal-content').innerHTML = `
         ${imgHtml}
@@ -1971,6 +1989,47 @@ window.openToolFromDrawing = (id) => {
     document.getElementById('modal-tool').classList.add('open');
 };
 window.closeToolModal = () => document.getElementById('modal-tool').classList.remove('open');
+
+// ── Úprava nástrojov priradených k výkresu ──
+let editDrawingId = null, editDrawingNumber = null, editMachine = null, editToolIds = [];
+window.openEditTools = (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    editDrawingId = id; editDrawingNumber = d.number; editMachine = d.machine;
+    editToolIds = [...(d.toolIds || [])];
+    renderEditToolsPicker();
+    document.getElementById('modal-edittools').classList.add('open');
+};
+window.renderEditToolsPicker = () => {
+    const box = document.getElementById('edittools-pick');
+    if (!box) return;
+    const pool = tools.filter(t => t.machine === editMachine);
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje. Najprv ich pridajte v sekcii Nástroje.</span>'; return; }
+    editToolIds = editToolIds.filter(id => pool.some(t => t._id === id));
+    box.innerHTML = '';
+    pool.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip' + (editToolIds.includes(t._id) ? ' sel' : '');
+        chip.textContent = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
+        chip.onclick = () => {
+            const i = editToolIds.indexOf(t._id);
+            if (i >= 0) editToolIds.splice(i, 1); else editToolIds.push(t._id);
+            renderEditToolsPicker();
+        };
+        box.appendChild(chip);
+    });
+};
+window.saveEditTools = () => {
+    if (!editDrawingId) return;
+    setDoc(doc(db, 'users', currentUser.uid, 'drawings', editDrawingId), { toolIds: [...editToolIds] }, { merge: true })
+        .catch(() => showToast('Uloží sa pri wifi', ''));
+    const d = drawings.find(x => x._id === editDrawingId);
+    if (d) d.toolIds = [...editToolIds];
+    showToast('Nástroje uložené ✓', 'ok');
+    closeEditTools();
+    if (editDrawingNumber) openDetail(editDrawingNumber); // obnov detail
+};
+window.closeEditTools = () => document.getElementById('modal-edittools').classList.remove('open');
 
 // ════════ NÁSTROJE – PRIDAJ ════════
 let pendingToolFile = null;
