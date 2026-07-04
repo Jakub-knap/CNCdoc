@@ -341,6 +341,23 @@
             font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
         }
         .btn-photo:active { transform: scale(.98); border-color: var(--cut); }
+        .tool-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tool-pick .tp-empty { font-size: 13px; color: var(--muted); }
+        .tp-chip {
+            padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px;
+            background: var(--input); color: var(--light); font-size: 13px; cursor: pointer;
+            user-select: none;
+        }
+        .tp-chip.sel { background: var(--green); border-color: var(--green); color: #06240f; font-weight: 700; }
+        .det-tools { margin-top: 16px; }
+        .det-tools .dt-head { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+        .det-tool-card {
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+            background: var(--input); margin-bottom: 8px;
+        }
+        .det-tool-card:active { border-color: var(--green); }
+        .det-tool-card .dtc-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--iron); }
 
         /* ── SEARCH ── */
         .search-wrap { position: relative; margin-bottom: 12px; }
@@ -795,7 +812,7 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj</label>
-                    <select id="ad-machine"><option value="">— Vyberte stroj —</option></select>
+                    <select id="ad-machine" onchange="onDrawingMachineChange()"><option value="">— Vyberte stroj —</option></select>
                 </div>
                 <div class="fg">
                     <label class="field-label">Číslo výkresu</label>
@@ -818,6 +835,10 @@
                     <input type="file" id="ad-file-cam" accept="image/*" capture="environment" style="display:none" onchange="onDrawingFile(this)">
                     <input type="file" id="ad-file-lib" accept="image/*" style="display:none" onchange="onDrawingFile(this)">
                     <div id="ad-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Nástroje k výkresu (voliteľné)</label>
+                    <div id="ad-tools-pick" class="tool-pick"></div>
                 </div>
                 <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
             </div>
@@ -1621,6 +1642,7 @@ function renderAll() {
     renderDrawingSearch();
     renderToolSearch();
     renderToolCategories();
+    if (window.renderDrawingToolPicker) renderDrawingToolPicker();
 }
 
 // ════════ STROJE ════════
@@ -1722,12 +1744,27 @@ window.openDetail = (number) => {
     const titleEl = document.getElementById('modal-detail-title');
     if (titleEl) titleEl.textContent = 'Detail výkresu';
     const imgHtml = d.fileData ? `<div class="detail-img-wrap"><img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
+
+    // Priradené nástroje (klik -> detail nástroja)
+    let toolsHtml = '';
+    const ids = d.toolIds || [];
+    const linked = ids.map(id => tools.find(t => t._id === id)).filter(Boolean);
+    if (linked.length) {
+        toolsHtml = '<div class="det-tools"><div class="dt-head">🔧 Nástroje k výkresu (klikni pre detail)</div>';
+        linked.forEach(t => {
+            const thumb = t.fileData ? `<img class="dtc-thumb" src="${t.fileData}" alt="">` : '<div class="dtc-thumb"></div>';
+            toolsHtml += `<div class="det-tool-card" onclick="openToolDetail('${t._id}')">${thumb}<div><div style="font-weight:600;">${t.diameter || t.name || 'nástroj'}</div><div style="font-size:12px;color:var(--muted);">${t.name || ''}</div></div></div>`;
+        });
+        toolsHtml += '</div>';
+    }
+
     document.getElementById('modal-content').innerHTML = `
         ${imgHtml}
         <div class="d-field"><div class="d-key">Číslo výkresu</div><div class="d-val">${d.number}</div></div>
         <div class="d-field"><div class="d-key">Číslo programu</div><div class="d-val">${d.program || '—'}</div></div>
         <div class="d-field"><div class="d-key">Stroj</div><div class="d-val">${d.machine}</div></div>
         <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${d.note || '—'}</div></div>
+        ${toolsHtml}
     `;
     document.getElementById('modal-detail').classList.add('open');
 };
@@ -1736,6 +1773,34 @@ window.closeModal = () => document.getElementById('modal-detail').classList.remo
 
 // ════════ VÝKRESY – PRIDAJ ════════
 let pendingDrawingFile = null;
+let selectedToolIds = [];
+
+window.onDrawingMachineChange = () => { selectedToolIds = []; renderDrawingToolPicker(); };
+
+window.renderDrawingToolPicker = () => {
+    const box = document.getElementById('ad-tools-pick');
+    if (!box) return;
+    const machine = document.getElementById('ad-machine').value;
+    if (!machine) { box.innerHTML = '<span class="tp-empty">Najprv vyberte stroj</span>'; return; }
+    const pool = tools.filter(t => t.machine === machine);
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje</span>'; return; }
+    // odstráň z výberu nástroje, čo už neexistujú
+    selectedToolIds = selectedToolIds.filter(id => pool.some(t => t._id === id));
+    box.innerHTML = '';
+    pool.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip' + (selectedToolIds.includes(t._id) ? ' sel' : '');
+        const label = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
+        chip.textContent = label;
+        chip.onclick = () => {
+            const i = selectedToolIds.indexOf(t._id);
+            if (i >= 0) selectedToolIds.splice(i, 1); else selectedToolIds.push(t._id);
+            renderDrawingToolPicker();
+        };
+        box.appendChild(chip);
+    });
+};
+
 window.onDrawingFile = (input) => {
     const f = input.files && input.files[0];
     if (!f) return;
@@ -1760,7 +1825,7 @@ window.saveDrawing = async () => {
         if (fileData && fileData.startsWith('data:image')) {
             finalData = await compressImage(fileData, 800);
         }
-        const newDrawing = { machine, number, program, note, fileData: finalData || null, createdAt: Date.now() };
+        const newDrawing = { machine, number, program, note, fileData: finalData || null, toolIds: [...selectedToolIds], createdAt: Date.now() };
         // Zápis do podkolekcie. Offline sa uloží lokálne a nahrá pri wifi.
         // Nečakáme na server – zoznam sa aktualizuje cez realtime listener.
         addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing)
@@ -1772,6 +1837,8 @@ window.saveDrawing = async () => {
         document.getElementById('ad-file-lib').value = '';
         document.getElementById('ad-file-status').textContent = '';
         pendingDrawingFile = null;
+        selectedToolIds = [];
+        renderDrawingToolPicker();
         document.getElementById('sec-add-drawing').classList.remove('open');
         document.getElementById('sec-search-drawing').classList.add('open');
     };
