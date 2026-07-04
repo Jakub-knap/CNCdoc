@@ -422,6 +422,14 @@
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* ── Nástroj otvorený Z VÝKRESU: menšie plávajúce okno, výkres vidno v pozadí ── */
+        #modal-tool { background: rgba(0,0,0,.45); align-items: center; }
+        #modal-tool .modal {
+            width: calc(100% - 32px); max-width: 440px; max-height: 82vh;
+            border-radius: 18px; border: 1px solid var(--cut);
+            box-shadow: 0 20px 60px rgba(0,0,0,.6);
+        }
+
         /* ── DETAIL ── */
         .detail-img-wrap {
             border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
@@ -980,6 +988,17 @@
     </div>
 </div>
 
+<!-- MODAL: Nástroj otvorený Z VÝKRESU (okno navrchu) -->
+<div id="modal-tool" class="modal-bg" style="z-index:400;" onclick="closeToolModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Detail nástroja</div>
+            <button class="modal-close" onclick="closeToolModal()">✕</button>
+        </div>
+        <div id="modal-tool-content"></div>
+    </div>
+</div>
+
 <!-- ZOOM -->
 <div id="zoom-ov" class="zoom-ov">
     <div id="zoom-touch-area">
@@ -1297,10 +1316,13 @@ onAuthStateChanged(auth, user => {
 history.pushState({ cnc: 1 }, '');
 window.addEventListener('popstate', () => {
     const zoom = document.getElementById('zoom-ov');
+    const mtool = document.getElementById('modal-tool');
     const md   = document.getElementById('modal-detail');
     const ov   = document.querySelector('.modal-ov.visible');
     if (zoom && zoom.classList.contains('open')) {
         if (window.closeZoom) window.closeZoom(); else zoom.classList.remove('open');
+    } else if (mtool && mtool.classList.contains('open')) {
+        mtool.classList.remove('open');
     } else if (md && md.classList.contains('open')) {
         md.classList.remove('open');
     } else if (ov) {
@@ -1753,7 +1775,7 @@ window.openDetail = (number) => {
         toolsHtml = '<div class="det-tools"><div class="dt-head">🔧 Nástroje k výkresu (klikni pre detail)</div>';
         linked.forEach(t => {
             const thumb = t.fileData ? `<img class="dtc-thumb" src="${t.fileData}" alt="">` : '<div class="dtc-thumb"></div>';
-            toolsHtml += `<div class="det-tool-card" onclick="openToolDetail('${t._id}')">${thumb}<div><div style="font-weight:600;">${t.diameter || t.name || 'nástroj'}</div><div style="font-size:12px;color:var(--muted);">${t.name || ''}</div></div></div>`;
+            toolsHtml += `<div class="det-tool-card" onclick="openToolFromDrawing('${t._id}')">${thumb}<div><div style="font-weight:600;">${t.diameter || t.name || 'nástroj'}</div><div style="font-size:12px;color:var(--muted);">${t.name || ''}</div></div></div>`;
         });
         toolsHtml += '</div>';
     }
@@ -1920,21 +1942,35 @@ window.renderToolSearch = () => {
     });
 };
 
-window.openToolDetail = (id) => {
-    const t = tools.find(x => x._id === id);
-    if (!t) return;
+function buildToolHtml(t) {
     const imgHtml = t.fileData ? `<div class="detail-img-wrap"><img src="${t.fileData}" onclick="zoomImage('${t.fileData}')" alt="Nástroj"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
-    const titleEl = document.getElementById('modal-detail-title');
-    if (titleEl) titleEl.textContent = 'Detail nástroja';
-    document.getElementById('modal-content').innerHTML = `
+    return `
         ${imgHtml}
         <div class="d-field"><div class="d-key">Nástroj</div><div class="d-val">${t.name}</div></div>
         <div class="d-field"><div class="d-key">Priemer / rozmer</div><div class="d-val">${t.diameter}</div></div>
         <div class="d-field"><div class="d-key">Stroj</div><div class="d-val">${t.machine}</div></div>
         <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${t.note || '—'}</div></div>
     `;
+}
+
+// Samostatný detail nástroja (z hľadania nástrojov)
+window.openToolDetail = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    const titleEl = document.getElementById('modal-detail-title');
+    if (titleEl) titleEl.textContent = 'Detail nástroja';
+    document.getElementById('modal-content').innerHTML = buildToolHtml(t);
     document.getElementById('modal-detail').classList.add('open');
 };
+
+// Nástroj otvorený Z VÝKRESU — okno navrchu (Späť/X sa vráti na výkres)
+window.openToolFromDrawing = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    document.getElementById('modal-tool-content').innerHTML = buildToolHtml(t);
+    document.getElementById('modal-tool').classList.add('open');
+};
+window.closeToolModal = () => document.getElementById('modal-tool').classList.remove('open');
 
 // ════════ NÁSTROJE – PRIDAJ ════════
 let pendingToolFile = null;
