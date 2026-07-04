@@ -172,6 +172,13 @@
         }
         @keyframes reminderPulse { 0%,100%{opacity:1} 50%{opacity:.75} }
         .sync-reminder .sr-icon { font-size: 18px; flex-shrink: 0; }
+        .upload-bar {
+            padding: 12px 16px; align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 600; line-height: 1.4;
+            background: #0c4a6e; color: #bae6fd;
+            display: flex;
+        }
+        .upload-bar.waiting { background: #78350f; color: #fde68a; }
 
         /* ── ADMIN MODAL ── */
         .modal-ov {
@@ -731,6 +738,9 @@
         <span class="sr-icon">⚠️</span>
         <span id="sync-reminder-text"></span>
     </div>
+
+    <!-- UPLOAD PROGRESS (nahravanie cakajucich poloziek) -->
+    <div class="upload-bar" id="upload-progress" style="display:none;"></div>
 
     <!-- INSTALL BANNER -->
     <div class="install-banner" id="install-banner">
@@ -1429,6 +1439,10 @@ function listenData(uid) {
     const dref = collection(db, 'users', uid, 'drawings');
     unsubscribeDrawings = onSnapshot(dref, { includeMetadataChanges: true }, snap => {
         drawings = snap.docs.map(ds => ({ _id: ds.id, ...ds.data() }));
+        dwPending = snap.docs.filter(x => x.metadata.hasPendingWrites).length;
+        if (dwPending > dwTotal) dwTotal = dwPending;
+        if (dwPending === 0) dwTotal = 0;
+        updateUploadProgress();
         renderAll();
     }, err => { /* offline / chyba – ponecháme, čo máme */ });
 
@@ -1436,9 +1450,41 @@ function listenData(uid) {
     const tref = collection(db, 'users', uid, 'tools');
     unsubscribeTools = onSnapshot(tref, { includeMetadataChanges: true }, snap => {
         tools = snap.docs.map(ts => ({ _id: ts.id, ...ts.data() }));
+        tlPending = snap.docs.filter(x => x.metadata.hasPendingWrites).length;
+        if (tlPending > tlTotal) tlTotal = tlPending;
+        if (tlPending === 0) tlTotal = 0;
+        updateUploadProgress();
         renderAll();
     }, err => { /* offline / chyba – ponecháme, čo máme */ });
 }
+
+// ── Počítadlo nahrávania čakajúcich položiek ──
+let dwPending = 0, dwTotal = 0, tlPending = 0, tlTotal = 0, wasUploading = false;
+function updateUploadProgress() {
+    const box = document.getElementById('upload-progress');
+    if (!box) return;
+    if (dwPending === 0 && tlPending === 0) {
+        box.style.display = 'none';
+        if (wasUploading) { showToast('✓ Všetko nahrané a zálohované', 'ok'); wasUploading = false; }
+        return;
+    }
+    wasUploading = true;
+    box.style.display = 'flex';
+    const online = navigator.onLine;
+    const parts = [];
+    if (dwTotal > 0) parts.push(`výkresy ${dwTotal - dwPending}/${dwTotal}`);
+    if (tlTotal > 0) parts.push(`nástroje ${tlTotal - tlPending}/${tlTotal}`);
+    const detail = parts.join(', ');
+    if (online) {
+        box.className = 'upload-bar';
+        box.textContent = `⬆️ Nahrávam ${detail} — nechajte wifi zapnutú, kým sa nedokončí`;
+    } else {
+        box.className = 'upload-bar waiting';
+        box.textContent = `⏳ Čaká na nahratie: ${detail} — pripojte wifi, dáta sú zatiaľ len v tablete`;
+    }
+}
+window.addEventListener('online',  updateUploadProgress);
+window.addEventListener('offline', updateUploadProgress);
 
 // Presun starých výkresov (pole) do podkolekcie. Spustí sa raz.
 async function migrateDrawings(uid, arr) {
@@ -2117,8 +2163,10 @@ window._delTool = async (id) => {
 
 // ════════ HELPERS ════════
 function updateCounts() {
-    document.getElementById('sub-drawings').textContent = drawings.length + ' výkresov';
-    document.getElementById('sub-tools').textContent    = tools.length    + ' nástrojov';
+    const dPend = (typeof dwPending === 'number' && dwPending > 0) ? ` · ${dwPending} čaká na nahratie` : '';
+    const tPend = (typeof tlPending === 'number' && tlPending > 0) ? ` · ${tlPending} čaká na nahratie` : '';
+    document.getElementById('sub-drawings').textContent = drawings.length + ' výkresov' + dPend;
+    document.getElementById('sub-tools').textContent    = tools.length    + ' nástrojov' + tPend;
     document.getElementById('sub-machines').textContent = machines.length + ' strojov';
 }
 
