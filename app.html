@@ -710,6 +710,12 @@
             font-family: inherit;
         }
         .tile-del:active { border-color: #7f1d1d; color: #fca5a5; }
+
+        /* ═══ KOMPAKTNÝ REŽIM (pôvodný zoznam sekcií) ═══ */
+        body.mode-compact .home-tiles { display: none; }
+        body.mode-compact #app-back { display: none !important; }
+        body.mode-compact .wrap .section { display: block; }
+        body.mode-compact .wrap .section .chevron { display: inline; }
     </style>
 </head>
 <body>
@@ -744,6 +750,7 @@
     <div class="user-info" id="topbar-user" style="display:none">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
+        <button class="btn-signout" id="mode-toggle" onclick="toggleMode()" title="Prepnúť veľkosť menu" style="font-size:15px;">☰</button>
         <button class="btn-signout" id="admin-key-btn" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px; display:none;">🔑</button>
         <button class="btn-signout" onclick="signOut()">Odhlásiť</button>
     </div>
@@ -953,8 +960,8 @@
                         <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-cam').click()">📷 Odfotiť</button>
                         <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-lib').click()">📁 Zo zariadenia</button>
                     </div>
-                    <input type="file" id="ad-file-cam" accept="image/*" capture="environment" style="display:none" onchange="onDrawingFile(this)">
-                    <input type="file" id="ad-file-lib" accept="image/*" style="display:none" onchange="onDrawingFile(this)">
+                    <input type="file" id="ad-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
+                    <input type="file" id="ad-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
                     <div id="ad-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
                 </div>
                 <div class="fg">
@@ -1056,8 +1063,8 @@
                         <button type="button" class="btn-photo" onclick="document.getElementById('at-file-cam').click()">📷 Odfotiť</button>
                         <button type="button" class="btn-photo" onclick="document.getElementById('at-file-lib').click()">📁 Zo zariadenia</button>
                     </div>
-                    <input type="file" id="at-file-cam" accept="image/*" capture="environment" style="display:none" onchange="onToolFile(this)">
-                    <input type="file" id="at-file-lib" accept="image/*" style="display:none" onchange="onToolFile(this)">
+                    <input type="file" id="at-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onToolFile(this)">
+                    <input type="file" id="at-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onToolFile(this)">
                     <div id="at-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
                 </div>
                 <button class="btn btn-success" onclick="saveTool()">✓ Uložiť nástroj</button>
@@ -1224,6 +1231,13 @@ const provider = new GoogleAuthProvider();
 
 // Offline persistence
 enableIndexedDbPersistence(db).catch(() => {});
+
+// Service worker — appka sa da otvorit aj offline (uklada app shell)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+}
 
 // ════════ STAV ════════
 let currentUser = null;
@@ -2294,12 +2308,24 @@ function updateCounts() {
 
 // ═══ DLAŽDICOVÁ NAVIGÁCIA ═══
 // Hlavička sekcie už nezbaľuje (v úlohe je vždy otvorená)
-window.toggleSection = (id) => document.getElementById(id).classList.add('open');
+// ═══ REŽIMY: veľký (dlaždice) / kompaktný (zoznam) ═══
+function isCompact() { return document.body.classList.contains('mode-compact'); }
+
+window.toggleSection = (id) => {
+    // Kompaktný = klasické rozbaľovanie; Veľký = hlavička nezbaľuje
+    if (isCompact()) document.getElementById(id).classList.toggle('open');
+    else document.getElementById(id).classList.add('open');
+};
 
 window.openSection = (id) => {
+    const sec = document.getElementById(id);
+    if (isCompact()) {                       // v zozname len rozbaľ danú sekciu
+        sec.classList.add('open');
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
     document.getElementById('home-tiles').classList.add('hidden');
     document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
-    const sec = document.getElementById(id);
     sec.classList.add('active'); sec.classList.add('open');
     document.getElementById('app-back').classList.add('show');
     window.scrollTo(0, 0);
@@ -2311,6 +2337,23 @@ window.backToTiles = () => {
     document.getElementById('app-back').classList.remove('show');
     window.scrollTo(0, 0);
 };
+
+window.setMode = (mode) => {
+    localStorage.setItem('cnc_mode', mode);
+    if (mode === 'compact') {
+        document.body.classList.add('mode-compact');
+        document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
+        document.getElementById('app-back').classList.remove('show');
+    } else {
+        document.body.classList.remove('mode-compact');
+        backToTiles();
+    }
+    const b = document.getElementById('mode-toggle');
+    if (b) b.textContent = (mode === 'compact') ? '▦' : '☰';
+};
+window.toggleMode = () => setMode(isCompact() ? 'tiles' : 'compact');
+// nastav uložený režim (predvolený = veľké dlaždice)
+setMode(localStorage.getItem('cnc_mode') || 'tiles');
 
 // ════════ PINCH ZOOM ════════
 let _z = { scale: 1, x: 0, y: 0, startX: 0, startY: 0, lastDist: 0, dragging: false, lastTap: 0 };
