@@ -172,6 +172,13 @@
         }
         @keyframes reminderPulse { 0%,100%{opacity:1} 50%{opacity:.75} }
         .sync-reminder .sr-icon { font-size: 18px; flex-shrink: 0; }
+        .upload-bar {
+            padding: 12px 16px; align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 600; line-height: 1.4;
+            background: #0c4a6e; color: #bae6fd;
+            display: flex;
+        }
+        .upload-bar.waiting { background: #78350f; color: #fde68a; }
 
         /* ── ADMIN MODAL ── */
         .modal-ov {
@@ -335,6 +342,29 @@
         }
         .btn-ghost:hover { border-color: var(--muted); color: var(--white); }
         .btn-sm { display: inline-block; width: auto; padding: 8px 14px; font-size: 13px; margin: 8px 0 0 0; }
+        .btn-photo {
+            flex: 1; padding: 12px; border: 1px solid var(--border);
+            border-radius: 10px; background: var(--input); color: var(--light);
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .btn-photo:active { transform: scale(.98); border-color: var(--cut); }
+        .tool-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tool-pick .tp-empty { font-size: 13px; color: var(--muted); }
+        .tp-chip {
+            padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px;
+            background: var(--input); color: var(--light); font-size: 13px; cursor: pointer;
+            user-select: none;
+        }
+        .tp-chip.sel { background: var(--green); border-color: var(--green); color: #06240f; font-weight: 700; }
+        .det-tools { margin-top: 16px; }
+        .det-tools .dt-head { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+        .det-tool-card {
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+            background: var(--input); margin-bottom: 8px;
+        }
+        .det-tool-card:active { border-color: var(--green); }
+        .det-tool-card .dtc-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--iron); }
 
         /* ── SEARCH ── */
         .search-wrap { position: relative; margin-bottom: 12px; }
@@ -397,6 +427,14 @@
             background: var(--input); border: none; color: var(--muted);
             font-size: 16px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ── Nástroj otvorený Z VÝKRESU: menšie plávajúce okno, výkres vidno v pozadí ── */
+        #modal-tool, #modal-edittools { background: rgba(0,0,0,.45); align-items: center; }
+        #modal-tool .modal, #modal-edittools .modal {
+            width: calc(100% - 32px); max-width: 440px; max-height: 82vh;
+            border-radius: 18px; border: 1px solid var(--cut);
+            box-shadow: 0 20px 60px rgba(0,0,0,.6);
         }
 
         /* ── DETAIL ── */
@@ -608,6 +646,76 @@
             font-size: 12px; color: var(--muted); text-align: center;
             cursor: pointer; text-decoration: underline; margin-top: -4px;
         }
+        /* ═══ DLAŽDICOVÁ NAVIGÁCIA (redizajn) ═══ */
+        .wrap .section { display: none; }
+        .wrap .section.active { display: block; margin-top: 4px; }
+        .wrap .section.active .chevron { display: none; }
+        .home-tiles.hidden { display: none; }
+
+        #app-back { display: none; padding: 6px 0 10px; }
+        #app-back.show { display: block; }
+        .backbtn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--card2, #1e2c3d); border: 1px solid var(--border);
+            color: var(--light); font-size: 17px; font-weight: 700;
+            padding: 12px 18px; border-radius: 12px; cursor: pointer;
+            font-family: inherit;
+        }
+        .backbtn:active { transform: scale(.98); }
+
+        .m-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-left: 5px solid var(--cut); border-radius: 16px;
+            padding: 14px 16px 16px; margin-bottom: 18px;
+        }
+        .m-card-lbl { font-size: 12px; font-weight: 700; color: var(--cut); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+        .m-card-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
+        .m-card-name { font-size: 18px; font-weight: 700; }
+        .m-card-go { color: var(--muted); font-size: 22px; }
+
+        .tile-hero {
+            width: 100%; text-align: left; border: none; cursor: pointer;
+            background: linear-gradient(135deg,#1d4ed8,#1e3a8a); border-radius: 20px;
+            padding: 24px 22px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(29,78,216,.3);
+            display: flex; align-items: center; gap: 16px; color: #fff; font-family: inherit;
+        }
+        .tile-hero .ic { font-size: 42px; }
+        .tile-hero .tt { font-size: 26px; font-weight: 800; line-height: 1.05; }
+        .tile-hero .sb { font-size: 14px; color: #bfdbfe; margin-top: 4px; font-weight: 600; }
+
+        .tile-wide {
+            width: 100%; text-align: left; cursor: pointer; border: 1px solid rgba(22,163,74,.4);
+            background: rgba(22,163,74,.10); border-radius: 18px; padding: 18px 20px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 14px; color: var(--light); font-family: inherit;
+        }
+        .tile-wide .ic { width: 48px; height: 48px; border-radius: 12px; background: rgba(22,163,74,.18); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .tile-wide .tt { font-size: 20px; font-weight: 700; }
+
+        .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .tile {
+            border: 1px solid var(--border); cursor: pointer; background: var(--card);
+            border-radius: 18px; padding: 18px 16px; min-height: 118px; text-align: left;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+            color: var(--light); font-family: inherit;
+        }
+        .tile:active { transform: scale(.98); }
+        .tile .ic { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .tile .tt { font-size: 17px; font-weight: 700; line-height: 1.15; }
+        .tile .ic.blue  { background: rgba(37,99,235,.15);  border: 1px solid rgba(37,99,235,.4); }
+        .tile .ic.green { background: rgba(22,163,74,.15);  border: 1px solid rgba(22,163,74,.4); }
+        .tile-del-row { display: flex; gap: 12px; }
+        .tile-del {
+            flex: 1; border: 1px solid var(--border); background: transparent; cursor: pointer;
+            border-radius: 12px; padding: 13px; color: var(--muted); font-size: 13.5px; font-weight: 600;
+            font-family: inherit;
+        }
+        .tile-del:active { border-color: #7f1d1d; color: #fca5a5; }
+
+        /* ═══ KOMPAKTNÝ REŽIM (pôvodný zoznam sekcií) ═══ */
+        body.mode-compact .home-tiles { display: none; }
+        body.mode-compact #app-back { display: none !important; }
+        body.mode-compact .wrap .section { display: block; }
+        body.mode-compact .wrap .section .chevron { display: inline; }
     </style>
 </head>
 <body>
@@ -642,6 +750,7 @@
     <div class="user-info" id="topbar-user" style="display:none">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
+        <button class="btn-signout" id="mode-toggle" onclick="toggleMode()" title="Prepnúť veľkosť menu" style="font-size:15px;">☰</button>
         <button class="btn-signout" id="admin-key-btn" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px; display:none;">🔑</button>
         <button class="btn-signout" onclick="signOut()">Odhlásiť</button>
     </div>
@@ -701,6 +810,9 @@
         <span id="sync-reminder-text"></span>
     </div>
 
+    <!-- UPLOAD PROGRESS (nahravanie cakajucich poloziek) -->
+    <div class="upload-bar" id="upload-progress" style="display:none;"></div>
+
     <!-- INSTALL BANNER -->
     <div class="install-banner" id="install-banner">
         <div class="install-banner-left">
@@ -715,6 +827,45 @@
     </div>
 
     <div class="wrap">
+
+        <!-- LIŠTA SPÄŤ (viditeľná len v úlohe) -->
+        <div id="app-back">
+            <button class="backbtn" onclick="backToTiles()">← Späť na hlavnú</button>
+        </div>
+
+        <!-- ÚVODNÉ DLAŽDICE -->
+        <div class="home-tiles" id="home-tiles">
+            <div class="m-card">
+                <div class="m-card-lbl">⚙️ Stroje — základ všetkého</div>
+                <div class="m-card-row" onclick="openSection('sec-machines')">
+                    <div class="m-card-name" id="tile-machines">0 strojov</div>
+                    <div class="m-card-go">›</div>
+                </div>
+            </div>
+
+            <button class="tile-hero" onclick="openSection('sec-search-drawing')">
+                <span class="ic">🔍</span>
+                <span><div class="tt">Nájsť výkres</div><div class="sb" id="tile-d-count">0 výkresov</div></span>
+            </button>
+
+            <button class="tile-wide" onclick="openSection('sec-add-drawing')">
+                <span class="ic">➕</span><span class="tt">Pridať výkres</span>
+            </button>
+
+            <div class="tile-grid">
+                <button class="tile" onclick="openSection('sec-search-tool')">
+                    <div class="ic blue">🔧</div><div class="tt" id="tile-t-count">Nájsť nástroj</div>
+                </button>
+                <button class="tile" onclick="openSection('sec-add-tool')">
+                    <div class="ic green">➕</div><div class="tt">Pridať nástroj</div>
+                </button>
+            </div>
+
+            <div class="tile-del-row">
+                <button class="tile-del" onclick="openSection('sec-del-drawing')">🗑 Vymazať výkres</button>
+                <button class="tile-del" onclick="openSection('sec-del-tool')">🗑 Vymazať nástroj</button>
+            </div>
+        </div>
 
         <!-- STROJE -->
         <div class="section" id="sec-machines">
@@ -789,7 +940,7 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj</label>
-                    <select id="ad-machine"><option value="">— Vyberte stroj —</option></select>
+                    <select id="ad-machine" onchange="onDrawingMachineChange()"><option value="">— Vyberte stroj —</option></select>
                 </div>
                 <div class="fg">
                     <label class="field-label">Číslo výkresu</label>
@@ -805,7 +956,17 @@
                 </div>
                 <div class="fg">
                     <label class="field-label">Fotka / sken výkresu</label>
-                    <input type="file" id="ad-file" accept="image/*">
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-cam').click()">📷 Odfotiť</button>
+                        <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-lib').click()">📁 Zo zariadenia</button>
+                    </div>
+                    <input type="file" id="ad-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
+                    <input type="file" id="ad-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
+                    <div id="ad-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Nástroje k výkresu (voliteľné)</label>
+                    <div id="ad-tools-pick" class="tool-pick"></div>
                 </div>
                 <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
             </div>
@@ -847,12 +1008,18 @@
                 <div class="chevron">⌄</div>
             </div>
             <div class="section-body">
+                <div class="fg">
+                    <label class="field-label">Stroj (voliteľné)</label>
+                    <select id="tool-machine-filter" onchange="renderToolSearch()">
+                        <option value="">— Všetky stroje —</option>
+                    </select>
+                </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
                     <input type="text" id="inp-tool-search" oninput="renderToolSearch()" placeholder="Priemer alebo názov (D10, vrták...)">
                 </div>
                 <div id="tool-search-results">
-                    <div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>
+                    <div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>
                 </div>
             </div>
         </div>
@@ -890,6 +1057,16 @@
                     <label class="field-label">Poznámka / korekcia</label>
                     <textarea id="at-note" rows="2" placeholder="Dĺžková korekcia, otáčky, posuv..."></textarea>
                 </div>
+                <div class="fg">
+                    <label class="field-label">Fotka nástroja (voliteľné)</label>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-photo" onclick="document.getElementById('at-file-cam').click()">📷 Odfotiť</button>
+                        <button type="button" class="btn-photo" onclick="document.getElementById('at-file-lib').click()">📁 Zo zariadenia</button>
+                    </div>
+                    <input type="file" id="at-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onToolFile(this)">
+                    <input type="file" id="at-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onToolFile(this)">
+                    <div id="at-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+                </div>
                 <button class="btn btn-success" onclick="saveTool()">✓ Uložiť nástroj</button>
             </div>
         </div>
@@ -924,10 +1101,34 @@
 <div id="modal-detail" class="modal-bg" onclick="closeModal()">
     <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div class="modal-title">Detail výkresu</div>
+            <div class="modal-title" id="modal-detail-title">Detail výkresu</div>
             <button class="modal-close" onclick="closeModal()">✕</button>
         </div>
         <div id="modal-content"></div>
+    </div>
+</div>
+
+<!-- MODAL: Nástroj otvorený Z VÝKRESU (okno navrchu) -->
+<div id="modal-tool" class="modal-bg" style="z-index:400;" onclick="closeToolModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Detail nástroja</div>
+            <button class="modal-close" onclick="closeToolModal()">✕</button>
+        </div>
+        <div id="modal-tool-content"></div>
+    </div>
+</div>
+
+<!-- MODAL: Upraviť nástroje k výkresu -->
+<div id="modal-edittools" class="modal-bg" style="z-index:400;" onclick="closeEditTools()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Upraviť nástroje</div>
+            <button class="modal-close" onclick="closeEditTools()">✕</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Ťuknutím pridáte alebo odoberiete nástroj. Označené sú priradené k výkresu.</div>
+        <div id="edittools-pick" class="tool-pick" style="margin-bottom:16px;"></div>
+        <button class="btn btn-success" onclick="saveEditTools()">✓ Uložiť nástroje</button>
     </div>
 </div>
 
@@ -1010,7 +1211,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
     onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
     sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence }
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
+    collection, addDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1030,12 +1232,23 @@ const provider = new GoogleAuthProvider();
 // Offline persistence
 enableIndexedDbPersistence(db).catch(() => {});
 
+// Service worker — appka sa da otvorit aj offline (uklada app shell)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+}
+
 // ════════ STAV ════════
 let currentUser = null;
 let machines = [];
 let drawings = [];
 let tools    = [];
 let unsubscribe = null;
+let unsubscribeDrawings = null;
+let unsubscribeTools = null;
+let migrationChecked = false;
+let migrationToolsChecked = false;
 let adminHash = null;          // hash admin hesla (z Firestore)
 let recoveryHash = null;       // hash záložného obnovovacieho kódu
 let subTier = null;            // tarif: 'solo' | 'firma' | null (trial/neznámy)
@@ -1223,6 +1436,8 @@ window.forgotPassword = async () => {
 window.signOut = async () => {
     if (!confirm('Odhlásiť sa?')) return;
     if (unsubscribe) unsubscribe();
+    if (unsubscribeDrawings) unsubscribeDrawings();
+    if (unsubscribeTools) unsubscribeTools();
     await fbSignOut(auth);
 };
 
@@ -1235,6 +1450,31 @@ onAuthStateChanged(auth, user => {
         currentUser = null;
         showLogin();
     }
+});
+
+// ── Strážca "Späť": systémové Späť zatvorí otvorené okno, appku nezavrie ──
+history.pushState({ cnc: 1 }, '');
+window.addEventListener('popstate', () => {
+    const zoom = document.getElementById('zoom-ov');
+    const medit = document.getElementById('modal-edittools');
+    const mtool = document.getElementById('modal-tool');
+    const md   = document.getElementById('modal-detail');
+    const ov   = document.querySelector('.modal-ov.visible');
+    if (zoom && zoom.classList.contains('open')) {
+        if (window.closeZoom) window.closeZoom(); else zoom.classList.remove('open');
+    } else if (medit && medit.classList.contains('open')) {
+        medit.classList.remove('open');
+    } else if (mtool && mtool.classList.contains('open')) {
+        mtool.classList.remove('open');
+    } else if (md && md.classList.contains('open')) {
+        md.classList.remove('open');
+    } else if (ov) {
+        ov.classList.remove('visible');
+    } else if (document.querySelector('.wrap .section.active')) {
+        backToTiles();
+    }
+    // Vždy ostaň v appke (von len cez domovské tlačidlo)
+    history.pushState({ cnc: 1 }, '');
 });
 
 function showLogin() {
@@ -1257,18 +1497,36 @@ function showApp(user) {
 // ════════ FIRESTORE REALTIME ════════
 function listenData(uid) {
     setSyncState('syncing');
+    if (unsubscribe) unsubscribe();
+    if (unsubscribeDrawings) unsubscribeDrawings();
+    if (unsubscribeTools) unsubscribeTools();
+    migrationChecked = false;
+    migrationToolsChecked = false;
+
+    // ── Hlavný dokument účtu: stroje, predplatné, heslá ──
     const ref = doc(db, 'users', uid);
     unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, snap => {
         if (snap.exists()) {
             const d = snap.data();
             machines  = d.machines || [];
-            drawings  = d.drawings || [];
-            tools     = d.tools    || [];
             adminHash = d.adminHash || null;
             recoveryHash = d.recoveryHash || null;
             subTier = (d.subscription && d.subscription.tier) || null;
+
+            // Migrácia starého formátu: výkresy z poľa -> do podkolekcie
+            const oldDrawings = d.drawings || [];
+            if (!migrationChecked && oldDrawings.length) {
+                migrationChecked = true;
+                migrateDrawings(uid, oldDrawings);
+            }
+            // Migrácia starého formátu: nástroje z poľa -> do podkolekcie
+            const oldTools = d.tools || [];
+            if (!migrationToolsChecked && oldTools.length) {
+                migrationToolsChecked = true;
+                migrateTools(uid, oldTools);
+            }
         } else {
-            machines = []; drawings = []; tools = []; adminHash = null; recoveryHash = null; subTier = null;
+            machines = []; adminHash = null; recoveryHash = null; subTier = null;
         }
         renderAll();
 
@@ -1295,13 +1553,106 @@ function listenData(uid) {
         setSyncState('offline');
         updateSyncReminder();
     });
+
+    // ── Podkolekcia výkresov: každý výkres = vlastný dokument ──
+    const dref = collection(db, 'users', uid, 'drawings');
+    unsubscribeDrawings = onSnapshot(dref, { includeMetadataChanges: true }, snap => {
+        drawings = snap.docs.map(ds => ({ _id: ds.id, ...ds.data() }));
+        dwPending = snap.docs.filter(x => x.metadata.hasPendingWrites).length;
+        if (dwPending > dwTotal) dwTotal = dwPending;
+        if (dwPending === 0) dwTotal = 0;
+        updateUploadProgress();
+        renderAll();
+    }, err => { /* offline / chyba – ponecháme, čo máme */ });
+
+    // ── Podkolekcia nástrojov: každý nástroj = vlastný dokument ──
+    const tref = collection(db, 'users', uid, 'tools');
+    unsubscribeTools = onSnapshot(tref, { includeMetadataChanges: true }, snap => {
+        tools = snap.docs.map(ts => ({ _id: ts.id, ...ts.data() }));
+        tlPending = snap.docs.filter(x => x.metadata.hasPendingWrites).length;
+        if (tlPending > tlTotal) tlTotal = tlPending;
+        if (tlPending === 0) tlTotal = 0;
+        updateUploadProgress();
+        renderAll();
+    }, err => { /* offline / chyba – ponecháme, čo máme */ });
+}
+
+// ── Počítadlo nahrávania čakajúcich položiek ──
+let dwPending = 0, dwTotal = 0, tlPending = 0, tlTotal = 0, wasUploading = false;
+function updateUploadProgress() {
+    const box = document.getElementById('upload-progress');
+    if (!box) return;
+    if (dwPending === 0 && tlPending === 0) {
+        box.style.display = 'none';
+        if (wasUploading) { showToast('✓ Všetko nahrané a zálohované', 'ok'); wasUploading = false; }
+        return;
+    }
+    wasUploading = true;
+    box.style.display = 'flex';
+    const online = navigator.onLine;
+    const parts = [];
+    if (dwTotal > 0) parts.push(`výkresy ${dwTotal - dwPending}/${dwTotal}`);
+    if (tlTotal > 0) parts.push(`nástroje ${tlTotal - tlPending}/${tlTotal}`);
+    const detail = parts.join(', ');
+    if (online) {
+        box.className = 'upload-bar';
+        box.textContent = `⬆️ Nahrávam ${detail} — nechajte wifi zapnutú, kým sa nedokončí`;
+    } else {
+        box.className = 'upload-bar waiting';
+        box.textContent = `⏳ Čaká na nahratie: ${detail} — pripojte wifi, dáta sú zatiaľ len v tablete`;
+    }
+}
+window.addEventListener('online',  updateUploadProgress);
+window.addEventListener('offline', updateUploadProgress);
+
+// Presun starých výkresov (pole) do podkolekcie. Spustí sa raz.
+async function migrateDrawings(uid, arr) {
+    try {
+        for (const dr of arr) {
+            await addDoc(collection(db, 'users', uid, 'drawings'), {
+                machine: dr.machine || '',
+                number:  dr.number  || '',
+                program: dr.program || '',
+                note:    dr.note    || '',
+                fileData: dr.fileData || null,
+                createdAt: Date.now()
+            });
+        }
+        await setDoc(doc(db, 'users', uid), { drawings: [] }, { merge: true });
+        showToast('Výkresy prevedené do nového formátu ✓', 'ok');
+    } catch (e) {
+        migrationChecked = false; // skús znova pri ďalšom načítaní
+    }
+}
+
+// Presun starých nástrojov (pole) do podkolekcie. Spustí sa raz.
+async function migrateTools(uid, arr) {
+    try {
+        for (const t of arr) {
+            await addDoc(collection(db, 'users', uid, 'tools'), {
+                machine: t.machine || '',
+                name: t.name || '',
+                diameter: t.diameter || '',
+                type: t.type || '',
+                category: t.category || '',
+                catName: t.catName || '',
+                note: t.note || '',
+                fileData: t.fileData || null,
+                createdAt: Date.now()
+            });
+        }
+        await setDoc(doc(db, 'users', uid), { tools: [] }, { merge: true });
+        showToast('Nástroje prevedené do nového formátu ✓', 'ok');
+    } catch (e) {
+        migrationToolsChecked = false;
+    }
 }
 
 async function saveToFirestore() {
     if (!currentUser) return;
     setSyncState('syncing');
     try {
-        await setDoc(doc(db, 'users', currentUser.uid), { machines, drawings, tools }, { merge: true });
+        await setDoc(doc(db, 'users', currentUser.uid), { machines }, { merge: true });
         setSyncState('online');
     } catch(e) {
         setSyncState('offline');
@@ -1494,6 +1845,7 @@ function renderAll() {
     renderDrawingSearch();
     renderToolSearch();
     renderToolCategories();
+    if (window.renderDrawingToolPicker) renderDrawingToolPicker();
 }
 
 // ════════ STROJE ════════
@@ -1512,13 +1864,14 @@ function renderMachines() {
         });
     }
     // Fill all machine selects
-    ['ad-machine','at-machine','del-machine-select','search-machine-filter'].forEach(id => {
+    ['ad-machine','at-machine','del-machine-select','search-machine-filter','tool-machine-filter'].forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
         const cur = sel.value;
+        const isFilter = (id === 'search-machine-filter' || id === 'tool-machine-filter');
         sel.innerHTML = id === 'del-machine-select'
             ? '<option value="">— Vyberte stroj na vymazanie —</option>'
-            : '<option value="">— Vyberte stroj —</option>';
+            : (isFilter ? '<option value="">— Všetky stroje —</option>' : '<option value="">— Vyberte stroj —</option>');
         machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
         sel.value = cur;
     });
@@ -1544,9 +1897,17 @@ window.deleteMachineConfirm = async () => {
     const tCnt = tools.filter(t => t.machine === name).length;
     if (!confirm(`Vymazať stroj "${name}"?\nVýkresy: ${dCnt} · Nástroje: ${tCnt}\nAkcia sa nedá vrátiť!`)) return;
     if (!await requireAdminPassword()) return;
+    // Zmaž výkresy tohto stroja (každý je vlastný dokument)
+    const toDel = drawings.filter(d => d.machine === name);
+    for (const d of toDel) {
+        deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', d._id)).catch(() => {});
+    }
+    // Zmaž nástroje tohto stroja (každý je vlastný dokument)
+    const toolsDel = tools.filter(t => t.machine === name);
+    for (const t of toolsDel) {
+        deleteDoc(doc(db, 'users', currentUser.uid, 'tools', t._id)).catch(() => {});
+    }
     machines = machines.filter(m => m !== name);
-    drawings = drawings.filter(d => d.machine !== name);
-    tools    = tools.filter(t => t.machine !== name);
     await saveToFirestore();
     sel.value = '';
     renderMachines();
@@ -1583,13 +1944,32 @@ window.renderDrawingSearch = () => {
 window.openDetail = (number) => {
     const d = drawings.find(x => x.number === number);
     if (!d) return;
+    const titleEl = document.getElementById('modal-detail-title');
+    if (titleEl) titleEl.textContent = 'Detail výkresu';
     const imgHtml = d.fileData ? `<div class="detail-img-wrap"><img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
+
+    // Priradené nástroje (klik -> detail nástroja) + tlačidlo na úpravu
+    const ids = d.toolIds || [];
+    const linked = ids.map(id => tools.find(t => t._id === id)).filter(Boolean);
+    let toolsHtml = '<div class="det-tools"><div class="dt-head">🔧 Nástroje k výkresu</div>';
+    if (linked.length) {
+        linked.forEach(t => {
+            const thumb = t.fileData ? `<img class="dtc-thumb" src="${t.fileData}" alt="">` : '<div class="dtc-thumb"></div>';
+            toolsHtml += `<div class="det-tool-card" onclick="openToolFromDrawing('${t._id}')">${thumb}<div><div style="font-weight:600;">${t.diameter || t.name || 'nástroj'}</div><div style="font-size:12px;color:var(--muted);">${t.name || ''}</div></div></div>`;
+        });
+    } else {
+        toolsHtml += '<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Žiadne priradené nástroje</div>';
+    }
+    toolsHtml += `<button class="btn btn-sm" style="width:100%;margin-top:4px;background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="openEditTools('${d._id}')">✏️ Upraviť nástroje</button>`;
+    toolsHtml += '</div>';
+
     document.getElementById('modal-content').innerHTML = `
         ${imgHtml}
         <div class="d-field"><div class="d-key">Číslo výkresu</div><div class="d-val">${d.number}</div></div>
         <div class="d-field"><div class="d-key">Číslo programu</div><div class="d-val">${d.program || '—'}</div></div>
         <div class="d-field"><div class="d-key">Stroj</div><div class="d-val">${d.machine}</div></div>
         <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${d.note || '—'}</div></div>
+        ${toolsHtml}
     `;
     document.getElementById('modal-detail').classList.add('open');
 };
@@ -1597,12 +1977,48 @@ window.openDetail = (number) => {
 window.closeModal = () => document.getElementById('modal-detail').classList.remove('open');
 
 // ════════ VÝKRESY – PRIDAJ ════════
+let pendingDrawingFile = null;
+let selectedToolIds = [];
+
+window.onDrawingMachineChange = () => { selectedToolIds = []; renderDrawingToolPicker(); };
+
+window.renderDrawingToolPicker = () => {
+    const box = document.getElementById('ad-tools-pick');
+    if (!box) return;
+    const machine = document.getElementById('ad-machine').value;
+    if (!machine) { box.innerHTML = '<span class="tp-empty">Najprv vyberte stroj</span>'; return; }
+    const pool = tools.filter(t => t.machine === machine);
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje</span>'; return; }
+    // odstráň z výberu nástroje, čo už neexistujú
+    selectedToolIds = selectedToolIds.filter(id => pool.some(t => t._id === id));
+    box.innerHTML = '';
+    pool.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip' + (selectedToolIds.includes(t._id) ? ' sel' : '');
+        const label = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
+        chip.textContent = label;
+        chip.onclick = () => {
+            const i = selectedToolIds.indexOf(t._id);
+            if (i >= 0) selectedToolIds.splice(i, 1); else selectedToolIds.push(t._id);
+            renderDrawingToolPicker();
+        };
+        box.appendChild(chip);
+    });
+};
+
+window.onDrawingFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingDrawingFile = f;
+    const st = document.getElementById('ad-file-status');
+    if (st) st.textContent = '✓ Fotka pripravená: ' + (f.name || 'obrázok');
+};
+
 window.saveDrawing = async () => {
     const machine = document.getElementById('ad-machine').value;
     const number  = document.getElementById('ad-number').value.trim();
     const program = document.getElementById('ad-program').value.trim();
     const note    = document.getElementById('ad-note').value.trim();
-    const fi      = document.getElementById('ad-file');
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
     if (!number)  { showToast('Zadajte číslo výkresu!', 'err'); return; }
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
@@ -1612,23 +2028,30 @@ window.saveDrawing = async () => {
         // Compress image if too large (max 800px wide)
         let finalData = fileData;
         if (fileData && fileData.startsWith('data:image')) {
-            finalData = await compressImage(fileData, 800);
+            finalData = await compressImage(fileData, 1800);
         }
-        const newDrawing = { machine, number, program, note, fileData: finalData || null };
-        drawings = [...drawings, newDrawing];
-        await saveToFirestore();
+        const newDrawing = { machine, number, program, note, fileData: finalData || null, toolIds: [...selectedToolIds], createdAt: Date.now() };
+        // Zápis do podkolekcie. Offline sa uloží lokálne a nahrá pri wifi.
+        // Nečakáme na server – zoznam sa aktualizuje cez realtime listener.
+        addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing)
+            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('ad-machine').value = '';
-        fi.value = '';
+        document.getElementById('ad-file-cam').value = '';
+        document.getElementById('ad-file-lib').value = '';
+        document.getElementById('ad-file-status').textContent = '';
+        pendingDrawingFile = null;
+        selectedToolIds = [];
+        renderDrawingToolPicker();
         document.getElementById('sec-add-drawing').classList.remove('open');
-        document.getElementById('sec-search-drawing').classList.add('open');
+        openSection('sec-search-drawing');
     };
 
-    if (fi.files && fi.files[0]) {
+    if (pendingDrawingFile) {
         const reader = new FileReader();
         reader.onload = e => doSave(e.target.result);
-        reader.readAsDataURL(fi.files[0]);
+        reader.readAsDataURL(pendingDrawingFile);
     } else {
         doSave(null);
     }
@@ -1636,15 +2059,28 @@ window.saveDrawing = async () => {
 
 // Compress image to max width
 function compressImage(dataUrl, maxWidth) {
+    // Vyuzijeme takmer cely 1 MB na jeden dokument -> ostrejsia fotka (citanie kot).
+    // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod 1 MB.
+    const MAX_CHARS = 950000; // bezpecne pod limit Firestore 1 MB/dokument
     return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
-            const ratio = Math.min(1, maxWidth / img.width);
-            const canvas = document.createElement('canvas');
-            canvas.width  = img.width  * ratio;
-            canvas.height = img.height * ratio;
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', 0.75));
+            const render = (w, q) => {
+                const ratio = Math.min(1, w / img.width);
+                const canvas = document.createElement('canvas');
+                canvas.width  = Math.round(img.width  * ratio);
+                canvas.height = Math.round(img.height * ratio);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', q);
+            };
+            let width = Math.min(img.width, maxWidth);
+            let q = 0.85;
+            let out = render(width, q);
+            // 1) najprv znizuj kvalitu
+            while (out.length > MAX_CHARS && q > 0.4) { q = Math.round((q - 0.1) * 100) / 100; out = render(width, q); }
+            // 2) ak stale velke, znizuj aj rozmer
+            while (out.length > MAX_CHARS && width > 700) { width = Math.round(width * 0.85); out = render(width, 0.7); }
+            resolve(out);
         };
         img.src = dataUrl;
     });
@@ -1659,19 +2095,20 @@ window.renderDelDrawing = () => {
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(d => {
-        const idx = drawings.findIndex(x => x.number === d.number);
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing(${idx})">🗑 Vymazať</button>`;
+        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing('${d._id}')">🗑 Vymazať</button>`;
         box.appendChild(card);
     });
 };
 
-window._delDrawing = async (idx) => {
-    if (!confirm(`Vymazať výkres "${drawings[idx].number}"?`)) return;
+window._delDrawing = async (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    if (!confirm(`Vymazať výkres "${d.number}"?`)) return;
     if (!await requireAdminPassword()) return;
-    drawings.splice(idx, 1);
-    await saveToFirestore();
+    deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', id))
+        .catch(() => showToast('Zmena sa uloží pri wifi', ''));
     showToast('Výkres vymazaný', 'err');
     window.renderDelDrawing();
 };
@@ -1679,22 +2116,109 @@ window._delDrawing = async (idx) => {
 // ════════ NÁSTROJE – HĽADAJ ════════
 window.renderToolSearch = () => {
     const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
+    const machineF = document.getElementById('tool-machine-filter').value;
     const box  = document.getElementById('tool-search-results');
-    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Zadajte priemer alebo názov</p></div>`; return; }
-    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text));
+    let pool = machineF ? tools.filter(t => t.machine === machineF) : tools;
+    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>`; return; }
+    const filtered = text
+        ? pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text))
+        : pool;
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`; return; }
     filtered.forEach(t => {
         const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
         const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
+        const photoTag = t.fileData ? ' 📷' : '';
         const card = document.createElement('div');
         card.className = 'r-card tool';
-        card.innerHTML = `<div class="r-title">${iconHtml}${t.diameter}</div><div class="r-meta">${t.name}<br>Stroj: ${t.machine}${t.note?'<br>Poznámka: '+t.note:''}</div>`;
+        card.style.cursor = 'pointer';
+        card.innerHTML = `<div class="r-title">${iconHtml}${t.diameter}${photoTag}</div><div class="r-meta">${t.name}<br>Stroj: ${t.machine}${t.note?'<br>Poznámka: '+t.note:''}</div>`;
+        card.onclick = () => openToolDetail(t._id);
         box.appendChild(card);
     });
 };
 
+function buildToolHtml(t) {
+    const imgHtml = t.fileData ? `<div class="detail-img-wrap"><img src="${t.fileData}" onclick="zoomImage('${t.fileData}')" alt="Nástroj"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
+    return `
+        ${imgHtml}
+        <div class="d-field"><div class="d-key">Nástroj</div><div class="d-val">${t.name}</div></div>
+        <div class="d-field"><div class="d-key">Priemer / rozmer</div><div class="d-val">${t.diameter}</div></div>
+        <div class="d-field"><div class="d-key">Stroj</div><div class="d-val">${t.machine}</div></div>
+        <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${t.note || '—'}</div></div>
+    `;
+}
+
+// Samostatný detail nástroja (z hľadania nástrojov)
+window.openToolDetail = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    const titleEl = document.getElementById('modal-detail-title');
+    if (titleEl) titleEl.textContent = 'Detail nástroja';
+    document.getElementById('modal-content').innerHTML = buildToolHtml(t);
+    document.getElementById('modal-detail').classList.add('open');
+};
+
+// Nástroj otvorený Z VÝKRESU — okno navrchu (Späť/X sa vráti na výkres)
+window.openToolFromDrawing = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    document.getElementById('modal-tool-content').innerHTML = buildToolHtml(t);
+    document.getElementById('modal-tool').classList.add('open');
+};
+window.closeToolModal = () => document.getElementById('modal-tool').classList.remove('open');
+
+// ── Úprava nástrojov priradených k výkresu ──
+let editDrawingId = null, editDrawingNumber = null, editMachine = null, editToolIds = [];
+window.openEditTools = (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    editDrawingId = id; editDrawingNumber = d.number; editMachine = d.machine;
+    editToolIds = [...(d.toolIds || [])];
+    renderEditToolsPicker();
+    document.getElementById('modal-edittools').classList.add('open');
+};
+window.renderEditToolsPicker = () => {
+    const box = document.getElementById('edittools-pick');
+    if (!box) return;
+    const pool = tools.filter(t => t.machine === editMachine);
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje. Najprv ich pridajte v sekcii Nástroje.</span>'; return; }
+    editToolIds = editToolIds.filter(id => pool.some(t => t._id === id));
+    box.innerHTML = '';
+    pool.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip' + (editToolIds.includes(t._id) ? ' sel' : '');
+        chip.textContent = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
+        chip.onclick = () => {
+            const i = editToolIds.indexOf(t._id);
+            if (i >= 0) editToolIds.splice(i, 1); else editToolIds.push(t._id);
+            renderEditToolsPicker();
+        };
+        box.appendChild(chip);
+    });
+};
+window.saveEditTools = () => {
+    if (!editDrawingId) return;
+    setDoc(doc(db, 'users', currentUser.uid, 'drawings', editDrawingId), { toolIds: [...editToolIds] }, { merge: true })
+        .catch(() => showToast('Uloží sa pri wifi', ''));
+    const d = drawings.find(x => x._id === editDrawingId);
+    if (d) d.toolIds = [...editToolIds];
+    showToast('Nástroje uložené ✓', 'ok');
+    closeEditTools();
+    if (editDrawingNumber) openDetail(editDrawingNumber); // obnov detail
+};
+window.closeEditTools = () => document.getElementById('modal-edittools').classList.remove('open');
+
 // ════════ NÁSTROJE – PRIDAJ ════════
+let pendingToolFile = null;
+window.onToolFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingToolFile = f;
+    const st = document.getElementById('at-file-status');
+    if (st) st.textContent = '✓ Fotka pripravená: ' + (f.name || 'obrázok');
+};
+
 window.saveTool = async () => {
     const machine = document.getElementById('at-machine').value;
     const diam    = document.getElementById('at-diam').value.trim();
@@ -1708,18 +2232,38 @@ window.saveTool = async () => {
     if (limitReached('tools', tools.length)) return;
     // name = kategória + podtyp
     const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
-    tools = [...tools, { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note }];
-    await saveToFirestore();
-    showToast('Nástroj uložený ✓', 'ok');
-    document.getElementById('at-diam').value = '';
-    document.getElementById('at-note').value = '';
-    document.getElementById('at-machine').value = '';
-    document.getElementById('at-subtype').value = '';
-    document.getElementById('tool-subtype-wrap').style.display = 'none';
-    selectedCat = null;
-    renderToolCategories();
-    document.getElementById('sec-add-tool').classList.remove('open');
-    document.getElementById('sec-search-tool').classList.add('open');
+
+    const doSaveTool = async (fileData) => {
+        let finalData = fileData;
+        if (fileData && fileData.startsWith('data:image')) {
+            finalData = await compressImage(fileData, 1800);
+        }
+        const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalData || null, createdAt: Date.now() };
+        addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool)
+            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
+        showToast('Nástroj uložený ✓', 'ok');
+        document.getElementById('at-diam').value = '';
+        document.getElementById('at-note').value = '';
+        document.getElementById('at-machine').value = '';
+        document.getElementById('at-subtype').value = '';
+        document.getElementById('tool-subtype-wrap').style.display = 'none';
+        document.getElementById('at-file-cam').value = '';
+        document.getElementById('at-file-lib').value = '';
+        document.getElementById('at-file-status').textContent = '';
+        pendingToolFile = null;
+        selectedCat = null;
+        renderToolCategories();
+        document.getElementById('sec-add-tool').classList.remove('open');
+        openSection('sec-search-tool');
+    };
+
+    if (pendingToolFile) {
+        const reader = new FileReader();
+        reader.onload = e => doSaveTool(e.target.result);
+        reader.readAsDataURL(pendingToolFile);
+    } else {
+        doSaveTool(null);
+    }
 };
 
 // ════════ NÁSTROJE – VYMAŽ ════════
@@ -1731,31 +2275,85 @@ window.renderDelTool = () => {
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(t => {
-        const idx = tools.findIndex(x => x.machine === t.machine && x.name === t.name && x.diameter === t.diameter);
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool(${idx})">🗑 Vymazať</button>`;
+        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool('${t._id}')">🗑 Vymazať</button>`;
         box.appendChild(card);
     });
 };
 
-window._delTool = async (idx) => {
-    if (!confirm(`Vymazať nástroj "${tools[idx].name}"?`)) return;
+window._delTool = async (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    if (!confirm(`Vymazať nástroj "${t.name}"?`)) return;
     if (!await requireAdminPassword()) return;
-    tools.splice(idx, 1);
-    await saveToFirestore();
+    deleteDoc(doc(db, 'users', currentUser.uid, 'tools', id))
+        .catch(() => showToast('Zmena sa uloží pri wifi', ''));
     showToast('Nástroj vymazaný', 'err');
     window.renderDelTool();
 };
 
 // ════════ HELPERS ════════
 function updateCounts() {
-    document.getElementById('sub-drawings').textContent = drawings.length + ' výkresov';
-    document.getElementById('sub-tools').textContent    = tools.length    + ' nástrojov';
+    const dPend = (typeof dwPending === 'number' && dwPending > 0) ? ` · ${dwPending} čaká na nahratie` : '';
+    const tPend = (typeof tlPending === 'number' && tlPending > 0) ? ` · ${tlPending} čaká na nahratie` : '';
+    document.getElementById('sub-drawings').textContent = drawings.length + ' výkresov' + dPend;
+    document.getElementById('sub-tools').textContent    = tools.length    + ' nástrojov' + tPend;
     document.getElementById('sub-machines').textContent = machines.length + ' strojov';
+    // dlaždice na úvode
+    const tm = document.getElementById('tile-machines'); if (tm) tm.textContent = machines.length + (machines.length === 1 ? ' stroj' : ' strojov');
+    const td = document.getElementById('tile-d-count');  if (td) td.textContent = drawings.length + ' výkresov' + dPend;
+    const tt = document.getElementById('tile-t-count');  if (tt) tt.textContent = 'Nájsť nástroj';
 }
 
-window.toggleSection = (id) => document.getElementById(id).classList.toggle('open');
+// ═══ DLAŽDICOVÁ NAVIGÁCIA ═══
+// Hlavička sekcie už nezbaľuje (v úlohe je vždy otvorená)
+// ═══ REŽIMY: veľký (dlaždice) / kompaktný (zoznam) ═══
+function isCompact() { return document.body.classList.contains('mode-compact'); }
+
+window.toggleSection = (id) => {
+    // Kompaktný = klasické rozbaľovanie; Veľký = hlavička nezbaľuje
+    if (isCompact()) document.getElementById(id).classList.toggle('open');
+    else document.getElementById(id).classList.add('open');
+};
+
+window.openSection = (id) => {
+    const sec = document.getElementById(id);
+    if (isCompact()) {                       // v zozname len rozbaľ danú sekciu
+        sec.classList.add('open');
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    document.getElementById('home-tiles').classList.add('hidden');
+    document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
+    sec.classList.add('active'); sec.classList.add('open');
+    document.getElementById('app-back').classList.add('show');
+    window.scrollTo(0, 0);
+    history.pushState({ cnc: 1 }, '');
+};
+window.backToTiles = () => {
+    document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
+    document.getElementById('home-tiles').classList.remove('hidden');
+    document.getElementById('app-back').classList.remove('show');
+    window.scrollTo(0, 0);
+};
+
+window.setMode = (mode) => {
+    localStorage.setItem('cnc_mode', mode);
+    if (mode === 'compact') {
+        document.body.classList.add('mode-compact');
+        document.querySelectorAll('.wrap .section').forEach(s => { s.classList.remove('active'); s.classList.remove('open'); });
+        document.getElementById('app-back').classList.remove('show');
+    } else {
+        document.body.classList.remove('mode-compact');
+        backToTiles();
+    }
+    const b = document.getElementById('mode-toggle');
+    if (b) b.textContent = (mode === 'compact') ? '▦' : '☰';
+};
+window.toggleMode = () => setMode(isCompact() ? 'tiles' : 'compact');
+// nastav uložený režim (predvolený = veľké dlaždice)
+setMode(localStorage.getItem('cnc_mode') || 'tiles');
 
 // ════════ PINCH ZOOM ════════
 let _z = { scale: 1, x: 0, y: 0, startX: 0, startY: 0, lastDist: 0, dragging: false, lastTap: 0 };
