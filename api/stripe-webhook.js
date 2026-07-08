@@ -22,10 +22,10 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 // ── Mapovanie Stripe produktu (prod_...) → tarif (solo / firma) ──
 const PRODUCT_TIER = {
-  'prod_UnyBSRQhtpJsCs': 'solo',   // Solo 1 €/mes
-  'prod_UnyCCCcHrcxN7h': 'solo',   // Solo 10 €/rok
-  'prod_UndxuayUAcVp61': 'firma',  // Firma 10 €/mes
-  'prod_UndyUu2paKLbgO': 'firma',  // Firma 100 €/rok
+  'prod_UqblIFB8rnYA43': 'solo',   // Jednotlivec 1 €/mes
+  'prod_UqbmDLqf3Jx8r1': 'solo',   // Jednotlivec 10 €/rok
+  'prod_UqboHbbp3SMcSe': 'firma',  // Partia 10 €/mes
+  'prod_UqbpXOXUQNrErg': 'firma',  // Partia 100 €/rok
 };
 function tierForPrice(price) {
   const prodId = typeof price?.product === 'string' ? price.product : price?.product?.id;
