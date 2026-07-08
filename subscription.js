@@ -45,10 +45,10 @@ const DAY_MS     = 86400000;
 // Stripe Payment Links — jeden link pre každý tarif a obdobie.
 // (Sandbox / test linky. Pre OSTRÚ prevádzku vymeň za live linky.)
 const CHECKOUT_LINKS = {
-    firma_monthly: "https://buy.stripe.com/test_14AcN6ed5fTl9zFdYC3Je00",
-    firma_yearly:  "https://buy.stripe.com/test_28E9AU8SL6iL5jpdYC3Je01",
-    solo_monthly:  "https://buy.stripe.com/test_5kQ4gAd914aDdPV9Im3Je02",
-    solo_yearly:   "https://buy.stripe.com/test_9B6cN61qjdLdbHNaMq3Je03",
+    firma_monthly: "https://buy.stripe.com/4gMcMY0j6b5s06QbA6fw402",
+    firma_yearly:  "https://buy.stripe.com/4gM8wI4zm0qO2eY0Vsfw403",
+    solo_monthly:  "https://buy.stripe.com/6oUfZagi48Xk2eY5bIfw400",
+    solo_yearly:   "https://buy.stripe.com/dRm7sE5Dq7TgbPyaw2fw401",
 };
 // Kam smeruje "Aktivovať" v appke (nech si používateľ vyberie plán).
 const UPGRADE_URL = "index.html#cennik";
