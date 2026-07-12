@@ -1215,6 +1215,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
     collection, addDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
@@ -1222,10 +1223,14 @@ const firebaseConfig = {
     projectId: "cncdoc-827bf",
     storageBucket: "cncdoc-827bf.firebasestorage.app",
     messagingSenderId: "27352328550",
-    appId: "1:27352328550:web:3d8d13f3e1230744d900a7"
+    appId: "1:27352328550:web:3d8d13f3e1230744d900a7",
+    measurementId: "G-EZYLV6FR8X"
 };
 
 const app     = initializeApp(firebaseConfig);
+
+// Počítadlo návštevnosti (Google Analytics) — page_view sa loguje automaticky
+try { getAnalytics(app); } catch(e) { /* napr. blokovač reklám — appku to nesmie zhodiť */ }
 const auth    = getAuth(app);
 const db      = getFirestore(app);
 const provider = new GoogleAuthProvider();

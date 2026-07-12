@@ -757,5 +757,22 @@
     <div class="footer-note">// vyrobené strojárom pre strojárov</div>
 </section>
 
+<!-- Počítadlo návštevnosti (Firebase / Google Analytics) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+
+const app = initializeApp({
+    apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
+    authDomain: "cncdoc-827bf.firebaseapp.com",
+    projectId: "cncdoc-827bf",
+    storageBucket: "cncdoc-827bf.firebasestorage.app",
+    messagingSenderId: "27352328550",
+    appId: "1:27352328550:web:3d8d13f3e1230744d900a7",
+    measurementId: "G-EZYLV6FR8X"
+});
+try { getAnalytics(app); } catch(e) { /* blokovač reklám — stránku to nesmie zhodiť */ }
+</script>
+
 </body>
 </html>
