@@ -510,6 +510,82 @@
 
         .div { height: 1px; background: var(--border); margin: 14px 0; }
 
+        /* ── ONBOARDING SPRIEVODCA ── */
+        .onb-card {
+            background: linear-gradient(150deg, #1e2d3d 0%, #223447 100%);
+            border: 1.5px solid rgba(249,115,22,.35);
+            border-radius: 18px;
+            padding: 22px 18px;
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .onb-card::before {
+            content: '';
+            position: absolute; top: -40px; right: -40px;
+            width: 140px; height: 140px;
+            background: radial-gradient(circle, rgba(249,115,22,.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .onb-step-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(249,115,22,.18);
+            color: var(--cut);
+            font-size: 11px; font-weight: 800;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 5px 11px; border-radius: 20px;
+            margin-bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .onb-title {
+            font-size: 19px; font-weight: 800; color: var(--white);
+            line-height: 1.25; margin-bottom: 8px; position: relative;
+        }
+        .onb-text {
+            font-size: 14px; color: var(--muted);
+            line-height: 1.6; margin-bottom: 18px; position: relative;
+        }
+        .onb-actions { display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .onb-btn {
+            padding: 13px; border: none; border-radius: 11px;
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all .2s; width: 100%;
+        }
+        .onb-btn:active { transform: scale(.98); }
+        .onb-btn-primary { background: var(--cut); color: #fff; }
+        .onb-btn-primary:hover { background: #ea6c0b; }
+        .onb-btn-ghost {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--muted); font-size: 13px;
+        }
+        .onb-btn-ghost:hover { border-color: var(--muted); color: var(--white); }
+
+        .onb-progress {
+            display: flex; gap: 6px; margin-top: 16px;
+            position: relative; justify-content: center;
+        }
+        .onb-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(255,255,255,.15); transition: all .3s;
+        }
+        .onb-dot.active { background: var(--cut); width: 22px; border-radius: 4px; }
+        .onb-dot.done { background: rgba(249,115,22,.5); }
+
+        .onb-quick-input {
+            display: flex; gap: 8px; margin-bottom: 12px; position: relative;
+        }
+        .onb-quick-input input {
+            flex: 1; padding: 12px 13px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--input); color: var(--white); font-size: 15px;
+        }
+        .onb-quick-input input:focus { outline: none; border-color: var(--cut); }
+
+        .onb-done-icon {
+            font-size: 38px; text-align: center; margin-bottom: 10px;
+            position: relative;
+        }
+
         /* ── TOOL CATEGORY GRID ── */
         .tool-cat-grid {
             display: grid;
@@ -828,6 +904,13 @@
     </div>
 
     <div class="wrap">
+
+        <!-- ══ ONBOARDING SPRIEVODCA ══ -->
+        <div class="onb-card" id="onb-card" style="display:none;">
+            <div id="onb-content"></div>
+            <div class="onb-progress" id="onb-progress"></div>
+        </div>
+
 
         <!-- LIŠTA SPÄŤ (viditeľná len v úlohe) -->
         <div id="app-back">
@@ -1845,6 +1928,136 @@ function updateSyncReminder() {
 }
 
 // ════════ RENDER ALL ════════
+
+// ════════ ONBOARDING SPRIEVODCA ════════
+let onbDismissed = false;
+
+function getOnbStep() {
+    if (machines.length === 0) return 1;
+    if (drawings.length === 0) return 2;
+    if (tools.length === 0)    return 3;
+    return 0; // hotovo
+}
+
+function renderOnboarding() {
+    const card = document.getElementById('onb-card');
+    const box  = document.getElementById('onb-content');
+    const prog = document.getElementById('onb-progress');
+    if (!card || !box) return;
+
+    // Skryť ak užívateľ zavrel alebo má už všetko
+    if (onbDismissed || localStorage.getItem('cnc_onb_done') === '1') {
+        card.style.display = 'none';
+        return;
+    }
+
+    const step = getOnbStep();
+
+    if (step === 0) {
+        // Všetko hotové - gratulácia raz
+        card.style.display = 'block';
+        box.innerHTML = `
+            <div class="onb-done-icon">🎉</div>
+            <div class="onb-title" style="text-align:center;">Všetko pripravené!</div>
+            <div class="onb-text" style="text-align:center;">
+                Máte stroj, výkres aj nástroj. Aplikácia je pripravená na prácu pri stroji.
+            </div>
+            <div class="onb-actions">
+                <button class="onb-btn onb-btn-primary" onclick="finishOnboarding()">Rozumiem, začíname</button>
+            </div>`;
+        prog.innerHTML = '<div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div>';
+        return;
+    }
+
+    card.style.display = 'block';
+
+    const steps = {
+        1: {
+            badge: 'Krok 1 z 3',
+            title: 'Vitajte v CNCdok!',
+            text: 'Začnime pridaním prvého stroja — napríklad "Fréza 1" alebo "Sústruh CTX". Neskôr môžete pridať ďalšie.',
+            html: `
+                <div class="onb-quick-input">
+                    <input type="text" id="onb-machine-input" placeholder="Napr. Fréza 1, Sústruh 2..." autocomplete="off">
+                </div>
+                <div class="onb-actions">
+                    <button class="onb-btn onb-btn-primary" onclick="onbAddMachine()">＋ Pridať stroj</button>
+                    <button class="onb-btn onb-btn-ghost" onclick="dismissOnboarding()">Preskočiť sprievodcu</button>
+                </div>`
+        },
+        2: {
+            badge: 'Krok 2 z 3',
+            title: 'Stroj pridaný ✓',
+            text: 'Teraz pridajte prvý výkres — odfotíte ho mobilom, zadáte číslo a máte ho vždy po ruke.',
+            html: `
+                <div class="onb-actions">
+                    <button class="onb-btn onb-btn-primary" onclick="onbOpenSection('sec-add-drawing')">📐 Pridať prvý výkres</button>
+                    <button class="onb-btn onb-btn-ghost" onclick="dismissOnboarding()">Preskočiť sprievodcu</button>
+                </div>`
+        },
+        3: {
+            badge: 'Krok 3 z 3 · voliteľné',
+            title: 'Výkres uložený ✓',
+            text: 'Chcete evidovať aj nástroje? Vrtáky, frézy, sústružnícke nože — všetko podľa stroja. Tento krok môžete preskočiť.',
+            html: `
+                <div class="onb-actions">
+                    <button class="onb-btn onb-btn-primary" onclick="onbOpenSection('sec-add-tool')">🔧 Pridať nástroj</button>
+                    <button class="onb-btn onb-btn-ghost" onclick="finishOnboarding()">Preskočiť — som hotový</button>
+                </div>`
+        }
+    };
+
+    const s = steps[step];
+    box.innerHTML = `
+        <div class="onb-step-badge">${s.badge}</div>
+        <div class="onb-title">${s.title}</div>
+        <div class="onb-text">${s.text}</div>
+        ${s.html}`;
+
+    // Progress dots
+    prog.innerHTML = [1,2,3].map(i =>
+        `<div class="onb-dot ${i < step ? 'done' : i === step ? 'active' : ''}"></div>`
+    ).join('');
+
+    // Enter key na pridanie stroja
+    const mi = document.getElementById('onb-machine-input');
+    if (mi) {
+        mi.addEventListener('keydown', e => { if (e.key === 'Enter') onbAddMachine(); });
+    }
+}
+
+window.onbAddMachine = async () => {
+    const inp = document.getElementById('onb-machine-input');
+    const name = inp.value.trim();
+    if (!name) { showToast('Zadajte názov stroja!', 'err'); return; }
+    if (machines.includes(name)) { showToast('Stroj už existuje!', 'err'); return; }
+    machines = [...machines, name];
+    inp.value = '';
+    await saveToFirestore();
+    showToast('Stroj pridaný ✓', 'ok');
+};
+
+window.onbOpenSection = (id) => {
+    const sec = document.getElementById(id);
+    if (!sec) return;
+    sec.classList.add('open');
+    setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+};
+
+window.dismissOnboarding = () => {
+    onbDismissed = true;
+    localStorage.setItem('cnc_onb_done', '1');
+    document.getElementById('onb-card').style.display = 'none';
+    showToast('Sprievodcu môžete kedykoľvek vyvolať v nastaveniach', '');
+};
+
+window.finishOnboarding = () => {
+    localStorage.setItem('cnc_onb_done', '1');
+    onbDismissed = true;
+    document.getElementById('onb-card').style.display = 'none';
+    showToast('Hotovo! Aplikácia je pripravená ✓', 'ok');
+};
+
 function renderAll() {
     renderMachines();
     updateCounts();
@@ -1852,6 +2065,7 @@ function renderAll() {
     renderToolSearch();
     renderToolCategories();
     if (window.renderDrawingToolPicker) renderDrawingToolPicker();
+    renderOnboarding();
 }
 
 // ════════ STROJE ════════
