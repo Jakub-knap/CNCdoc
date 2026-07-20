@@ -826,6 +826,7 @@
     <div class="user-info" id="topbar-user" style="display:none">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
+        <button class="btn-signout" onclick="restartOnboarding()" title="Sprievodca / tutoriál" style="font-size:15px;">❓</button>
         <button class="btn-signout" id="mode-toggle" onclick="toggleMode()" title="Prepnúť veľkosť menu" style="font-size:15px;">☰</button>
         <button class="btn-signout" id="admin-key-btn" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px; display:none;">🔑</button>
         <button class="btn-signout" onclick="window.open('https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400','_blank')" title="Spravovať predplatné" style="font-size:15px;">💳</button>
@@ -2040,8 +2041,7 @@ window.onbAddMachine = async () => {
 window.onbOpenSection = (id) => {
     const sec = document.getElementById(id);
     if (!sec) return;
-    sec.classList.add('open');
-    setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    openSection(id);
 };
 
 window.dismissOnboarding = () => {
@@ -2056,6 +2056,19 @@ window.finishOnboarding = () => {
     onbDismissed = true;
     document.getElementById('onb-card').style.display = 'none';
     showToast('Hotovo! Aplikácia je pripravená ✓', 'ok');
+};
+
+window.restartOnboarding = () => {
+    localStorage.removeItem('cnc_onb_done');
+    onbDismissed = false;
+    // Ak je v tiles režime, vrátiť sa domov aby bol sprievodca viditeľný
+    if (!isCompact() && document.getElementById('app-back').classList.contains('show')) {
+        backToTiles();
+    }
+    renderOnboarding();
+    const card = document.getElementById('onb-card');
+    if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    showToast('Sprievodca spustený', 'ok');
 };
 
 function renderAll() {
