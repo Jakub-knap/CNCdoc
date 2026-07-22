@@ -1299,7 +1299,6 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
     collection, addDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
@@ -1313,8 +1312,12 @@ const firebaseConfig = {
 
 const app     = initializeApp(firebaseConfig);
 
-// Počítadlo návštevnosti (Google Analytics) — page_view sa loguje automaticky
-try { getAnalytics(app); } catch(e) { /* napr. blokovač reklám — appku to nesmie zhodiť */ }
+// Google Analytics — spustí sa len po súhlase s cookies (viď cookie lišta nižšie)
+window._cncApp = app;
+if (localStorage.getItem('cnc_cookie') === 'all') {
+    import("https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js")
+        .then(m => { try { m.getAnalytics(app); } catch(e){} });
+}
 const auth    = getAuth(app);
 const db      = getFirestore(app);
 const provider = new GoogleAuthProvider();
@@ -2706,5 +2709,42 @@ window.showToast = (msg, type='') => {
 </script>
 <!-- SUBSCRIPTION GATE (Trial / Free / Premium) -->
 <script type="module" src="subscription.js"></script>
+
+<!-- COOKIE CONSENT -->
+<div id="cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:99999; background:#1a2332; border-top:1px solid rgba(255,255,255,0.12); padding:16px; box-shadow:0 -4px 24px rgba(0,0,0,0.4);">
+  <div style="max-width:560px; margin:0 auto;">
+    <div style="font-size:14px; color:#e2e8f0; line-height:1.6; margin-bottom:14px;">
+      🍪 Používame nevyhnutné cookies pre prihlásenie a fungovanie aplikácie a voliteľne <strong>Google Analytics</strong> na meranie návštevnosti.
+      <a href="privacy.html" style="color:#f97316; text-decoration:underline;">Viac info</a>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button onclick="cookieAccept()" style="flex:1; min-width:130px; padding:12px; background:#f97316; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">Súhlasím so všetkým</button>
+      <button onclick="cookieReject()" style="flex:1; min-width:130px; padding:12px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;">Len nevyhnutné</button>
+    </div>
+  </div>
+</div>
+
+<script>
+window.cookieAccept = () => {
+    localStorage.setItem('cnc_cookie', 'all');
+    document.getElementById('cookie-banner').style.display = 'none';
+    if (window._cncApp) {
+        import("https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js")
+            .then(m => { try { m.getAnalytics(window._cncApp); } catch(e){} });
+    }
+};
+window.cookieReject = () => {
+    localStorage.setItem('cnc_cookie', 'essential');
+    document.getElementById('cookie-banner').style.display = 'none';
+};
+(function() {
+    const c = localStorage.getItem('cnc_cookie');
+    if (c !== 'all' && c !== 'essential') {
+        const b = document.getElementById('cookie-banner');
+        if (b) b.style.display = 'block';
+    }
+})();
+</script>
+
 </body>
 </html>

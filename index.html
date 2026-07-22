@@ -757,21 +757,63 @@
     <div class="footer-note">// vyrobené strojárom pre strojárov</div>
 </section>
 
-<!-- Počítadlo návštevnosti (Firebase / Google Analytics) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
 
-const app = initializeApp({
-    apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
-    authDomain: "cncdoc-827bf.firebaseapp.com",
-    projectId: "cncdoc-827bf",
-    storageBucket: "cncdoc-827bf.firebasestorage.app",
-    messagingSenderId: "27352328550",
-    appId: "1:27352328550:web:3d8d13f3e1230744d900a7",
-    measurementId: "G-EZYLV6FR8X"
-});
-try { getAnalytics(app); } catch(e) { /* blokovač reklám — stránku to nesmie zhodiť */ }
+
+
+<!-- COOKIE CONSENT -->
+<div id="cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:99999; background:#1a2332; border-top:1px solid rgba(255,255,255,0.12); padding:16px; box-shadow:0 -4px 24px rgba(0,0,0,0.4);">
+  <div style="max-width:600px; margin:0 auto;">
+    <div style="font-size:14px; color:#e2e8f0; line-height:1.6; margin-bottom:14px;">
+      🍪 Používame nevyhnutné cookies pre fungovanie aplikácie a voliteľne <strong>Google Analytics</strong> na meranie návštevnosti. Analytické cookies sa spustia len s vaším súhlasom.
+      <a href="privacy.html" style="color:#f97316; text-decoration:underline;">Viac info</a>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button onclick="cookieAccept()" style="flex:1; min-width:130px; padding:12px; background:#f97316; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">Súhlasím so všetkým</button>
+      <button onclick="cookieReject()" style="flex:1; min-width:130px; padding:12px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;">Len nevyhnutné</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Cookie consent logic
+function loadAnalytics() {
+    if (window._gaLoaded) return;
+    window._gaLoaded = true;
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.textContent = `
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+        const app = initializeApp({
+            apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
+            authDomain: "cncdoc-827bf.firebaseapp.com",
+            projectId: "cncdoc-827bf",
+            storageBucket: "cncdoc-827bf.firebasestorage.app",
+            messagingSenderId: "27352328550",
+            appId: "1:27352328550:web:3d8d13f3e1230744d900a7",
+            measurementId: "G-EZYLV6FR8X"
+        });
+        try { getAnalytics(app); } catch(e) {}
+    `;
+    document.body.appendChild(s);
+}
+window.cookieAccept = () => {
+    localStorage.setItem('cnc_cookie', 'all');
+    document.getElementById('cookie-banner').style.display = 'none';
+    loadAnalytics();
+};
+window.cookieReject = () => {
+    localStorage.setItem('cnc_cookie', 'essential');
+    document.getElementById('cookie-banner').style.display = 'none';
+};
+// Na štarte
+(function() {
+    const c = localStorage.getItem('cnc_cookie');
+    if (c === 'all') { loadAnalytics(); }
+    else if (c !== 'essential') {
+        document.getElementById('cookie-banner').style.display = 'block';
+    }
+})();
 </script>
 
 </body>
