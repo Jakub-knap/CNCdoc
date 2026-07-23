@@ -510,6 +510,34 @@
 
         .div { height: 1px; background: var(--border); margin: 14px 0; }
 
+        /* ── VYBRANÝ STROJ BOX ── */
+        .machine-selected-box {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(249,115,22,.12);
+            border: 1.5px solid rgba(249,115,22,.4);
+            border-radius: 11px;
+            padding: 12px 14px;
+        }
+        .msb-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+        .msb-icon { font-size: 17px; flex-shrink: 0; }
+        .msb-name {
+            font-size: 15px; font-weight: 700; color: var(--cut);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .msb-change {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 7px; padding: 6px 11px;
+            color: var(--light); font-size: 12px; font-weight: 600;
+            cursor: pointer; flex-shrink: 0; white-space: nowrap;
+        }
+        .msb-change:hover { background: rgba(255,255,255,.14); }
+        .machine-selected-box.empty {
+            background: rgba(255,255,255,.04);
+            border-color: var(--border);
+        }
+        .machine-selected-box.empty .msb-name { color: var(--muted); font-weight: 500; }
+
         /* ── ONBOARDING SPRIEVODCA ── */
         .onb-card {
             background: linear-gradient(150deg, #1e2d3d 0%, #223447 100%);
@@ -1023,24 +1051,9 @@
                 <div class="chevron">⌄</div>
             </div>
             <div class="section-body">
+                <!-- 1. FOTKA -->
                 <div class="fg">
-                    <label class="field-label">Stroj</label>
-                    <select id="ad-machine" onchange="onDrawingMachineChange()"><option value="">— Vyberte stroj —</option></select>
-                </div>
-                <div class="fg">
-                    <label class="field-label">Číslo výkresu</label>
-                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001">
-                </div>
-                <div class="fg">
-                    <label class="field-label">Číslo programu</label>
-                    <input type="text" id="ad-program" placeholder="Napr. O1001">
-                </div>
-                <div class="fg">
-                    <label class="field-label">Poznámka / revízia</label>
-                    <textarea id="ad-note" rows="2" placeholder="Dôležité info, revízie..."></textarea>
-                </div>
-                <div class="fg">
-                    <label class="field-label">Fotka / sken výkresu</label>
+                    <label class="field-label">1 · Fotka / sken výkresu</label>
                     <div style="display:flex; gap:8px;">
                         <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-cam').click()">📷 Odfotiť</button>
                         <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-lib').click()">📁 Zo zariadenia</button>
@@ -1049,10 +1062,43 @@
                     <input type="file" id="ad-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
                     <div id="ad-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
                 </div>
+
+                <!-- 2. STROJ -->
+                <div class="fg">
+                    <label class="field-label">2 · Stroj</label>
+                    <div class="machine-selected-box" id="ad-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="ad-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleMachineSelect('ad')">zmeniť ▾</button>
+                    </div>
+                    <select id="ad-machine" onchange="onDrawingMachineChange()" style="display:none;margin-top:8px;"><option value="">— Vyberte stroj —</option></select>
+                </div>
+
+                <!-- 3. ČÍSLO VÝKRESU -->
+                <div class="fg">
+                    <label class="field-label">3 · Číslo výkresu</label>
+                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001">
+                </div>
+
+                <!-- 4. ČÍSLO PROGRAMU -->
+                <div class="fg">
+                    <label class="field-label">4 · Číslo programu</label>
+                    <input type="text" id="ad-program" placeholder="Napr. O1001">
+                </div>
+
+                <!-- 5. POZNÁMKA -->
+                <div class="fg">
+                    <label class="field-label">5 · Poznámka / revízia</label>
+                    <textarea id="ad-note" rows="2" placeholder="Dôležité info, revízie..."></textarea>
+                </div>
+
                 <div class="fg">
                     <label class="field-label">Nástroje k výkresu (voliteľné)</label>
                     <div id="ad-tools-pick" class="tool-pick"></div>
                 </div>
+
                 <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
             </div>
         </div>
@@ -1124,7 +1170,14 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj</label>
-                    <select id="at-machine"><option value="">— Vyberte stroj —</option></select>
+                    <div class="machine-selected-box" id="at-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="at-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleMachineSelect('at')">zmeniť ▾</button>
+                    </div>
+                    <select id="at-machine" onchange="onToolMachineChange()" style="display:none;margin-top:8px;"><option value="">— Vyberte stroj —</option></select>
                 </div>
                 <div class="fg">
                     <label class="field-label">Kategória nástroja</label>
@@ -2111,7 +2164,46 @@ function renderMachines() {
         machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
         sel.value = cur;
     });
+    autoSelectMachine();
 }
+
+// Automaticky vybrať stroj (posledný použitý alebo prvý)
+function autoSelectMachine() {
+    if (!machines.length) { updateMachineBox('ad'); updateMachineBox('at'); return; }
+    const last = localStorage.getItem('cnc_last_machine');
+    const pick = (last && machines.includes(last)) ? last : machines[0];
+    ['ad-machine','at-machine'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel && !sel.value) sel.value = pick;
+    });
+    updateMachineBox('ad');
+    updateMachineBox('at');
+}
+
+// Aktualizovať zobrazenie boxu so strojom
+function updateMachineBox(prefix) {
+    const sel  = document.getElementById(prefix + '-machine');
+    const box  = document.getElementById(prefix + '-machine-box');
+    const name = document.getElementById(prefix + '-machine-name');
+    if (!sel || !box || !name) return;
+    if (sel.value) {
+        name.textContent = sel.value;
+        box.classList.remove('empty');
+    } else {
+        name.textContent = machines.length ? 'Vyberte stroj' : 'Najprv pridajte stroj';
+        box.classList.add('empty');
+    }
+}
+
+// Prepnúť zobrazenie selectu
+window.toggleMachineSelect = (prefix) => {
+    const sel = document.getElementById(prefix + '-machine');
+    if (!sel) return;
+    if (!machines.length) { showToast('Najprv pridajte stroj!', 'err'); return; }
+    const shown = sel.style.display !== 'none';
+    sel.style.display = shown ? 'none' : 'block';
+    if (!shown) sel.focus();
+};
 
 window.addMachine = async () => {
     const inp = document.getElementById('new-machine');
@@ -2121,8 +2213,16 @@ window.addMachine = async () => {
     if (limitReached('machines', machines.length)) return;
     machines.push(name);
     inp.value = '';
+    localStorage.setItem('cnc_last_machine', name);
+    // Nastaviť nový stroj ako vybraný
+    ['ad-machine','at-machine'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) sel.value = name;
+    });
     await saveToFirestore();
-    showToast('Stroj pridaný ✓', 'ok');
+    updateMachineBox('ad');
+    updateMachineBox('at');
+    showToast('Stroj "' + name + '" pridaný a vybraný ✓', 'ok');
 };
 
 window.deleteMachineConfirm = async () => {
@@ -2216,7 +2316,21 @@ window.closeModal = () => document.getElementById('modal-detail').classList.remo
 let pendingDrawingFile = null;
 let selectedToolIds = [];
 
-window.onDrawingMachineChange = () => { selectedToolIds = []; renderDrawingToolPicker(); };
+window.onToolMachineChange = () => {
+    const v = document.getElementById('at-machine').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateMachineBox('at');
+    document.getElementById('at-machine').style.display = 'none';
+};
+
+window.onDrawingMachineChange = () => {
+    const v = document.getElementById('ad-machine').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateMachineBox('ad');
+    document.getElementById('ad-machine').style.display = 'none';
+    selectedToolIds = [];
+    renderDrawingToolPicker();
+};
 
 window.renderDrawingToolPicker = () => {
     const box = document.getElementById('ad-tools-pick');
@@ -2273,7 +2387,7 @@ window.saveDrawing = async () => {
             .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('ad-machine').value = '';
+        updateMachineBox('ad');  // stroj zostáva vybraný
         document.getElementById('ad-file-cam').value = '';
         document.getElementById('ad-file-lib').value = '';
         document.getElementById('ad-file-status').textContent = '';
@@ -2480,7 +2594,7 @@ window.saveTool = async () => {
         showToast('Nástroj uložený ✓', 'ok');
         document.getElementById('at-diam').value = '';
         document.getElementById('at-note').value = '';
-        document.getElementById('at-machine').value = '';
+        updateMachineBox('at');  // stroj zostáva vybraný
         document.getElementById('at-subtype').value = '';
         document.getElementById('tool-subtype-wrap').style.display = 'none';
         document.getElementById('at-file-cam').value = '';
