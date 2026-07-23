@@ -975,7 +975,7 @@
             </div>
 
             <div class="tile-del-row">
-                <button class="tile-del" onclick="openSection('sec-del-drawing')">🗑 Vymazať výkres</button>
+                <button class="tile-del" onclick="openSection('sec-del-drawing')">✏️ Upraviť / vymazať výkres</button>
                 <button class="tile-del" onclick="openSection('sec-del-tool')">🗑 Vymazať nástroj</button>
             </div>
         </div>
@@ -1086,7 +1086,8 @@
                 <!-- 3. ČÍSLO VÝKRESU -->
                 <div class="fg">
                     <label class="field-label">3 · Číslo výkresu</label>
-                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001">
+                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001" oninput="checkDupNumber()">
+                    <div id="ad-dup-warn" style="font-size:13px;margin-top:6px;display:none;padding:9px 11px;border-radius:8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5;line-height:1.5;"></div>
                 </div>
 
                 <!-- 4. ČÍSLO PROGRAMU -->
@@ -1116,8 +1117,8 @@
                 <div class="section-head-left">
                     <div class="section-icon si-red">🗑️</div>
                     <div>
-                        <div class="section-title">Vymaž výkres</div>
-                        <div class="section-sub">Vyhľadaj a odstráň</div>
+                        <div class="section-title">Upraviť / vymazať výkres</div>
+                        <div class="section-sub">Vyhľadaj, uprav alebo odstráň</div>
                     </div>
                 </div>
                 <div class="chevron">⌄</div>
@@ -1296,6 +1297,47 @@
     <div class="zoom-hint-bar">👌 Pinch = zoom · 2× tap = priblíž</div>
 </div>
 
+
+<!-- MODAL: Upraviť výkres -->
+<div id="modal-edit" class="modal-bg" onclick="closeEditModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Upraviť výkres</div>
+            <button class="modal-close" onclick="closeEditModal()">✕</button>
+        </div>
+        <div class="fg">
+            <label class="field-label">Číslo výkresu</label>
+            <input type="text" id="ed-number" placeholder="Napr. V-2026-001">
+            <div id="ed-dup-warn" style="font-size:12px;color:var(--red);margin-top:5px;display:none;">⚠ Toto číslo už používa iný výkres</div>
+        </div>
+        <div class="fg">
+            <label class="field-label">Stroj</label>
+            <select id="ed-machine"></select>
+        </div>
+        <div class="fg">
+            <label class="field-label">Číslo programu</label>
+            <input type="text" id="ed-program" placeholder="Napr. O1001">
+        </div>
+        <div class="fg">
+            <label class="field-label">Poznámka / revízia</label>
+            <textarea id="ed-note" rows="3" placeholder="Technologické poznámky, revízie..."></textarea>
+        </div>
+        <div class="fg">
+            <label class="field-label">Fotka výkresu</label>
+            <div id="ed-photo-preview" style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-photo" onclick="document.getElementById('ed-file-cam').click()">📷 Nová fotka</button>
+                <button type="button" class="btn-photo" onclick="document.getElementById('ed-file-lib').click()">📁 Zo zariadenia</button>
+            </div>
+            <input type="file" id="ed-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditFile(this)">
+            <input type="file" id="ed-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditFile(this)">
+            <div id="ed-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+        </div>
+        <button class="btn btn-success" onclick="saveEditDrawing()">✓ Uložiť zmeny</button>
+        <button class="btn btn-ghost" onclick="closeEditModal()">Zrušiť</button>
+    </div>
+</div>
+
 <!-- TOAST -->
 <!-- ADMIN PASSWORD MODAL -->
 <div class="modal-ov" id="admin-modal">
@@ -1364,7 +1406,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
     sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
-    collection, addDoc, deleteDoc }
+    collection, addDoc, deleteDoc, updateDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2434,6 +2476,25 @@ window.onDrawingFile = (input) => {
     if (st) st.textContent = '✓ Fotka pripravená: ' + (f.name || 'obrázok');
 };
 
+
+// ════════ KONTROLA DUPLICITY ČÍSLA VÝKRESU ════════
+window.checkDupNumber = () => {
+    const inp  = document.getElementById('ad-number');
+    const warn = document.getElementById('ad-dup-warn');
+    if (!inp || !warn) return;
+    const v = inp.value.trim().toLowerCase();
+    if (!v) { warn.style.display = 'none'; inp.style.borderColor = ''; return; }
+    const existing = drawings.find(d => d.number.toLowerCase() === v);
+    if (existing) {
+        warn.style.display = 'block';
+        warn.innerHTML = `⚠ <strong>Výkres "${existing.number}" už existuje</strong><br>Stroj: ${existing.machine} · Program: ${existing.program || '—'}<br><span style="color:var(--muted);">Použite iné číslo alebo upravte existujúci výkres.</span>`;
+        inp.style.borderColor = 'var(--red)';
+    } else {
+        warn.style.display = 'none';
+        inp.style.borderColor = '';
+    }
+};
+
 window.saveDrawing = async () => {
     const machine = document.getElementById('ad-machine').value;
     const number  = document.getElementById('ad-number').value.trim();
@@ -2457,6 +2518,8 @@ window.saveDrawing = async () => {
             .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('ad-dup-warn').style.display = 'none';
+        document.getElementById('ad-number').style.borderColor = '';
         updateMachineBox('ad');  // stroj zostáva vybraný
         document.getElementById('ad-file-cam').value = '';
         document.getElementById('ad-file-lib').value = '';
@@ -2510,17 +2573,108 @@ function compressImage(dataUrl, maxWidth) {
 window.renderDelDrawing = () => {
     const text = document.getElementById('inp-del-drawing').value.trim().toLowerCase();
     const box  = document.getElementById('del-drawing-results');
-    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte číslo výkresu</p></div>`; return; }
-    const filtered = drawings.filter(d => d.number.toLowerCase().includes(text) || d.program.toLowerCase().includes(text));
+    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">✏️</div><p>Zadajte číslo výkresu</p></div>`; return; }
+    const filtered = drawings.filter(d => d.number.toLowerCase().includes(text) || (d.program||'').toLowerCase().includes(text));
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
     filtered.forEach(d => {
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing('${d._id}')">🗑 Vymazať</button>`;
+        card.innerHTML = `
+            <div class="r-title">${d.number}</div>
+            <div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}${d.note ? '<br>Pozn.: ' + d.note.substring(0,50) + (d.note.length>50?'…':'') : ''}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn btn-sm" style="flex:1; background:var(--blue); color:#fff; margin:0;" onclick="window._editDrawing('${d._id}')">✏️ Upraviť</button>
+                <button class="btn btn-danger btn-sm" style="flex:1; margin:0;" onclick="window._delDrawing('${d._id}')">🗑 Vymazať</button>
+            </div>`;
         box.appendChild(card);
     });
 };
+
+// ════════ EDITÁCIA VÝKRESU ════════
+let editingId = null;
+let pendingEditFile = null;
+
+window._editDrawing = (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    editingId = id;
+    pendingEditFile = null;
+    document.getElementById('ed-number').value  = d.number || '';
+    document.getElementById('ed-program').value = d.program || '';
+    document.getElementById('ed-note').value    = d.note || '';
+    // Stroje
+    const sel = document.getElementById('ed-machine');
+    sel.innerHTML = '';
+    machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
+    sel.value = d.machine || '';
+    // Fotka
+    const prev = document.getElementById('ed-photo-preview');
+    prev.innerHTML = d.fileData
+        ? `<img src="${d.fileData}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);">`
+        : `<div style="font-size:13px;color:var(--muted);">Bez fotky</div>`;
+    document.getElementById('ed-file-status').textContent = '';
+    document.getElementById('ed-dup-warn').style.display = 'none';
+    document.getElementById('modal-edit').classList.add('open');
+};
+
+window.closeEditModal = () => {
+    document.getElementById('modal-edit').classList.remove('open');
+    editingId = null;
+    pendingEditFile = null;
+};
+
+window.onEditFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingEditFile = f;
+    document.getElementById('ed-file-status').textContent = '✓ Nová fotka pripravená: ' + f.name;
+    input.value = '';
+};
+
+window.saveEditDrawing = async () => {
+    if (!editingId) return;
+    const number  = document.getElementById('ed-number').value.trim();
+    const machine = document.getElementById('ed-machine').value;
+    const program = document.getElementById('ed-program').value.trim();
+    const note    = document.getElementById('ed-note').value.trim();
+    if (!number) { showToast('Zadajte číslo výkresu!', 'err'); return; }
+    // Kontrola duplicity (okrem seba)
+    if (drawings.some(d => d._id !== editingId && d.number.toLowerCase() === number.toLowerCase())) {
+        showToast('Výkres s týmto číslom už existuje!', 'err'); return;
+    }
+
+    const doUpdate = async (fileData) => {
+        const upd = { number, machine, program, note };
+        if (fileData) {
+            upd.fileData = fileData.startsWith('data:image')
+                ? await compressImage(fileData, 1800) : fileData;
+        }
+        updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), upd)
+            .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+        showToast('Zmeny uložené ✓', 'ok');
+        closeEditModal();
+        setTimeout(() => window.renderDelDrawing(), 200);
+    };
+
+    if (pendingEditFile) {
+        const reader = new FileReader();
+        reader.onload = e => doUpdate(e.target.result);
+        reader.readAsDataURL(pendingEditFile);
+    } else {
+        doUpdate(null);
+    }
+};
+
+// Kontrola duplicity pri písaní v edit modali
+document.addEventListener('DOMContentLoaded', () => {
+    const en = document.getElementById('ed-number');
+    if (en) en.addEventListener('input', () => {
+        const v = en.value.trim().toLowerCase();
+        const dup = v && drawings.some(d => d._id !== editingId && d.number.toLowerCase() === v);
+        document.getElementById('ed-dup-warn').style.display = dup ? 'block' : 'none';
+    });
+});
 
 window._delDrawing = async (id) => {
     const d = drawings.find(x => x._id === id);
