@@ -1023,8 +1023,15 @@
             </div>
             <div class="section-body">
                 <div class="fg">
-                    <label class="field-label">Stroj (voliteľné)</label>
-                    <select id="search-machine-filter" onchange="renderDrawingSearch()">
+                    <label class="field-label">Stroj</label>
+                    <div class="machine-selected-box" id="sd-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="sd-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleSearchSelect('search-machine-filter')">zmeniť ▾</button>
+                    </div>
+                    <select id="search-machine-filter" onchange="onSearchMachineChange()" style="display:none;margin-top:8px;">
                         <option value="">— Všetky stroje —</option>
                     </select>
                 </div>
@@ -1140,8 +1147,15 @@
             </div>
             <div class="section-body">
                 <div class="fg">
-                    <label class="field-label">Stroj (voliteľné)</label>
-                    <select id="tool-machine-filter" onchange="renderToolSearch()">
+                    <label class="field-label">Stroj</label>
+                    <div class="machine-selected-box" id="st-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="st-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleSearchSelect('tool-machine-filter')">zmeniť ▾</button>
+                    </div>
+                    <select id="tool-machine-filter" onchange="onToolFilterChange()" style="display:none;margin-top:8px;">
                         <option value="">— Všetky stroje —</option>
                     </select>
                 </div>
@@ -2169,16 +2183,70 @@ function renderMachines() {
 
 // Automaticky vybrať stroj (posledný použitý alebo prvý)
 function autoSelectMachine() {
-    if (!machines.length) { updateMachineBox('ad'); updateMachineBox('at'); return; }
+    if (!machines.length) {
+        updateMachineBox('ad'); updateMachineBox('at');
+        updateSearchBox('sd','search-machine-filter');
+        updateSearchBox('st','tool-machine-filter');
+        return;
+    }
     const last = localStorage.getItem('cnc_last_machine');
     const pick = (last && machines.includes(last)) ? last : machines[0];
+    // Formuláre na pridávanie
     ['ad-machine','at-machine'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel && !sel.value) sel.value = pick;
+    });
+    // Filtre pri hľadaní
+    ['search-machine-filter','tool-machine-filter'].forEach(id => {
         const sel = document.getElementById(id);
         if (sel && !sel.value) sel.value = pick;
     });
     updateMachineBox('ad');
     updateMachineBox('at');
+    updateSearchBox('sd','search-machine-filter');
+    updateSearchBox('st','tool-machine-filter');
 }
+
+// Box pre vyhľadávacie filtre
+function updateSearchBox(prefix, selId) {
+    const sel  = document.getElementById(selId);
+    const box  = document.getElementById(prefix + '-machine-box');
+    const name = document.getElementById(prefix + '-machine-name');
+    if (!sel || !box || !name) return;
+    if (sel.value) {
+        name.textContent = sel.value;
+        box.classList.remove('empty');
+    } else {
+        name.textContent = machines.length ? 'Všetky stroje' : 'Najprv pridajte stroj';
+        box.classList.add('empty');
+    }
+}
+
+// Prepnúť select pri hľadaní
+window.toggleSearchSelect = (selId) => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    if (!machines.length) { showToast('Najprv pridajte stroj!', 'err'); return; }
+    const shown = sel.style.display !== 'none';
+    sel.style.display = shown ? 'none' : 'block';
+    if (!shown) sel.focus();
+};
+
+window.onSearchMachineChange = () => {
+    const v = document.getElementById('search-machine-filter').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateSearchBox('sd','search-machine-filter');
+    document.getElementById('search-machine-filter').style.display = 'none';
+    renderDrawingSearch();
+};
+
+window.onToolFilterChange = () => {
+    const v = document.getElementById('tool-machine-filter').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateSearchBox('st','tool-machine-filter');
+    document.getElementById('tool-machine-filter').style.display = 'none';
+    renderToolSearch();
+};
 
 // Aktualizovať zobrazenie boxu so strojom
 function updateMachineBox(prefix) {
@@ -2214,14 +2282,16 @@ window.addMachine = async () => {
     machines.push(name);
     inp.value = '';
     localStorage.setItem('cnc_last_machine', name);
-    // Nastaviť nový stroj ako vybraný
-    ['ad-machine','at-machine'].forEach(id => {
+    // Nastaviť nový stroj ako vybraný všade
+    ['ad-machine','at-machine','search-machine-filter','tool-machine-filter'].forEach(id => {
         const sel = document.getElementById(id);
         if (sel) sel.value = name;
     });
     await saveToFirestore();
     updateMachineBox('ad');
     updateMachineBox('at');
+    updateSearchBox('sd','search-machine-filter');
+    updateSearchBox('st','tool-machine-filter');
     showToast('Stroj "' + name + '" pridaný a vybraný ✓', 'ok');
 };
 
