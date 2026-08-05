@@ -2311,12 +2311,47 @@ function updateSearchBox(prefix, selId) {
 
 // Prepnúť select pri hľadaní
 window.toggleSearchSelect = (selId) => {
-    const sel = document.getElementById(selId);
-    if (!sel) return;
     if (!machines.length) { showToast('Najprv pridajte stroj!', 'err'); return; }
-    const shown = sel.style.display !== 'none';
-    sel.style.display = shown ? 'none' : 'block';
-    if (!shown) sel.focus();
+    const prefix = selId === 'search-machine-filter' ? 'sd' : 'st';
+    const box = document.getElementById(prefix + '-machine-box');
+    if (!box) return;
+    let picker = document.getElementById(prefix + '-search-picker');
+    if (picker) { picker.remove(); return; }
+
+    picker = document.createElement('div');
+    picker.id = prefix + '-search-picker';
+    picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;';
+    const sel = document.getElementById(selId);
+    const curVal = sel ? sel.value : '';
+    // "Všetky stroje" možnosť
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    const allSel = curVal === '';
+    allBtn.style.cssText = `padding:10px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ${allSel?'var(--cut)':'var(--border)'};background:${allSel?'rgba(249,115,22,.15)':'var(--input)'};color:${allSel?'var(--cut)':'var(--light)'};`;
+    allBtn.textContent = '📋 Všetky stroje';
+    allBtn.onclick = () => pickSearchMachine(selId, prefix, '');
+    picker.appendChild(allBtn);
+    machines.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSel = m === curVal;
+        btn.style.cssText = `padding:10px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ${isSel?'var(--cut)':'var(--border)'};background:${isSel?'rgba(249,115,22,.15)':'var(--input)'};color:${isSel?'var(--cut)':'var(--light)'};`;
+        btn.textContent = '⚙️ ' + m;
+        btn.onclick = () => pickSearchMachine(selId, prefix, m);
+        picker.appendChild(btn);
+    });
+    box.parentNode.insertBefore(picker, box.nextSibling);
+};
+
+window.pickSearchMachine = (selId, prefix, name) => {
+    const sel = document.getElementById(selId);
+    if (sel) sel.value = name;
+    if (name) localStorage.setItem('cnc_last_machine', name);
+    const picker = document.getElementById(prefix + '-search-picker');
+    if (picker) picker.remove();
+    updateSearchBox(prefix, selId);
+    if (selId === 'search-machine-filter') renderDrawingSearch();
+    else renderToolSearch();
 };
 
 window.onSearchMachineChange = () => {
@@ -2352,12 +2387,41 @@ function updateMachineBox(prefix) {
 
 // Prepnúť zobrazenie selectu
 window.toggleMachineSelect = (prefix) => {
-    const sel = document.getElementById(prefix + '-machine');
-    if (!sel) return;
     if (!machines.length) { showToast('Najprv pridajte stroj!', 'err'); return; }
-    const shown = sel.style.display !== 'none';
-    sel.style.display = shown ? 'none' : 'block';
-    if (!shown) sel.focus();
+    const box = document.getElementById(prefix + '-machine-box');
+    if (!box) return;
+    // Nájsť alebo vytvoriť kontajner s tlačidlami strojov
+    let picker = document.getElementById(prefix + '-machine-picker');
+    if (picker) { picker.remove(); return; } // toggle - zavrieť ak otvorený
+
+    picker = document.createElement('div');
+    picker.id = prefix + '-machine-picker';
+    picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;';
+    const sel = document.getElementById(prefix + '-machine');
+    const curVal = sel ? sel.value : '';
+    machines.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSel = m === curVal;
+        btn.style.cssText = `padding:10px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ${isSel?'var(--cut)':'var(--border)'};background:${isSel?'rgba(249,115,22,.15)':'var(--input)'};color:${isSel?'var(--cut)':'var(--light)'};`;
+        btn.textContent = '⚙️ ' + m;
+        btn.onclick = () => pickMachine(prefix, m);
+        picker.appendChild(btn);
+    });
+    box.parentNode.insertBefore(picker, box.nextSibling);
+};
+
+window.pickMachine = (prefix, name) => {
+    const sel = document.getElementById(prefix + '-machine');
+    if (sel) sel.value = name;
+    localStorage.setItem('cnc_last_machine', name);
+    // Zavrieť picker
+    const picker = document.getElementById(prefix + '-machine-picker');
+    if (picker) picker.remove();
+    // Aktualizovať box
+    updateMachineBox(prefix);
+    // Prefix-specific akcie
+    if (prefix === 'ad') { selectedToolIds = []; if (window.renderDrawingToolPicker) renderDrawingToolPicker(); }
 };
 
 window.addMachine = async () => {
@@ -2484,7 +2548,6 @@ window.onDrawingMachineChange = () => {
     const v = document.getElementById('ad-machine').value;
     if (v) localStorage.setItem('cnc_last_machine', v);
     updateMachineBox('ad');
-    document.getElementById('ad-machine').style.display = 'none';
     selectedToolIds = [];
     renderDrawingToolPicker();
 };
