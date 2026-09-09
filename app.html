@@ -1406,6 +1406,9 @@
         <div id="modal-content"></div>
     </div>
 </div>
+<!-- Trvalé skryté inputy pre pridanie fotky v detaile – MIMO modal-content, aby ich prekreslenie neresetovalo -->
+<input type="file" id="detail-photo-cam" accept="image/*" capture="environment" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">
+<input type="file" id="detail-photo-lib" accept="image/*" multiple style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">
 
 <!-- MODAL: Nástroj otvorený Z VÝKRESU (okno navrchu) -->
 <div id="modal-tool" class="modal-bg" style="z-index:400;" onclick="closeToolModal()">
@@ -2669,9 +2672,7 @@ window.openDetail = (number) => {
                 <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-lib').click()">📁 Zo zariadenia</button>
             </div>`;
     }
-    galleryHtml += `
-        <input type="file" id="detail-photo-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">
-        <input type="file" id="detail-photo-lib" accept="image/*" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">`;
+
 
     // Priradené nástroje
     const ids = d.toolIds || [];
@@ -2804,7 +2805,7 @@ window.addPhotoToDrawing = async (inputEl) => {
     showToast('Pridávam fotky...', '');
     const existing = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
 
-    const MAX_TOTAL_CHARS = 900000;
+    const MAX_TOTAL_CHARS = 980000;
     const newFiles = Array.from(inputEl.files);
     const perPhotoBudget = Math.floor(MAX_TOTAL_CHARS / (existing.length + newFiles.length || 1));
 
@@ -2990,7 +2991,7 @@ window.saveDrawing = async () => {
     showToast('Ukladám...', '');
 
     // Skomprimovať všetky fotky, ale udržať CELKOVÚ veľkosť pod limitom Firestore (1 MB / dokument)
-    const MAX_TOTAL_CHARS = 900000; // rezerva na ostatné polia dokumentu
+    const MAX_TOTAL_CHARS = 980000; // rezerva na ostatné polia dokumentu
     const photos = [];
     let totalSize = 0;
     // Postupne komprimuj čoraz menšie, ak sa fotky spolu nezmestia
@@ -3061,11 +3062,14 @@ function compressImage(dataUrl, maxWidth, customMaxChars) {
             let q = 0.85;
             let out = render(width, q);
             // 1) najprv znizuj kvalitu
-            while (out.length > MAX_CHARS && q > 0.4) { q = Math.round((q - 0.1) * 100) / 100; out = render(width, q); }
-            // 2) ak stale velke, znizuj aj rozmer
-            while (out.length > MAX_CHARS && width > 700) { width = Math.round(width * 0.85); out = render(width, 0.7); }
+            while (out.length > MAX_CHARS && q > 0.35) { q = Math.round((q - 0.1) * 100) / 100; out = render(width, q); }
+            // 2) ak stale velke, znizuj aj rozmer (bez spodnej hranice 700px – pokracuj kym sa nezmesti)
+            while (out.length > MAX_CHARS && width > 250) { width = Math.round(width * 0.8); out = render(width, 0.5); }
+            // 3) posledna poistka – ak sa aj tak nezmestilo (extremne male MAX_CHARS), vrat najmensiu rozumnu verziu
+            if (out.length > MAX_CHARS) { out = render(250, 0.35); }
             resolve(out);
         };
+        img.onerror = () => resolve(dataUrl); // radsej povodny obrazok nez nic
         img.src = dataUrl;
     });
 }
