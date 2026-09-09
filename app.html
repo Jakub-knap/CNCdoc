@@ -566,22 +566,61 @@
         }
         .photo-add-more:hover { border-color: var(--cut); color: var(--cut); }
 
-        /* ── DETAIL GALÉRIA (viac fotiek) ── */
-        .detail-gallery {
-            display: flex; gap: 8px; overflow-x: auto;
-            padding-bottom: 4px; margin-bottom: 12px;
-            scroll-snap-type: x mandatory;
+        /* ── DETAIL CAROUSEL (viac fotiek) ── */
+        .detail-carousel {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--input);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
         }
-        .detail-gallery img {
-            width: 84%; min-width: 84%; aspect-ratio: 4/3;
-            object-fit: cover; border-radius: 10px;
-            border: 1px solid var(--border); cursor: zoom-in;
-            scroll-snap-align: start;
+        .dc-track {
+            display: flex;
+            transition: transform .3s ease;
         }
-        .detail-gallery-count {
-            font-size: 11px; color: var(--muted); text-align: center;
-            margin-bottom: 10px; font-family: 'JetBrains Mono', monospace;
+        .dc-slide {
+            min-width: 100%; aspect-ratio: 4/3;
+            display: flex; align-items: center; justify-content: center;
+            cursor: zoom-in;
         }
+        .dc-slide img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .dc-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(0,0,0,.55); border: none; color: #fff;
+            font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5; transition: background .15s;
+        }
+        .dc-arrow:hover { background: rgba(0,0,0,.75); }
+        .dc-arrow-left  { left: 8px; }
+        .dc-arrow-right { right: 8px; }
+        .dc-counter {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,.6); color: #fff;
+            font-size: 11px; font-weight: 700;
+            padding: 3px 9px; border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 5;
+        }
+        .dc-dots {
+            position: absolute; bottom: 10px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 5px; z-index: 5;
+        }
+        .dc-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,.4); transition: all .2s;
+            cursor: pointer;
+        }
+        .dc-dot.active { background: #fff; width: 16px; border-radius: 3px; }
+        .detail-photo-actions {
+            display: flex; gap: 8px; margin-bottom: 12px;
+        }
+        .detail-photo-actions .btn-sm { flex: 1; margin: 0; }
 
         /* ── INLINE EDITOVATEĽNÉ POLE V DETAILE ── */
         .d-field-editable {
@@ -2598,22 +2637,41 @@ window.openDetail = (number) => {
     const titleEl = document.getElementById('modal-detail-title');
     if (titleEl) titleEl.textContent = 'Detail výkresu';
 
-    // Galéria fotiek (podporuje aj staré výkresy s jedným fileData)
+    // Carousel fotiek (podporuje aj staré výkresy s jedným fileData)
     const photos = (d.photos && d.photos.length) ? d.photos : (d.fileData ? [d.fileData] : []);
+    window._detailPhotos = photos;
+    window._detailSlide = 0;
     let galleryHtml = '';
     if (photos.length) {
-        galleryHtml = `<div class="detail-gallery" id="detail-gallery-scroll">`;
-        photos.forEach((p, i) => {
-            galleryHtml += `<img src="${p}" onclick="zoomImage('${p}')" alt="Výkres ${i+1}">`;
-        });
-        galleryHtml += `</div>`;
-        if (photos.length > 1) {
-            galleryHtml += `<div class="detail-gallery-count">📷 ${photos.length} fotiek · posuňte doprava</div>`;
-        }
-        galleryHtml += `<button class="btn btn-sm" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--light);margin-bottom:12px;" onclick="addPhotoToDrawing()">➕ Pridať ďalšiu fotku</button>`;
+        const slides = photos.map((p, i) => `<div class="dc-slide" onclick="zoomImage('${p}')"><img src="${p}" alt="Výkres ${i+1}"></div>`).join('');
+        const dots = photos.length > 1
+            ? `<div class="dc-dots">${photos.map((_,i) => `<div class="dc-dot ${i===0?'active':''}" onclick="event.stopPropagation(); goToSlide(${i})"></div>`).join('')}</div>`
+            : '';
+        const arrows = photos.length > 1 ? `
+            <button class="dc-arrow dc-arrow-left" onclick="event.stopPropagation(); prevSlide()">‹</button>
+            <button class="dc-arrow dc-arrow-right" onclick="event.stopPropagation(); nextSlide()">›</button>` : '';
+        const counter = photos.length > 1 ? `<div class="dc-counter" id="dc-counter">1 / ${photos.length}</div>` : '';
+        galleryHtml = `
+            <div class="detail-carousel">
+                <div class="dc-track" id="dc-track">${slides}</div>
+                ${arrows}
+                ${counter}
+                ${dots}
+            </div>
+            <div class="detail-photo-actions">
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-cam').click()">📷 Odfotiť</button>
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-lib').click()">📁 Zo zariadenia</button>
+            </div>`;
     } else {
-        galleryHtml = `<button class="btn btn-sm" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--light);margin-bottom:12px;" onclick="addPhotoToDrawing()">📷 Pridať fotku</button>`;
+        galleryHtml = `
+            <div class="detail-photo-actions">
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-cam').click()">📷 Odfotiť</button>
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-lib').click()">📁 Zo zariadenia</button>
+            </div>`;
     }
+    galleryHtml += `
+        <input type="file" id="detail-photo-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">
+        <input type="file" id="detail-photo-lib" accept="image/*" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">`;
 
     // Priradené nástroje
     const ids = d.toolIds || [];
@@ -2737,35 +2795,68 @@ window.saveMachineEdit = async () => {
 };
 
 // ════════ PRIDAŤ FOTKU K EXISTUJÚCEMU VÝKRESU ════════
-window.addPhotoToDrawing = () => {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = 'image/*';
-    inp.multiple = true;
-    inp.onchange = async () => {
-        if (!inp.files || !inp.files.length) return;
-        const d = drawings.find(x => x._id === currentDetailId);
-        if (!d) return;
-        showToast('Pridávam fotky...', '');
-        const existing = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
-        for (const f of Array.from(inp.files)) {
-            const dataUrl = await new Promise(res => {
-                const r = new FileReader();
-                r.onload = e => res(e.target.result);
-                r.readAsDataURL(f);
-            });
-            const compressed = await compressImage(dataUrl, 1800);
-            existing.push(compressed);
-        }
-        updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
-            photos: existing, fileData: existing[0]
-        }).catch(() => showToast('Uloží sa pri wifi', ''));
-        d.photos = existing; d.fileData = existing[0];
-        showToast('Fotky pridané ✓', 'ok');
-        openDetail(d.number);
-    };
-    inp.click();
+window.addPhotoToDrawing = async (inputEl) => {
+    // Volané z hlavného tlačidla (bez inputEl) ALEBO priamo z <input onchange>
+    if (!inputEl) return; // tlačidlá teraz vždy klikajú na skryté inputy nižšie
+    if (!inputEl.files || !inputEl.files.length) return;
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+    showToast('Pridávam fotky...', '');
+    const existing = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
+    for (const f of Array.from(inputEl.files)) {
+        const dataUrl = await new Promise(res => {
+            const r = new FileReader();
+            r.onload = e => res(e.target.result);
+            r.readAsDataURL(f);
+        });
+        const compressed = await compressImage(dataUrl, 1800);
+        existing.push(compressed);
+    }
+    updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
+        photos: existing, fileData: existing[0]
+    }).catch(() => showToast('Uloží sa pri wifi', ''));
+    d.photos = existing; d.fileData = existing[0];
+    showToast('Fotky pridané ✓', 'ok');
+    openDetail(d.number);
+    inputEl.value = '';
 };
+
+// ════════ CAROUSEL NAVIGÁCIA ════════
+window.goToSlide = (i) => {
+    const photos = window._detailPhotos || [];
+    if (i < 0 || i >= photos.length) return;
+    window._detailSlide = i;
+    const track = document.getElementById('dc-track');
+    if (track) track.style.transform = `translateX(-${i * 100}%)`;
+    document.querySelectorAll('.dc-dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+    const counter = document.getElementById('dc-counter');
+    if (counter) counter.textContent = `${i + 1} / ${photos.length}`;
+};
+
+window.nextSlide = () => {
+    const photos = window._detailPhotos || [];
+    const next = (window._detailSlide + 1) % photos.length;
+    goToSlide(next);
+};
+
+window.prevSlide = () => {
+    const photos = window._detailPhotos || [];
+    const prev = (window._detailSlide - 1 + photos.length) % photos.length;
+    goToSlide(prev);
+};
+
+// Swipe gestá na carouseli (touch)
+let _dcTouchX = 0;
+document.addEventListener('touchstart', e => {
+    if (e.target.closest('.detail-carousel')) _dcTouchX = e.touches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+    if (!e.target.closest('.detail-carousel')) return;
+    const diff = e.changedTouches[0].clientX - _dcTouchX;
+    if (Math.abs(diff) > 50) {
+        if (diff < 0) window.nextSlide(); else window.prevSlide();
+    }
+});
 
 // ════════ VÝKRESY – PRIDAJ ════════
 let selectedToolIds = [];
