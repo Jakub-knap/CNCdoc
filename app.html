@@ -2803,21 +2803,40 @@ window.addPhotoToDrawing = async (inputEl) => {
     if (!d) return;
     showToast('Pridávam fotky...', '');
     const existing = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
-    for (const f of Array.from(inputEl.files)) {
+
+    const MAX_TOTAL_CHARS = 900000;
+    const newFiles = Array.from(inputEl.files);
+    const perPhotoBudget = Math.floor(MAX_TOTAL_CHARS / (existing.length + newFiles.length || 1));
+
+    const newPhotos = [];
+    for (const f of newFiles) {
         const dataUrl = await new Promise(res => {
             const r = new FileReader();
             r.onload = e => res(e.target.result);
             r.readAsDataURL(f);
         });
-        const compressed = await compressImage(dataUrl, 1800);
-        existing.push(compressed);
+        const compressed = await compressImage(dataUrl, 1800, perPhotoBudget);
+        newPhotos.push(compressed);
     }
-    updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
-        photos: existing, fileData: existing[0]
-    }).catch(() => showToast('Uloží sa pri wifi', ''));
-    d.photos = existing; d.fileData = existing[0];
-    showToast('Fotky pridané ✓', 'ok');
-    openDetail(d.number);
+
+    const merged = [...existing, ...newPhotos];
+    const totalSize = merged.reduce((sum, p) => sum + p.length, 0);
+    if (totalSize > MAX_TOTAL_CHARS) {
+        showToast('⚠ Príliš veľa fotiek pre tento výkres. Skúste pridať menej naraz alebo vymazať staršie.', 'err');
+        inputEl.value = '';
+        return;
+    }
+
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
+            photos: merged, fileData: merged[0]
+        });
+        d.photos = merged; d.fileData = merged[0];
+        showToast('Fotky pridané ✓', 'ok');
+        openDetail(d.number);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa uložiť fotky: ' + (e.message || 'skúste menej fotiek'), 'err');
+    }
     inputEl.value = '';
 };
 
@@ -2970,11 +2989,26 @@ window.saveDrawing = async () => {
 
     showToast('Ukladám...', '');
 
-    // Skomprimovať všetky fotky
+    // Skomprimovať všetky fotky, ale udržať CELKOVÚ veľkosť pod limitom Firestore (1 MB / dokument)
+    const MAX_TOTAL_CHARS = 900000; // rezerva na ostatné polia dokumentu
     const photos = [];
+    let totalSize = 0;
+    // Postupne komprimuj čoraz menšie, ak sa fotky spolu nezmestia
+    let perPhotoBudget = window.pendingDrawingPhotos.length
+        ? Math.floor(MAX_TOTAL_CHARS / window.pendingDrawingPhotos.length)
+        : MAX_TOTAL_CHARS;
+
     for (const p of window.pendingDrawingPhotos) {
-        const compressed = await compressImage(p.dataUrl, 1800);
+        const compressed = await compressImage(p.dataUrl, 1800, perPhotoBudget);
         photos.push(compressed);
+        totalSize += compressed.length;
+    }
+
+    // Poistka: ak by aj tak súčet presiahol limit (napr. veľmi veľa fotiek), odmietni uložiť
+    // radšej PRED zápisom, než aby zápis ticho zlyhal na serveri po synchronizácii.
+    if (totalSize > MAX_TOTAL_CHARS) {
+        showToast('⚠ Príliš veľa/veľké fotky pre jeden výkres. Skúste menej fotiek naraz.', 'err');
+        return;
     }
 
     const newDrawing = {
@@ -2984,9 +3018,16 @@ window.saveDrawing = async () => {
         toolIds: [...selectedToolIds],
         createdAt: Date.now()
     };
-    addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing)
-        .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
-    showToast('Výkres uložený ✓ (' + photos.length + ' ' + (photos.length === 1 ? 'fotka' : 'fotiek') + ')', 'ok');
+
+    try {
+        // Čakáme na potvrdenie zápisu (aj keď offline, Firestore SDK vyrieši promise po zápise do lokálnej cache;
+        // ak zápis neskôr na serveri zlyhá napr. pre veľkosť, tu to aspoň zalogujeme a upozorníme používateľa).
+        await addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing);
+        showToast('Výkres uložený ✓ (' + photos.length + ' ' + (photos.length === 1 ? 'fotka' : 'fotiek') + ')', 'ok');
+    } catch (e) {
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova s menším počtom fotiek'), 'err');
+        return;
+    }
 
     ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('ad-dup-warn').style.display = 'none';
@@ -3001,10 +3042,10 @@ window.saveDrawing = async () => {
 };
 
 // Compress image to max width
-function compressImage(dataUrl, maxWidth) {
+function compressImage(dataUrl, maxWidth, customMaxChars) {
     // Vyuzijeme takmer cely 1 MB na jeden dokument -> ostrejsia fotka (citanie kot).
-    // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod 1 MB.
-    const MAX_CHARS = 950000; // bezpecne pod limit Firestore 1 MB/dokument
+    // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod limit.
+    const MAX_CHARS = customMaxChars || 950000; // bezpecne pod limit Firestore 1 MB/dokument
     return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
@@ -3273,9 +3314,13 @@ window.saveTool = async () => {
             finalData = await compressImage(fileData, 1800);
         }
         const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalData || null, createdAt: Date.now() };
-        addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool)
-            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
-        showToast('Nástroj uložený ✓', 'ok');
+        try {
+            await addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool);
+            showToast('Nástroj uložený ✓', 'ok');
+        } catch (e) {
+            showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+            return;
+        }
         document.getElementById('at-diam').value = '';
         document.getElementById('at-note').value = '';
         updateMachineBox('at');  // stroj zostáva vybraný
