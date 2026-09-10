@@ -1557,6 +1557,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
     collection, addDoc, deleteDoc, updateDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
@@ -1578,6 +1580,7 @@ if (localStorage.getItem('cnc_cookie') === 'all') {
 }
 const auth    = getAuth(app);
 const db      = getFirestore(app);
+const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
 // Offline persistence
@@ -2797,46 +2800,48 @@ window.saveMachineEdit = async () => {
 
 // ════════ PRIDAŤ FOTKU K EXISTUJÚCEMU VÝKRESU ════════
 window.addPhotoToDrawing = async (inputEl) => {
-    // Volané z hlavného tlačidla (bez inputEl) ALEBO priamo z <input onchange>
-    if (!inputEl) return; // tlačidlá teraz vždy klikajú na skryté inputy nižšie
+    if (!inputEl) return;
     if (!inputEl.files || !inputEl.files.length) return;
     const d = drawings.find(x => x._id === currentDetailId);
     if (!d) return;
-    showToast('Pridávam fotky...', '');
-    const existing = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
-
-    const MAX_TOTAL_CHARS = 980000;
     const newFiles = Array.from(inputEl.files);
-    const perPhotoBudget = Math.floor(MAX_TOTAL_CHARS / (existing.length + newFiles.length || 1));
+    showToast(`Nahrávam ${newFiles.length} ${newFiles.length === 1 ? 'fotku' : 'fotky'}...`, '');
+
+    const existingPhotos = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
+    const existingPaths  = d.photoPaths ? [...d.photoPaths] : [];
 
     const newPhotos = [];
-    for (const f of newFiles) {
-        const dataUrl = await new Promise(res => {
-            const r = new FileReader();
-            r.onload = e => res(e.target.result);
-            r.readAsDataURL(f);
-        });
-        const compressed = await compressImage(dataUrl, 1800, perPhotoBudget);
-        newPhotos.push(compressed);
-    }
-
-    const merged = [...existing, ...newPhotos];
-    const totalSize = merged.reduce((sum, p) => sum + p.length, 0);
-    if (totalSize > MAX_TOTAL_CHARS) {
-        showToast('⚠ Príliš veľa fotiek pre tento výkres. Skúste pridať menej naraz alebo vymazať staršie.', 'err');
+    const newPaths  = [];
+    try {
+        for (const f of newFiles) {
+            const dataUrl = await new Promise(res => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.readAsDataURL(f);
+            });
+            const compressed = await compressImage(dataUrl, 2400);
+            const { url, path } = await uploadPhotoToStorage(compressed, 'drawings');
+            newPhotos.push(url);
+            newPaths.push(path);
+        }
+    } catch (e) {
+        showToast('⚠ Nahrávanie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
         inputEl.value = '';
         return;
     }
 
+    const mergedPhotos = [...existingPhotos, ...newPhotos];
+    const mergedPaths  = [...existingPaths, ...newPaths];
+
     try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
-            photos: merged, fileData: merged[0]
+            photos: mergedPhotos, photoPaths: mergedPaths, fileData: mergedPhotos[0]
         });
-        d.photos = merged; d.fileData = merged[0];
+        d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.fileData = mergedPhotos[0];
         showToast('Fotky pridané ✓', 'ok');
         openDetail(d.number);
     } catch (e) {
-        showToast('⚠ Nepodarilo sa uložiť fotky: ' + (e.message || 'skúste menej fotiek'), 'err');
+        showToast('⚠ Nepodarilo sa uložiť: ' + (e.message || 'skúste znova'), 'err');
     }
     inputEl.value = '';
 };
@@ -2988,45 +2993,39 @@ window.saveDrawing = async () => {
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
     if (limitReached('drawings', drawings.length)) return;
 
-    showToast('Ukladám...', '');
+    const photoCount = window.pendingDrawingPhotos.length;
+    showToast(photoCount ? `Nahrávam ${photoCount} ${photoCount === 1 ? 'fotku' : 'fotky'}...` : 'Ukladám...', '');
 
-    // Skomprimovať všetky fotky, ale udržať CELKOVÚ veľkosť pod limitom Firestore (1 MB / dokument)
-    const MAX_TOTAL_CHARS = 980000; // rezerva na ostatné polia dokumentu
-    const photos = [];
-    let totalSize = 0;
-    // Postupne komprimuj čoraz menšie, ak sa fotky spolu nezmestia
-    let perPhotoBudget = window.pendingDrawingPhotos.length
-        ? Math.floor(MAX_TOTAL_CHARS / window.pendingDrawingPhotos.length)
-        : MAX_TOTAL_CHARS;
-
-    for (const p of window.pendingDrawingPhotos) {
-        const compressed = await compressImage(p.dataUrl, 1800, perPhotoBudget);
-        photos.push(compressed);
-        totalSize += compressed.length;
-    }
-
-    // Poistka: ak by aj tak súčet presiahol limit (napr. veľmi veľa fotiek), odmietni uložiť
-    // radšej PRED zápisom, než aby zápis ticho zlyhal na serveri po synchronizácii.
-    if (totalSize > MAX_TOTAL_CHARS) {
-        showToast('⚠ Príliš veľa/veľké fotky pre jeden výkres. Skúste menej fotiek naraz.', 'err');
+    // Fotky nahrávame do Firebase Storage (žiadny limit veľkosti dokumentu) –
+    // komprimujeme len rozumne na rýchlejší prenos, kvalita ostáva vysoká pre čitateľné kóty.
+    const photos = [];      // URL adresy pre zobrazenie
+    const photoPaths = [];  // cesty v Storage pre neskoršie mazanie
+    try {
+        for (const p of window.pendingDrawingPhotos) {
+            const compressed = await compressImage(p.dataUrl, 2400); // vyššie rozlíšenie, bez tesného limitu
+            const { url, path } = await uploadPhotoToStorage(compressed, 'drawings');
+            photos.push(url);
+            photoPaths.push(path);
+        }
+    } catch (e) {
+        showToast('⚠ Nahrávanie fotiek zlyhalo: ' + (e.message || 'skúste znova'), 'err');
         return;
     }
 
     const newDrawing = {
         machine, number, program, note,
         photos: photos,
-        fileData: photos[0] || null, // spätná kompatibilita so starým zobrazením
+        photoPaths: photoPaths,
+        fileData: photos[0] || null, // spätná kompatibilita so starým zobrazením (teraz URL)
         toolIds: [...selectedToolIds],
         createdAt: Date.now()
     };
 
     try {
-        // Čakáme na potvrdenie zápisu (aj keď offline, Firestore SDK vyrieši promise po zápise do lokálnej cache;
-        // ak zápis neskôr na serveri zlyhá napr. pre veľkosť, tu to aspoň zalogujeme a upozorníme používateľa).
         await addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing);
-        showToast('Výkres uložený ✓ (' + photos.length + ' ' + (photos.length === 1 ? 'fotka' : 'fotiek') + ')', 'ok');
+        showToast('Výkres uložený ✓' + (photoCount ? ` (${photoCount} ${photoCount === 1 ? 'fotka' : 'fotiek'})` : ''), 'ok');
     } catch (e) {
-        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova s menším počtom fotiek'), 'err');
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
         return;
     }
 
@@ -3043,6 +3042,22 @@ window.saveDrawing = async () => {
 };
 
 // Compress image to max width
+// ════════ UPLOAD FOTIEK DO FIREBASE STORAGE ════════
+// Namiesto ukladania Base64 priamo do Firestore (limit 1MB/dokument) nahrávame
+// obrázky ako súbory do Storage a v dokumente držíme len URL. Žiadny limit na počet/veľkosť fotiek.
+async function uploadPhotoToStorage(dataUrl, folder) {
+    const path = `users/${currentUser.uid}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
+    const ref = storageRef(storage, path);
+    await uploadString(ref, dataUrl, 'data_url');
+    const url = await getDownloadURL(ref);
+    return { url, path };
+}
+
+async function deletePhotoFromStorage(path) {
+    if (!path) return;
+    try { await deleteObject(storageRef(storage, path)); } catch(e) { /* uz mozno neexistuje */ }
+}
+
 function compressImage(dataUrl, maxWidth, customMaxChars) {
     // Vyuzijeme takmer cely 1 MB na jeden dokument -> ostrejsia fotka (citanie kot).
     // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod limit.
@@ -3149,25 +3164,31 @@ window.saveEditDrawing = async () => {
         showToast('Výkres s týmto číslom už existuje!', 'err'); return;
     }
 
-    const doUpdate = async (fileData) => {
-        const upd = { number, machine, program, note };
-        if (fileData) {
-            upd.fileData = fileData.startsWith('data:image')
-                ? await compressImage(fileData, 1800) : fileData;
+    const upd = { number, machine, program, note };
+    if (pendingEditFile) {
+        try {
+            const dataUrl = await new Promise(res => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.readAsDataURL(pendingEditFile);
+            });
+            const compressed = await compressImage(dataUrl, 2400);
+            const { url, path } = await uploadPhotoToStorage(compressed, 'drawings');
+            upd.fileData = url;
+            upd.photos = [url];
+            upd.photoPaths = [path];
+        } catch (e) {
+            showToast('⚠ Nahrávanie fotky zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+            return;
         }
-        updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), upd)
-            .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    }
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), upd);
         showToast('Zmeny uložené ✓', 'ok');
         closeEditModal();
         setTimeout(() => window.renderDelDrawing(), 200);
-    };
-
-    if (pendingEditFile) {
-        const reader = new FileReader();
-        reader.onload = e => doUpdate(e.target.result);
-        reader.readAsDataURL(pendingEditFile);
-    } else {
-        doUpdate(null);
+    } catch (e) {
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
     }
 };
 
@@ -3188,6 +3209,10 @@ window._delDrawing = async (id) => {
     if (!await requireAdminPassword()) return;
     deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', id))
         .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    // Vymazať aj fotky zo Storage (nezablokovať UI čakaním)
+    if (d.photoPaths && d.photoPaths.length) {
+        d.photoPaths.forEach(p => deletePhotoFromStorage(p));
+    }
     showToast('Výkres vymazaný', 'err');
     window.renderDelDrawing();
 };
@@ -3313,11 +3338,19 @@ window.saveTool = async () => {
     const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
 
     const doSaveTool = async (fileData) => {
-        let finalData = fileData;
+        let finalUrl = null;
+        let finalPath = null;
         if (fileData && fileData.startsWith('data:image')) {
-            finalData = await compressImage(fileData, 1800);
+            try {
+                const compressed = await compressImage(fileData, 2000);
+                const { url, path } = await uploadPhotoToStorage(compressed, 'tools');
+                finalUrl = url; finalPath = path;
+            } catch (e) {
+                showToast('⚠ Nahrávanie fotky zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+                return;
+            }
         }
-        const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalData || null, createdAt: Date.now() };
+        const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalUrl, filePath: finalPath, createdAt: Date.now() };
         try {
             await addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool);
             showToast('Nástroj uložený ✓', 'ok');
@@ -3372,6 +3405,7 @@ window._delTool = async (id) => {
     if (!await requireAdminPassword()) return;
     deleteDoc(doc(db, 'users', currentUser.uid, 'tools', id))
         .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    if (t.filePath) deletePhotoFromStorage(t.filePath);
     showToast('Nástroj vymazaný', 'err');
     window.renderDelTool();
 };
