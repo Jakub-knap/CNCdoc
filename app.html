@@ -1865,6 +1865,8 @@ function showApp(user) {
         showLetterAvatar(displayName, letterEl);
     }
     renderToolCategories();
+    // Skúsiť doriešiť nedokončené mazania fotiek z minulej offline session
+    processDeleteQueue();
 }
 
 function showLetterAvatar(name, el) {
@@ -3053,10 +3055,70 @@ async function uploadPhotoToStorage(dataUrl, folder) {
     return { url, path };
 }
 
+// ════════ SPOĽAHLIVÉ MAZANIE FOTIEK (fronta prežije výpadok internetu) ════════
+// Cesty na vymazanie sa najprv zapíšu do localStorage. Až PO úspešnom vymazaní
+// zo Storage sa z fronty odstránia. Ak nie je pripojenie, zostanú vo fronte
+// a skúsia sa znova pri ďalšom spustení aplikácie alebo návrate online.
+const DEL_QUEUE_KEY = 'cnc_pending_photo_deletes';
+
+function getDeleteQueue() {
+    try { return JSON.parse(localStorage.getItem(DEL_QUEUE_KEY) || '[]'); }
+    catch(e) { return []; }
+}
+
+function setDeleteQueue(queue) {
+    localStorage.setItem(DEL_QUEUE_KEY, JSON.stringify(queue));
+}
+
+function enqueuePhotoDelete(path) {
+    if (!path) return;
+    const queue = getDeleteQueue();
+    if (!queue.includes(path)) {
+        queue.push(path);
+        setDeleteQueue(queue);
+    }
+}
+
 async function deletePhotoFromStorage(path) {
     if (!path) return;
-    try { await deleteObject(storageRef(storage, path)); } catch(e) { /* uz mozno neexistuje */ }
+    enqueuePhotoDelete(path);       // najprv zapísať do trvalej fronty
+    await processDeleteQueue();     // hneď skúsiť spracovať
 }
+
+// Prejde celú frontu a pokúsi sa vymazať každú fotku zo Storage.
+// Úspešne vymazané odstráni z fronty; neúspešné (offline) tam ostanú na neskôr.
+let _processingQueue = false;
+async function processDeleteQueue() {
+    if (_processingQueue) return; // zabrániť súbežnému behu
+    _processingQueue = true;
+    try {
+        let queue = getDeleteQueue();
+        if (!queue.length) return;
+        const stillPending = [];
+        for (const path of queue) {
+            try {
+                await deleteObject(storageRef(storage, path));
+                // úspešne vymazané -> nepridávame do stillPending
+            } catch (e) {
+                if (e.code === 'storage/object-not-found') {
+                    // uz neexistuje (napr. uz vymazane inokedy) -> beriem ako hotove
+                } else {
+                    // pravdepodobne offline alebo docasna chyba -> skus neskor
+                    stillPending.push(path);
+                }
+            }
+        }
+        setDeleteQueue(stillPending);
+        if (stillPending.length) {
+            console.log(`CNCdok: ${stillPending.length} fotiek čaká na vymazanie zo servera (offline)`);
+        }
+    } finally {
+        _processingQueue = false;
+    }
+}
+
+// Skúsiť frontu spracovať pri štarte aplikácie a pri návrate pripojenia
+window.addEventListener('online', () => { processDeleteQueue(); });
 
 function compressImage(dataUrl, maxWidth, customMaxChars) {
     // Vyuzijeme takmer cely 1 MB na jeden dokument -> ostrejsia fotka (citanie kot).
