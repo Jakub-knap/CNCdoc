@@ -1482,6 +1482,31 @@
             <input type="file" id="ed-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditFile(this)">
             <div id="ed-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
         </div>
+        <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+            <label class="field-label">🔧 Nástroje k výkresu</label>
+            <div id="em-tools-linked" style="margin-bottom:10px;"></div>
+            <div id="em-tools-pick" class="tool-pick" style="margin-bottom:10px;"></div>
+            <button type="button" class="btn btn-sm" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--light);margin:0 0 10px;" onclick="toggleEmNewTool()">➕ Vytvoriť nový nástroj</button>
+            <div id="em-new-tool-form" style="display:none;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px;">
+                <div class="fg">
+                    <label class="field-label">Kategória</label>
+                    <select id="em-tool-cat" onchange="emUpdateSubtypes()"></select>
+                </div>
+                <div class="fg" id="em-subtype-wrap" style="display:none;">
+                    <label class="field-label">Typ / vyhotovenie</label>
+                    <select id="em-tool-subtype"></select>
+                </div>
+                <div class="fg">
+                    <label class="field-label" id="em-diam-label">Priemer / polomer / dĺžka</label>
+                    <input type="text" id="em-tool-diam" placeholder="Napr. D10, R0.8">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Poznámka</label>
+                    <input type="text" id="em-tool-note" placeholder="Voliteľné">
+                </div>
+                <button type="button" class="btn btn-success" style="margin-bottom:0;" onclick="emCreateAndLinkTool()">✓ Vytvoriť a priradiť</button>
+            </div>
+        </div>
         <button class="btn btn-success" onclick="saveEditDrawing()">✓ Uložiť zmeny</button>
         <button class="btn btn-ghost" onclick="closeEditModal()">Zrušiť</button>
     </div>
@@ -3204,6 +3229,11 @@ window._editDrawing = (id) => {
     renderEditPhotos(d);
     document.getElementById('ed-file-status').textContent = '';
     document.getElementById('ed-dup-warn').style.display = 'none';
+    // Nástroje priradené k výkresu
+    emEditToolIds = [...(d.toolIds || [])];
+    document.getElementById('em-new-tool-form').style.display = 'none';
+    renderEmLinkedTools();
+    renderEmToolPicker();
     document.getElementById('modal-edit').classList.add('open');
 };
 
@@ -3276,7 +3306,7 @@ window.saveEditDrawing = async () => {
         showToast('Výkres s týmto číslom už existuje!', 'err'); return;
     }
 
-    const upd = { number, machine, program, note };
+    const upd = { number, machine, program, note, toolIds: [...emEditToolIds] };
     if (pendingEditFile) {
         try {
             const dataUrl = await new Promise(res => {
@@ -3296,11 +3326,134 @@ window.saveEditDrawing = async () => {
     }
     try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), upd);
+        const dd = drawings.find(x => x._id === editingId);
+        if (dd) dd.toolIds = [...emEditToolIds];
         showToast('Zmeny uložené ✓', 'ok');
         closeEditModal();
         setTimeout(() => window.renderDelDrawing(), 200);
     } catch (e) {
         showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+// ════════ NÁSTROJE PRIAMO V EDITÁCII VÝKRESU ════════
+let emEditToolIds = [];
+
+function renderEmLinkedTools() {
+    const box = document.getElementById('em-tools-linked');
+    if (!box) return;
+    const linked = emEditToolIds.map(id => tools.find(t => t._id === id)).filter(Boolean);
+    if (!linked.length) {
+        box.innerHTML = `<div style="font-size:13px;color:var(--muted);">Žiadne priradené nástroje</div>`;
+        return;
+    }
+    box.innerHTML = linked.map(t => `
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--input);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:6px;">
+            <div style="min-width:0;">
+                <div style="font-weight:700;font-size:14px;color:var(--white);">${t.diameter || t.name || 'nástroj'}</div>
+                <div style="font-size:12px;color:var(--muted);">${t.name || ''}</div>
+            </div>
+            <button type="button" onclick="emUnlinkTool('${t._id}')" style="background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#f87171;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">Odobrať</button>
+        </div>`).join('');
+}
+
+window.emUnlinkTool = (id) => {
+    emEditToolIds = emEditToolIds.filter(x => x !== id);
+    renderEmLinkedTools();
+    renderEmToolPicker();
+};
+
+function renderEmToolPicker() {
+    const box = document.getElementById('em-tools-pick');
+    if (!box) return;
+    const d = drawings.find(x => x._id === editingId);
+    const pool = tools.filter(t => t.machine === (d ? d.machine : ''));
+    const unlinked = pool.filter(t => !emEditToolIds.includes(t._id));
+    if (!unlinked.length) {
+        box.innerHTML = `<div class="tp-empty">Žiadne ďalšie nástroje pre tento stroj</div>`;
+        return;
+    }
+    box.innerHTML = '';
+    unlinked.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip';
+        chip.textContent = (t.diameter || t.name || 'nástroj');
+        chip.onclick = () => {
+            emEditToolIds.push(t._id);
+            renderEmLinkedTools();
+            renderEmToolPicker();
+        };
+        box.appendChild(chip);
+    });
+}
+
+window.toggleEmNewTool = () => {
+    const form = document.getElementById('em-new-tool-form');
+    const show = form.style.display === 'none';
+    form.style.display = show ? 'block' : 'none';
+    if (show) emFillCategorySelect();
+};
+
+function emFillCategorySelect() {
+    const sel = document.getElementById('em-tool-cat');
+    sel.innerHTML = '';
+    TOOL_CATEGORIES.forEach(cat => {
+        const o = document.createElement('option');
+        o.value = cat.id; o.textContent = cat.name;
+        sel.appendChild(o);
+    });
+    emUpdateSubtypes();
+}
+
+window.emUpdateSubtypes = () => {
+    const catId = document.getElementById('em-tool-cat').value;
+    const cat = TOOL_CATEGORIES.find(c => c.id === catId);
+    const wrap = document.getElementById('em-subtype-wrap');
+    const sel  = document.getElementById('em-tool-subtype');
+    if (cat && cat.subtypes.length) {
+        wrap.style.display = 'block';
+        sel.innerHTML = '<option value="">— Vyberte typ —</option>';
+        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); });
+    } else {
+        wrap.style.display = 'none';
+        sel.innerHTML = '';
+    }
+    document.getElementById('em-diam-label').textContent = cat ? cat.diamLabel : 'Priemer / polomer / dĺžka';
+};
+
+window.emCreateAndLinkTool = async () => {
+    const d = drawings.find(x => x._id === editingId);
+    if (!d) return;
+    const catId   = document.getElementById('em-tool-cat').value;
+    const cat     = TOOL_CATEGORIES.find(c => c.id === catId);
+    const subtype = document.getElementById('em-tool-subtype').value;
+    const diam    = document.getElementById('em-tool-diam').value.trim();
+    const note    = document.getElementById('em-tool-note').value.trim();
+    if (!cat) { showToast('Vyberte kategóriu!', 'err'); return; }
+    if (cat.subtypes.length && !subtype) { showToast('Vyberte typ nástroja!', 'err'); return; }
+    if (!diam) { showToast('Vyplňte ' + cat.diamLabel.toLowerCase() + '!', 'err'); return; }
+    if (limitReached('tools', tools.length)) return;
+
+    const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
+    const newTool = {
+        machine: d.machine, name, diameter: diam,
+        type: subtype || cat.name, category: cat.id, catName: cat.name,
+        note, fileData: null, filePath: null, createdAt: Date.now()
+    };
+
+    try {
+        const ref = await addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool);
+        newTool._id = ref.id;
+        tools.push(newTool); // okamžitá lokálna dostupnosť pred realtime syncom
+        emEditToolIds.push(ref.id);
+        showToast('Nástroj vytvorený a priradený ✓', 'ok');
+        document.getElementById('em-tool-diam').value = '';
+        document.getElementById('em-tool-note').value = '';
+        document.getElementById('em-new-tool-form').style.display = 'none';
+        renderEmLinkedTools();
+        renderEmToolPicker();
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vytvoriť nástroj: ' + (e.message || 'skúste znova'), 'err');
     }
 };
 
