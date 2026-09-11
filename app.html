@@ -525,6 +525,23 @@
 
         .div { height: 1px; background: var(--border); margin: 14px 0; }
 
+        /* ── STARÉ VÝKRESY - UPOZORNENIE ── */
+        .old-drawing-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--input); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; gap: 10px;
+        }
+        .old-drawing-info { min-width: 0; flex: 1; }
+        .old-drawing-number { font-weight: 700; font-size: 15px; color: var(--white); }
+        .old-drawing-age { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .old-drawing-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .odb {
+            border: none; border-radius: 7px; padding: 8px 11px;
+            font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .odb-keep { background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
+        .odb-del  { background: rgba(220,38,38,.15); color: #f87171; border: 1px solid rgba(220,38,38,.3); }
+
         /* ── GALÉRIA FOTIEK ── */
         .photo-gallery {
             display: grid;
@@ -1512,6 +1529,24 @@
     </div>
 </div>
 
+<!-- MODAL: Staré výkresy -->
+<div id="modal-old-drawings" class="modal-bg" style="z-index:410;" onclick="closeOldDrawingsModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">📦 Staré výkresy</div>
+            <button class="modal-close" onclick="closeOldDrawingsModal()">✕</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+            Tieto výkresy sú staršie ako 2 roky. Ak sa už nepoužívajú, môžete ich vymazať a uvoľniť miesto. Ak sa ešte hodia, predĺžte ich.
+        </div>
+        <div id="old-drawings-list"></div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+            <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="closeOldDrawingsModal()">Zavrieť</button>
+            <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="remindOldDrawingsLater()">Pripomenúť o mesiac</button>
+        </div>
+    </div>
+</div>
+
 <!-- TOAST -->
 <!-- ADMIN PASSWORD MODAL -->
 <div class="modal-ov" id="admin-modal">
@@ -2410,7 +2445,99 @@ function renderAll() {
     renderToolCategories();
     if (window.renderDrawingToolPicker) renderDrawingToolPicker();
     renderOnboarding();
+    checkOldDrawings();
 }
+
+// ════════ STARÉ VÝKRESY (2+ roky) - UPOZORNENIE ════════
+const OLD_DRAWING_MS = 2 * 365 * 24 * 60 * 60 * 1000; // 2 roky v milisekundách
+const OLD_CHECK_KEY  = 'cnc_old_drawings_last_check';
+const OLD_SNOOZE_KEY = 'cnc_old_drawings_snooze_until';
+
+function checkOldDrawings() {
+    // Kontrolovať najviac raz za deň, nech to neotravuje pri každom otvorení appky
+    const lastCheck = parseInt(localStorage.getItem(OLD_CHECK_KEY) || '0', 10);
+    const now = Date.now();
+    if (now - lastCheck < 24 * 60 * 60 * 1000) return;
+
+    // Ak si používateľ nechal pripomenúť neskôr, rešpektuj to
+    const snoozeUntil = parseInt(localStorage.getItem(OLD_SNOOZE_KEY) || '0', 10);
+    if (now < snoozeUntil) return;
+
+    localStorage.setItem(OLD_CHECK_KEY, String(now));
+
+    const old = drawings.filter(d => d.createdAt && (now - d.createdAt) > OLD_DRAWING_MS);
+    if (!old.length) return;
+
+    renderOldDrawingsList(old);
+    document.getElementById('modal-old-drawings').classList.add('open');
+}
+
+function renderOldDrawingsList(list) {
+    const box = document.getElementById('old-drawings-list');
+    box.innerHTML = '';
+    list.forEach(d => {
+        const years = ((Date.now() - d.createdAt) / (365*24*60*60*1000)).toFixed(1);
+        const div = document.createElement('div');
+        div.className = 'old-drawing-item';
+        div.innerHTML = `
+            <div class="old-drawing-info">
+                <div class="old-drawing-number">${d.number}</div>
+                <div class="old-drawing-age">Stroj: ${d.machine} · staré ${years} roka</div>
+            </div>
+            <div class="old-drawing-actions">
+                <button class="odb odb-keep" onclick="extendOldDrawing('${d._id}')">Predĺžiť</button>
+                <button class="odb odb-del" onclick="deleteOldDrawing('${d._id}')">Vymazať</button>
+            </div>`;
+        box.appendChild(div);
+    });
+}
+
+window.extendOldDrawing = async (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', id), { createdAt: Date.now() });
+        d.createdAt = Date.now();
+        showToast('Výkres predĺžený ✓', 'ok');
+        removeOldDrawingRow(id);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+window.deleteOldDrawing = async (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    if (!confirm(`Vymazať výkres "${d.number}"? Táto akcia sa nedá vrátiť.`)) return;
+    try {
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', id));
+        if (d.photoPaths && d.photoPaths.length) d.photoPaths.forEach(p => deletePhotoFromStorage(p));
+        showToast('Výkres vymazaný', 'err');
+        removeOldDrawingRow(id);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vymazať: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+function removeOldDrawingRow(id) {
+    const remaining = document.querySelectorAll('#old-drawings-list .old-drawing-item');
+    // Prerenderuj zoznam podľa aktuálneho stavu drawings (jednoduchšie a spoľahlivejšie než mazať jeden riadok)
+    const now = Date.now();
+    const stillOld = drawings.filter(d => d.createdAt && (now - d.createdAt) > OLD_DRAWING_MS);
+    if (!stillOld.length) { closeOldDrawingsModal(); return; }
+    renderOldDrawingsList(stillOld);
+}
+
+window.closeOldDrawingsModal = () => {
+    document.getElementById('modal-old-drawings').classList.remove('open');
+};
+
+window.remindOldDrawingsLater = () => {
+    const in30days = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    localStorage.setItem(OLD_SNOOZE_KEY, String(in30days));
+    closeOldDrawingsModal();
+    showToast('Pripomenieme o mesiac', '');
+};
 
 // ════════ STROJE ════════
 function renderMachines() {
