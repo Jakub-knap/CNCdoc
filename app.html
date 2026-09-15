@@ -1260,7 +1260,7 @@
 
             <div class="tile-del-row">
                 <button class="tile-del" onclick="openSection('sec-del-drawing')">✏️ Upraviť / vymazať výkres</button>
-                <button class="tile-del" onclick="openSection('sec-del-tool')">🗑 Vymazať nástroj</button>
+                <button class="tile-del" onclick="openSection('sec-del-tool')">✏️ Upraviť / vymazať nástroj</button>
             </div>
         </div>
 
@@ -1509,14 +1509,14 @@
             </div>
         </div>
 
-        <!-- VYMAŽ NÁSTROJ -->
+        <!-- UPRAVIŤ / VYMAZAŤ NÁSTROJ -->
         <div class="section" id="sec-del-tool">
             <div class="section-head" onclick="toggleSection('sec-del-tool')">
                 <div class="section-head-left">
-                    <div class="section-icon si-red">🗑️</div>
+                    <div class="section-icon si-red">✏️</div>
                     <div>
-                        <div class="section-title">Vymaž nástroj</div>
-                        <div class="section-sub">Vyhľadaj a odstráň</div>
+                        <div class="section-title">Upraviť / vymazať nástroj</div>
+                        <div class="section-sub">Vyhľadaj, uprav alebo odstráň</div>
                     </div>
                 </div>
                 <div class="chevron">⌄</div>
@@ -1527,7 +1527,7 @@
                     <input type="text" id="inp-del-tool" oninput="renderDelTool()" placeholder="Priemer alebo názov...">
                 </div>
                 <div id="del-tool-results">
-                    <div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov</p></div>
+                    <div class="empty"><div class="ei">✏️</div><p>Zadajte priemer alebo názov</p></div>
                 </div>
             </div>
         </div>
@@ -1587,6 +1587,49 @@
 
 
 <!-- MODAL: Upraviť výkres -->
+<!-- MODAL: Upraviť nástroj -->
+<div id="modal-edit-tool" class="modal-bg" style="z-index:410;" onclick="closeEditToolModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Upraviť nástroj</div>
+            <button class="modal-close" onclick="closeEditToolModal()">✕</button>
+        </div>
+        <div class="fg">
+            <label class="field-label">Stroj</label>
+            <select id="et-machine"></select>
+        </div>
+        <div class="fg">
+            <label class="field-label">Kategória nástroja</label>
+            <select id="et-category" onchange="etUpdateSubtypes()"></select>
+        </div>
+        <div class="fg" id="et-subtype-wrap" style="display:none;">
+            <label class="field-label">Typ / vyhotovenie</label>
+            <select id="et-subtype"></select>
+        </div>
+        <div class="fg">
+            <label class="field-label" id="et-diam-label">Priemer / polomer / dĺžka</label>
+            <input type="text" id="et-diam" placeholder="Napr. D10, R0.8">
+        </div>
+        <div class="fg">
+            <label class="field-label">Poznámka / korekcia</label>
+            <textarea id="et-note" rows="3" placeholder="Dĺžková korekcia, otáčky, posuv..."></textarea>
+        </div>
+        <div class="fg">
+            <label class="field-label">Fotka nástroja</label>
+            <div id="et-photo-preview" style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-photo" onclick="document.getElementById('et-file-cam').click()">📷 Odfotiť</button>
+                <button type="button" class="btn-photo" onclick="document.getElementById('et-file-lib').click()">📁 Zo zariadenia</button>
+            </div>
+            <input type="file" id="et-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditToolFile(this)">
+            <input type="file" id="et-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditToolFile(this)">
+            <div id="et-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+        </div>
+        <button class="btn btn-success" onclick="saveEditTool()">✓ Uložiť zmeny</button>
+        <button class="btn btn-ghost" onclick="closeEditToolModal()">Zrušiť</button>
+    </div>
+</div>
+
 <div id="modal-edit" class="modal-bg" onclick="closeEditModal()">
     <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -3992,9 +4035,160 @@ window.renderDelTool = () => {
     filtered.forEach(t => {
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool('${t._id}')">🗑 Vymazať</button>`;
+        card.innerHTML = `
+            <div class="r-title">${t.name} — ${t.diameter}</div>
+            <div class="r-meta">Stroj: ${t.machine}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn btn-sm" style="flex:1; background:var(--blue); color:#fff; margin:0;" onclick="window._editTool('${t._id}')">✏️ Upraviť</button>
+                <button class="btn btn-danger btn-sm" style="flex:1; margin:0;" onclick="window._delTool('${t._id}')">🗑 Vymazať</button>
+            </div>`;
         box.appendChild(card);
     });
+};
+
+// ════════ EDITÁCIA NÁSTROJA ════════
+let editingToolId = null;
+let pendingEditToolFile = null;
+
+window._editTool = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    editingToolId = id;
+    pendingEditToolFile = null;
+
+    // Stroje
+    const msel = document.getElementById('et-machine');
+    msel.innerHTML = '';
+    machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; msel.appendChild(o); });
+    msel.value = t.machine || '';
+
+    // Kategórie
+    const csel = document.getElementById('et-category');
+    csel.innerHTML = '';
+    TOOL_CATEGORIES.forEach(cat => { const o = document.createElement('option'); o.value = cat.id; o.textContent = cat.name; csel.appendChild(o); });
+    csel.value = t.category || TOOL_CATEGORIES[0].id;
+    etUpdateSubtypes(t.type);
+
+    document.getElementById('et-diam').value = t.diameter || '';
+    document.getElementById('et-note').value = t.note || '';
+    document.getElementById('et-file-status').textContent = '';
+
+    renderEditToolPhoto(t);
+    document.getElementById('modal-edit-tool').classList.add('open');
+};
+
+function renderEditToolPhoto(t) {
+    const prev = document.getElementById('et-photo-preview');
+    if (t.fileData) {
+        prev.innerHTML = `
+            <div style="position:relative;max-width:200px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+                <img src="${t.fileData}" style="width:100%;display:block;" onclick="zoomImage('${t.fileData}')">
+                <button onclick="event.stopPropagation(); deleteEditToolPhoto()" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(220,38,38,.9);color:#fff;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>`;
+    } else {
+        prev.innerHTML = `<div style="font-size:13px;color:var(--muted);">Bez fotky</div>`;
+    }
+}
+
+window.deleteEditToolPhoto = async () => {
+    const t = tools.find(x => x._id === editingToolId);
+    if (!t) return;
+    if (!confirm('Vymazať fotku nástroja?')) return;
+    const oldPath = t.filePath;
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'tools', editingToolId), { fileData: null, filePath: null });
+        t.fileData = null; t.filePath = null;
+        if (oldPath) deletePhotoFromStorage(oldPath);
+        showToast('Fotka vymazaná ✓', 'ok');
+        renderEditToolPhoto(t);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vymazať: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+window.etUpdateSubtypes = (preselect) => {
+    const catId = document.getElementById('et-category').value;
+    const cat = TOOL_CATEGORIES.find(c => c.id === catId);
+    const wrap = document.getElementById('et-subtype-wrap');
+    const sel  = document.getElementById('et-subtype');
+    if (cat && cat.subtypes.length) {
+        wrap.style.display = 'block';
+        sel.innerHTML = '<option value="">— Vyberte typ —</option>';
+        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); });
+        if (preselect) sel.value = preselect;
+    } else {
+        wrap.style.display = 'none';
+        sel.innerHTML = '';
+    }
+    document.getElementById('et-diam-label').textContent = cat ? cat.diamLabel : 'Priemer / polomer / dĺžka';
+};
+
+window.onEditToolFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingEditToolFile = f;
+    document.getElementById('et-file-status').textContent = '✓ Nová fotka pripravená: ' + (f.name || 'obrázok');
+    input.value = '';
+};
+
+window.closeEditToolModal = () => {
+    document.getElementById('modal-edit-tool').classList.remove('open');
+    editingToolId = null;
+    pendingEditToolFile = null;
+};
+
+window.saveEditTool = async () => {
+    if (!editingToolId) return;
+    const t = tools.find(x => x._id === editingToolId);
+    if (!t) return;
+
+    const machine = document.getElementById('et-machine').value;
+    const catId   = document.getElementById('et-category').value;
+    const cat     = TOOL_CATEGORIES.find(c => c.id === catId);
+    const subtype = document.getElementById('et-subtype').value;
+    const diam    = document.getElementById('et-diam').value.trim();
+    const note    = document.getElementById('et-note').value.trim();
+
+    if (!diam) { showToast('Vyplňte rozmer nástroja!', 'err'); return; }
+    if (cat && cat.subtypes.length && !subtype) { showToast('Vyberte typ nástroja!', 'err'); return; }
+
+    const name = subtype ? `${cat.name} – ${subtype}` : (cat ? cat.name : t.name);
+    const upd = {
+        machine, name, diameter: diam,
+        type: subtype || (cat ? cat.name : t.type),
+        category: cat ? cat.id : t.category,
+        catName: cat ? cat.name : t.catName,
+        note
+    };
+
+    if (pendingEditToolFile) {
+        try {
+            const dataUrl = await new Promise(res => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.readAsDataURL(pendingEditToolFile);
+            });
+            const compressed = await compressImage(dataUrl, 2000);
+            const { url, path } = await uploadPhotoToStorage(compressed, 'tools');
+            const oldPath = t.filePath;
+            upd.fileData = url;
+            upd.filePath = path;
+            if (oldPath) deletePhotoFromStorage(oldPath); // stará fotka už nie je potrebná
+        } catch (e) {
+            showToast('⚠ Nahrávanie fotky zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+            return;
+        }
+    }
+
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'tools', editingToolId), upd);
+        Object.assign(t, upd); // okamžitá lokálna aktualizácia
+        showToast('Zmeny uložené ✓', 'ok');
+        closeEditToolModal();
+        setTimeout(() => window.renderDelTool(), 200);
+    } catch (e) {
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+    }
 };
 
 window._delTool = async (id) => {
