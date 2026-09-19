@@ -876,6 +876,29 @@
             color: var(--light); line-height: 1.25;
         }
         .tool-cat.selected .tool-cat-name { color: var(--cut); }
+
+        /* ── FILTER KATEGÓRIÍ PRI HĽADANÍ NÁSTROJOV ── */
+        .tool-cat-filter-row {
+            display: flex; gap: 8px; overflow-x: auto;
+            padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+        }
+        .tcf-chip {
+            display: flex; align-items: center; gap: 6px;
+            flex-shrink: 0;
+            background: var(--input); border: 1.5px solid var(--border);
+            border-radius: 20px; padding: 8px 14px;
+            font-size: 13px; font-weight: 600; color: var(--light);
+            cursor: pointer; white-space: nowrap; transition: all .15s;
+        }
+        .tcf-chip svg {
+            width: 16px; height: 16px; stroke: var(--muted); fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+        .tcf-chip.active {
+            background: rgba(249,115,22,.15); border-color: var(--cut); color: var(--cut);
+        }
+        .tcf-chip.active svg { stroke: var(--cut); }
         .r-card .r-title svg { width: 100%; height: 100%; stroke: var(--green); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
         /* ── IN-APP BROWSER WARNING ── */
@@ -1441,16 +1464,18 @@
                         </div>
                         <button type="button" class="msb-change" onclick="toggleSearchSelect('tool-machine-filter')">zmeniť ▾</button>
                     </div>
-                    <select id="tool-machine-filter" onchange="onToolFilterChange()" style="display:none;margin-top:8px;">
-                        <option value="">— Všetky stroje —</option>
-                    </select>
+                    <select id="tool-machine-filter" style="display:none;"><option value=""></option></select>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Kategória</label>
+                    <div id="tool-cat-filter" class="tool-cat-filter-row"></div>
                 </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
                     <input type="text" id="inp-tool-search" oninput="renderToolSearch()" placeholder="Priemer alebo názov (D10, vrták...)">
                 </div>
                 <div id="tool-search-results">
-                    <div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>
+                    <div class="empty"><div class="ei">🔧</div><p>Zadajte priemer/názov alebo vyberte kategóriu</p></div>
                 </div>
             </div>
         </div>
@@ -2803,25 +2828,20 @@ function autoSelectMachine() {
     if (!machines.length) {
         updateMachineBox('ad'); updateMachineBox('at');
         updateSearchBox('sd','search-machine-filter');
-        updateSearchBox('st','tool-machine-filter');
         return;
     }
     const last = localStorage.getItem('cnc_last_machine');
     const pick = (last && machines.includes(last)) ? last : machines[0];
-    // Formuláre na pridávanie
-    ['ad-machine','at-machine'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (sel && !sel.value) sel.value = pick;
-    });
-    // Filtre pri hľadaní
-    ['search-machine-filter','tool-machine-filter'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (sel && !sel.value) sel.value = pick;
-    });
+    // Formulár na pridanie výkresu - stroj je povinný, predvyplní sa
+    const adSel = document.getElementById('ad-machine');
+    if (adSel && !adSel.value) adSel.value = pick;
+    // Nástroj - stroj je voliteľný, NEVYPĹŇA sa automaticky (nech si užívateľ vedome zvolí, alebo nechá univerzálny)
+    // Filter pri hľadaní výkresov
+    const searchSel = document.getElementById('search-machine-filter');
+    if (searchSel && !searchSel.value) searchSel.value = pick;
     updateMachineBox('ad');
     updateMachineBox('at');
     updateSearchBox('sd','search-machine-filter');
-    updateSearchBox('st','tool-machine-filter');
 }
 
 // Box pre vyhľadávacie filtre
@@ -2909,6 +2929,10 @@ function updateMachineBox(prefix) {
     if (sel.value) {
         name.textContent = sel.value;
         box.classList.remove('empty');
+    } else if (prefix === 'at') {
+        // Nástroj - stroj je voliteľný
+        name.textContent = 'Bez konkrétneho stroja';
+        box.classList.add('empty');
     } else {
         name.textContent = machines.length ? 'Vyberte stroj' : 'Najprv pridajte stroj';
         box.classList.add('empty');
@@ -3850,17 +3874,39 @@ window._delDrawing = async (id) => {
 };
 
 // ════════ NÁSTROJE – HĽADAJ ════════
+let toolCatFilter = ''; // '' = všetky kategórie
+
+function renderToolCatFilter() {
+    const box = document.getElementById('tool-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    // Chip "Všetky"
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (toolCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { toolCatFilter = ''; renderToolCatFilter(); renderToolSearch(); };
+    box.appendChild(allChip);
+    // Chip pre každú kategóriu
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (toolCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { toolCatFilter = cat.id; renderToolCatFilter(); renderToolSearch(); };
+        box.appendChild(chip);
+    });
+}
+
 window.renderToolSearch = () => {
     const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
-    const machineF = document.getElementById('tool-machine-filter').value;
     const box  = document.getElementById('tool-search-results');
-    let pool = machineF ? tools.filter(t => t.machine === machineF) : tools;
+    // Najprv filter podľa kategórie, potom podľa textu
+    let pool = toolCatFilter ? tools.filter(t => t.category === toolCatFilter) : tools;
     const filtered = text
         ? pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text))
-        : pool; // bez textu zobraz celý zoznam
+        : pool; // bez textu zobraz celý (prípadne kategóriou filtrovaný) zoznam
     box.innerHTML = '';
     if (!filtered.length) {
-        box.innerHTML = pool.length === 0 && !tools.length
+        box.innerHTML = tools.length === 0
             ? `<div class="empty"><div class="ei">🔧</div><p>Zatiaľ žiadne nástroje</p></div>`
             : `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`;
         return;
@@ -4236,7 +4282,7 @@ window.toggleSection = (id) => {
 const SECTION_RENDER_MAP = {
     'sec-search-drawing': () => window.renderDrawingSearch && window.renderDrawingSearch(),
     'sec-del-drawing':    () => window.renderDelDrawing && window.renderDelDrawing(),
-    'sec-search-tool':    () => window.renderToolSearch && window.renderToolSearch(),
+    'sec-search-tool':    () => { renderToolCatFilter(); window.renderToolSearch && window.renderToolSearch(); },
     'sec-del-tool':       () => window.renderDelTool && window.renderDelTool(),
 };
 
