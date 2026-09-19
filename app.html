@@ -1593,6 +1593,11 @@
             <button class="modal-close" onclick="closeEditTools()">✕</button>
         </div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Ťuknutím pridáte alebo odoberiete nástroj. Označené sú priradené k výkresu.</div>
+        <div id="edittools-cat-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
+        <div class="search-wrap" style="margin-bottom:12px;">
+            <span class="s-icon">🔍</span>
+            <input type="text" id="edittools-search" oninput="renderEditToolsPicker()" placeholder="Priemer alebo názov...">
+        </div>
         <div id="edittools-pick" class="tool-pick" style="margin-bottom:16px;"></div>
         <button class="btn btn-success" onclick="saveEditTools()">✓ Uložiť nástroje</button>
     </div>
@@ -1692,6 +1697,11 @@
         <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
             <label class="field-label">🔧 Nástroje k výkresu</label>
             <div id="em-tools-linked" style="margin-bottom:10px;"></div>
+            <div id="em-tools-cat-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
+            <div class="search-wrap" style="margin-bottom:10px;">
+                <span class="s-icon">🔍</span>
+                <input type="text" id="em-tools-search" oninput="renderEmToolPicker()" placeholder="Priemer alebo názov...">
+            </div>
             <div id="em-tools-pick" class="tool-pick" style="margin-bottom:10px;"></div>
             <button type="button" class="btn btn-sm" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--light);margin:0 0 10px;" onclick="toggleEmNewTool()">➕ Vytvoriť nový nástroj</button>
             <div id="em-new-tool-form" style="display:none;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -3622,8 +3632,11 @@ window._editDrawing = (id) => {
     document.getElementById('ed-dup-warn').style.display = 'none';
     // Nástroje priradené k výkresu
     emEditToolIds = [...(d.toolIds || [])];
+    emToolsCatFilter = '';
+    document.getElementById('em-tools-search').value = '';
     document.getElementById('em-new-tool-form').style.display = 'none';
     renderEmLinkedTools();
+    renderEmToolsCatFilter();
     renderEmToolPicker();
     document.getElementById('modal-edit').classList.add('open');
 };
@@ -3754,14 +3767,38 @@ window.emUnlinkTool = (id) => {
     renderEmToolPicker();
 };
 
+let emToolsCatFilter = ''; // '' = všetky kategórie, pre editáciu výkresu
+
+function renderEmToolsCatFilter() {
+    const box = document.getElementById('em-tools-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (emToolsCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { emToolsCatFilter = ''; renderEmToolsCatFilter(); renderEmToolPicker(); };
+    box.appendChild(allChip);
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (emToolsCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { emToolsCatFilter = cat.id; renderEmToolsCatFilter(); renderEmToolPicker(); };
+        box.appendChild(chip);
+    });
+}
+
 function renderEmToolPicker() {
     const box = document.getElementById('em-tools-pick');
     if (!box) return;
-    const d = drawings.find(x => x._id === editingId);
-    const pool = tools.filter(t => t.machine === (d ? d.machine : ''));
+    const text = (document.getElementById('em-tools-search').value || '').trim().toLowerCase();
+    // Nástroje sú spoločné pre celú dielňu - filter len podľa kategórie a textu
+    let pool = emToolsCatFilter ? tools.filter(t => t.category === emToolsCatFilter) : tools;
+    if (text) {
+        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+    }
     const unlinked = pool.filter(t => !emEditToolIds.includes(t._id));
     if (!unlinked.length) {
-        box.innerHTML = `<div class="tp-empty">Žiadne ďalšie nástroje pre tento stroj</div>`;
+        box.innerHTML = `<div class="tp-empty">Žiadne ďalšie nástroje nenájdené</div>`;
         return;
     }
     box.innerHTML = '';
@@ -3956,20 +3993,49 @@ window.closeToolModal = () => document.getElementById('modal-tool').classList.re
 
 // ── Úprava nástrojov priradených k výkresu ──
 let editDrawingId = null, editDrawingNumber = null, editMachine = null, editToolIds = [];
+let editToolsCatFilter = ''; // '' = všetky kategórie, pre modal-edittools
+
 window.openEditTools = (id) => {
     const d = drawings.find(x => x._id === id);
     if (!d) return;
     editDrawingId = id; editDrawingNumber = d.number; editMachine = d.machine;
     editToolIds = [...(d.toolIds || [])];
+    editToolsCatFilter = '';
+    document.getElementById('edittools-search').value = '';
+    renderEditToolsCatFilter();
     renderEditToolsPicker();
     document.getElementById('modal-edittools').classList.add('open');
 };
+
+function renderEditToolsCatFilter() {
+    const box = document.getElementById('edittools-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (editToolsCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { editToolsCatFilter = ''; renderEditToolsCatFilter(); renderEditToolsPicker(); };
+    box.appendChild(allChip);
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (editToolsCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { editToolsCatFilter = cat.id; renderEditToolsCatFilter(); renderEditToolsPicker(); };
+        box.appendChild(chip);
+    });
+}
+
 window.renderEditToolsPicker = () => {
     const box = document.getElementById('edittools-pick');
     if (!box) return;
-    const pool = tools.filter(t => t.machine === editMachine);
-    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje. Najprv ich pridajte v sekcii Nástroje.</span>'; return; }
-    editToolIds = editToolIds.filter(id => pool.some(t => t._id === id));
+    const text = (document.getElementById('edittools-search').value || '').trim().toLowerCase();
+    // Nástroje sú spoločné pre celú dielňu - zobraz všetky, filtrované len kategóriou a textom
+    let pool = editToolsCatFilter ? tools.filter(t => t.category === editToolsCatFilter) : tools;
+    if (text) {
+        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+    }
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Žiadne nástroje nenájdené</span>'; return; }
+    editToolIds = editToolIds.filter(id => tools.some(t => t._id === id)); // len odstráň neexistujúce
     box.innerHTML = '';
     pool.forEach(t => {
         const chip = document.createElement('div');
