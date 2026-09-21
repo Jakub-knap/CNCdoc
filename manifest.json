@@ -3,6 +3,8 @@
   "short_name": "CNCdok",
   "description": "Výkresy, nástroje a programy vždy po ruke pri stroji",
   "start_url": "/app.html",
+  "scope": "/",
+  "id": "/app.html",
   "display": "standalone",
   "background_color": "#0f1a27",
   "theme_color": "#f97316",

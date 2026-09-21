@@ -45,13 +45,23 @@ const DAY_MS     = 86400000;
 // Stripe Payment Links — jeden link pre každý tarif a obdobie.
 // (Sandbox / test linky. Pre OSTRÚ prevádzku vymeň za live linky.)
 const CHECKOUT_LINKS = {
-    firma_monthly: "https://buy.stripe.com/4gMcMY0j6b5s06QbA6fw402",
-    firma_yearly:  "https://buy.stripe.com/4gM8wI4zm0qO2eY0Vsfw403",
-    solo_monthly:  "https://buy.stripe.com/6oUfZagi48Xk2eY5bIfw400",
-    solo_yearly:   "https://buy.stripe.com/dRm7sE5Dq7TgbPyaw2fw401",
+    firma_monthly: "https://buy.stripe.com/test_14AcN6ed5fTl9zFdYC3Je00",
+    firma_yearly:  "https://buy.stripe.com/test_28E9AU8SL6iL5jpdYC3Je01",
+    solo_monthly:  "https://buy.stripe.com/test_5kQ4gAd914aDdPV9Im3Je02",
+    solo_yearly:   "https://buy.stripe.com/test_9B6cN61qjdLdbHNaMq3Je03",
 };
 // Kam smeruje "Aktivovať" v appke (nech si používateľ vyberie plán).
 const UPGRADE_URL = "index.html#cennik";
+
+// Doména, kde sa dá appka otvoriť ako bežná webstránka (pre Android verziu).
+const WEB_URL = "https://cncdok.sk";
+
+// Beží appka zabalená ako Android appka (TWA)? Android nastavuje referrer
+// v tvare "android-app://<balíček>". V bežnom prehliadači/PWA je referrer
+// prázdny alebo iná URL.
+// POZOR: pre Google Play politiku NESMIE Android verzia spúšťať Stripe
+// platbu vo vnútri appky – predplatné sa dá aktivovať len na webe.
+const IS_TWA = /^android-app:\/\//.test(document.referrer || "");
 
 // Sekcie, ktoré sa vo Free režime zamknú. Prázdne pole = zamkni všetky .section.
 const LOCK_SELECTOR = ".section";
@@ -222,25 +232,44 @@ function ensureUpgradeModal() {
 
     const el = document.createElement("div");
     el.id = "sub-upgrade";
-    el.innerHTML = `
-        <div class="sub-up-card">
-            <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
-            <div class="sub-up-logo">CNC<span>dok</span></div>
-            <h2 class="sub-up-title">Aktivujte predplatné</h2>
-            <p class="sub-up-text">
-                Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
-                strojom a nástrojom si vyberte plán.
-            </p>
-            <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
-            <button class="sub-up-signout" type="button">Odhlásiť sa</button>
-            <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
-        </div>`;
+
+    if (IS_TWA) {
+        // Android appka: žiadne tlačidlo na Stripe checkout, len návod na web.
+        el.innerHTML = `
+            <div class="sub-up-card">
+                <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
+                <div class="sub-up-logo">CNC<span>dok</span></div>
+                <h2 class="sub-up-title">Aktivujte predplatné</h2>
+                <p class="sub-up-text">
+                    Skúšobná doba sa skončila. Predplatné si aktivujete na
+                    webovej stránke <strong>${WEB_URL.replace(/^https?:\/\//, "")}</strong> —
+                    otvorte ju v internetovom prehliadači (Chrome/Safari),
+                    nie v tejto aplikácii. Po zaplatení sa prístup v appke
+                    odomkne automaticky.
+                </p>
+                <button class="sub-up-signout" type="button">Odhlásiť sa</button>
+            </div>`;
+    } else {
+        el.innerHTML = `
+            <div class="sub-up-card">
+                <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
+                <div class="sub-up-logo">CNC<span>dok</span></div>
+                <h2 class="sub-up-title">Aktivujte predplatné</h2>
+                <p class="sub-up-text">
+                    Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
+                    strojom a nástrojom si vyberte plán.
+                </p>
+                <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
+                <button class="sub-up-signout" type="button">Odhlásiť sa</button>
+                <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
+            </div>`;
+    }
     document.body.appendChild(el);
 
     el.addEventListener("click", (e) => { if (e.target === el) closeUpgrade(); });
     el.querySelector(".sub-up-x").addEventListener("click", closeUpgrade);
-    el.querySelector('[data-goto="cennik"]')
-      .addEventListener("click", () => { window.location.href = UPGRADE_URL; });
+    const gotoBtn = el.querySelector('[data-goto="cennik"]');
+    if (gotoBtn) gotoBtn.addEventListener("click", () => { window.location.href = UPGRADE_URL; });
     el.querySelector(".sub-up-signout").addEventListener("click", () => {
         if (typeof window.signOut === "function") window.signOut();
         else auth.signOut();
@@ -293,12 +322,19 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     // 0) Deep-link z index.html: ?checkout=monthly|yearly → rovno na Stripe
+    //    V Android appke (TWA) sa checkout NIKDY nespúšťa – len sa vyčistí
+    //    URL a ukáže sa návod na aktiváciu cez web.
     if (!checkoutHandled) {
         checkoutHandled = true;
         const plan = new URLSearchParams(window.location.search).get("checkout");
         if (plan && CHECKOUT_LINKS[plan]) {
-            const url = buildCheckoutUrl(plan, user.uid, user.email);
-            if (url) { window.location.replace(url); return; }
+            if (IS_TWA) {
+                history.replaceState(null, "", window.location.pathname);
+                openUpgrade();
+            } else {
+                const url = buildCheckoutUrl(plan, user.uid, user.email);
+                if (url) { window.location.replace(url); return; }
+            }
         }
     }
 
