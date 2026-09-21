@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "sk.cncdok.app",
+    "sha256_cert_fingerprints": [
+      "TU_VLOZ_SHA256_FINGERPRINT_Z_BUBBLEWRAPU_ALEBO_PLAY_CONSOLE"
+    ]
+  }
+}]
