@@ -1761,6 +1761,7 @@
             Ťuknutím vyberiete nástroj. Zobrazené sú všetky nástroje z celej dielne — aj tie priradené k iným strojom.
         </div>
         <div id="tp-modal-cat-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
+        <div id="tp-modal-machine-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
         <div class="search-wrap" style="margin-bottom:12px;">
             <span class="s-icon">🔍</span>
             <input type="text" id="tp-modal-search" oninput="renderToolPickerModal()" placeholder="Priemer alebo názov...">
@@ -1963,6 +1964,16 @@ function planLimit(kind) {
     return (subTier === 'firma') ? PLAN_LIMITS.firma[kind] : PLAN_LIMITS.solo[kind];
 }
 // Vráti true a ukáže hlášku, ak je limit dosiahnutý.
+// Normalizácia textu pre hľadanie bez ohľadu na diakritiku (á/a, č/c, š/s...)
+// a bez ohľadu na veľkosť písmen. Použité všade, kde sa filtruje podľa napísaného textu.
+function normText(s) {
+    return (s || '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // odstráni diakritické znamienka
+        .toLowerCase();
+}
+
 function limitReached(kind, count) {
     if (count < planLimit(kind)) return false;
     const label = { machines: 'strojov', drawings: 'výkresov', tools: 'nástrojov' }[kind];
@@ -3060,14 +3071,14 @@ window.deleteMachineConfirm = async () => {
 
 // ════════ VÝKRESY – HĽADAJ ════════
 window.renderDrawingSearch = () => {
-    const text = document.getElementById('inp-drawing-search').value.trim().toLowerCase();
+    const text = normText(document.getElementById('inp-drawing-search').value);
     const machineF = document.getElementById('search-machine-filter').value;
     const box  = document.getElementById('drawing-search-results');
     let pool = machineF ? drawings.filter(d => d.machine === machineF) : drawings;
     let filtered;
     if (text) {
-        const byNum  = pool.filter(d => d.number.toLowerCase().includes(text));
-        const byProg = pool.filter(d => !d.number.toLowerCase().includes(text) && (d.program||'').toLowerCase().includes(text));
+        const byNum  = pool.filter(d => normText(d.number).includes(text));
+        const byProg = pool.filter(d => !normText(d.number).includes(text) && normText(d.program).includes(text));
         filtered = [...byNum, ...byProg];
     } else {
         filtered = pool; // bez textu zobraz celý zoznam (podľa vybraného stroja alebo úplne všetko)
@@ -3395,8 +3406,9 @@ window.renderDrawingToolPicker = () => {
     });
 };
 
-// ════════ MODAL: VÝBER NÁSTROJOV (kategórie + vyhľadávanie) ════════
+// ════════ MODAL: VÝBER NÁSTROJOV (kategórie + stroj + vyhľadávanie) ════════
 let tpModalCatFilter = '';
+let tpModalMachineFilter = '';
 
 window.openToolPickerModal = () => {
     if (!tools.length) {
@@ -3404,8 +3416,10 @@ window.openToolPickerModal = () => {
         return;
     }
     tpModalCatFilter = '';
+    tpModalMachineFilter = '';
     document.getElementById('tp-modal-search').value = '';
     renderToolPickerCatFilter();
+    renderToolPickerMachineFilter();
     renderToolPickerModal();
     document.getElementById('modal-tool-picker').classList.add('open');
 };
@@ -3421,7 +3435,7 @@ function renderToolPickerCatFilter() {
     box.innerHTML = '';
     const allChip = document.createElement('div');
     allChip.className = 'tcf-chip' + (tpModalCatFilter === '' ? ' active' : '');
-    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.innerHTML = `<span>📋</span><span>Všetky kategórie</span>`;
     allChip.onclick = () => { tpModalCatFilter = ''; renderToolPickerCatFilter(); renderToolPickerModal(); };
     box.appendChild(allChip);
     TOOL_CATEGORIES.forEach(cat => {
@@ -3433,14 +3447,50 @@ function renderToolPickerCatFilter() {
     });
 }
 
+// Filter podľa stroja - zobrazí sa len ak nástroje reálne majú viac než jeden rôzny stroj priradený,
+// nech to nemieta pri malej dielni. Zoznam sa berie zo skutočných hodnôt v tools, nie zo zoznamu machines,
+// takže sa ukážu len stroje, ktoré majú aspoň jeden nástroj.
+function renderToolPickerMachineFilter() {
+    const box = document.getElementById('tp-modal-machine-filter');
+    if (!box) return;
+    const machinesInTools = [...new Set(tools.map(t => t.machine).filter(Boolean))].sort();
+    if (machinesInTools.length < 2) { box.innerHTML = ''; box.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    box.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (tpModalMachineFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>⚙️</span><span>Všetky stroje</span>`;
+    allChip.onclick = () => { tpModalMachineFilter = ''; renderToolPickerMachineFilter(); renderToolPickerModal(); };
+    box.appendChild(allChip);
+    machinesInTools.forEach(m => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (tpModalMachineFilter === m ? ' active' : '');
+        chip.innerHTML = `<span>⚙️</span><span>${m}</span>`;
+        chip.onclick = () => { tpModalMachineFilter = m; renderToolPickerMachineFilter(); renderToolPickerModal(); };
+        box.appendChild(chip);
+    });
+    // Nástroje bez priradeného stroja (univerzálne) - voliteľná dodatočná možnosť
+    const hasUnassigned = tools.some(t => !t.machine);
+    if (hasUnassigned) {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (tpModalMachineFilter === '__none__' ? ' active' : '');
+        chip.innerHTML = `<span>❓</span><span>Bez stroja</span>`;
+        chip.onclick = () => { tpModalMachineFilter = '__none__'; renderToolPickerMachineFilter(); renderToolPickerModal(); };
+        box.appendChild(chip);
+    }
+}
+
 window.renderToolPickerModal = () => {
     const box = document.getElementById('tp-modal-list');
     if (!box) return;
-    const text = (document.getElementById('tp-modal-search').value || '').trim().toLowerCase();
-    // Nástroje sú spoločné pre celú dielňu - filter len podľa kategórie a textu, nikdy podľa stroja výkresu
-    let pool = tpModalCatFilter ? tools.filter(t => t.category === tpModalCatFilter) : tools;
+    const text = normText(document.getElementById('tp-modal-search').value);
+    // Nástroje sú spoločné pre celú dielňu - filtre sú len pomôcka na orientáciu, nikdy natvrdo neobmedzujú výber
+    let pool = tools;
+    if (tpModalCatFilter) pool = pool.filter(t => t.category === tpModalCatFilter);
+    if (tpModalMachineFilter === '__none__') pool = pool.filter(t => !t.machine);
+    else if (tpModalMachineFilter) pool = pool.filter(t => t.machine === tpModalMachineFilter);
     if (text) {
-        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+        pool = pool.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text) || normText(t.type).includes(text));
     }
     if (!pool.length) { box.innerHTML = '<span class="tp-empty">Nič nenájdené</span>'; return; }
     box.innerHTML = '';
@@ -3684,10 +3734,10 @@ function compressImage(dataUrl, maxWidth, customMaxChars) {
 
 // ════════ VÝKRESY – VYMAŽ ════════
 window.renderDelDrawing = () => {
-    const text = document.getElementById('inp-del-drawing').value.trim().toLowerCase();
+    const text = normText(document.getElementById('inp-del-drawing').value);
     const box  = document.getElementById('del-drawing-results');
     const filtered = text
-        ? drawings.filter(d => d.number.toLowerCase().includes(text) || (d.program||'').toLowerCase().includes(text))
+        ? drawings.filter(d => normText(d.number).includes(text) || normText(d.program).includes(text))
         : drawings; // bez textu zobraz úplne všetky výkresy
     box.innerHTML = '';
     if (!filtered.length) {
@@ -3891,11 +3941,11 @@ function renderEmToolsCatFilter() {
 function renderEmToolPicker() {
     const box = document.getElementById('em-tools-pick');
     if (!box) return;
-    const text = (document.getElementById('em-tools-search').value || '').trim().toLowerCase();
+    const text = normText(document.getElementById('em-tools-search').value);
     // Nástroje sú spoločné pre celú dielňu - filter len podľa kategórie a textu
     let pool = emToolsCatFilter ? tools.filter(t => t.category === emToolsCatFilter) : tools;
     if (text) {
-        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+        pool = pool.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text) || normText(t.type).includes(text));
     }
     const unlinked = pool.filter(t => !emEditToolIds.includes(t._id));
     if (!unlinked.length) {
@@ -4035,12 +4085,12 @@ function renderToolCatFilter() {
 }
 
 window.renderToolSearch = () => {
-    const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
+    const text = normText(document.getElementById('inp-tool-search').value);
     const box  = document.getElementById('tool-search-results');
     // Najprv filter podľa kategórie, potom podľa textu
     let pool = toolCatFilter ? tools.filter(t => t.category === toolCatFilter) : tools;
     const filtered = text
-        ? pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text))
+        ? pool.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text) || normText(t.type).includes(text) || normText(t.catName).includes(text))
         : pool; // bez textu zobraz celý (prípadne kategóriou filtrovaný) zoznam
     box.innerHTML = '';
     if (!filtered.length) {
@@ -4129,11 +4179,11 @@ function renderEditToolsCatFilter() {
 window.renderEditToolsPicker = () => {
     const box = document.getElementById('edittools-pick');
     if (!box) return;
-    const text = (document.getElementById('edittools-search').value || '').trim().toLowerCase();
+    const text = normText(document.getElementById('edittools-search').value);
     // Nástroje sú spoločné pre celú dielňu - zobraz všetky, filtrované len kategóriou a textom
     let pool = editToolsCatFilter ? tools.filter(t => t.category === editToolsCatFilter) : tools;
     if (text) {
-        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+        pool = pool.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text) || normText(t.type).includes(text));
     }
     if (!pool.length) { box.innerHTML = '<span class="tp-empty">Žiadne nástroje nenájdené</span>'; return; }
     editToolIds = editToolIds.filter(id => tools.some(t => t._id === id)); // len odstráň neexistujúce
@@ -4233,10 +4283,10 @@ window.saveTool = async () => {
 
 // ════════ NÁSTROJE – VYMAŽ ════════
 window.renderDelTool = () => {
-    const text = document.getElementById('inp-del-tool').value.trim().toLowerCase();
+    const text = normText(document.getElementById('inp-del-tool').value);
     const box  = document.getElementById('del-tool-results');
     const filtered = text
-        ? tools.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text))
+        ? tools.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text))
         : tools; // bez textu zobraz úplne všetky nástroje
     box.innerHTML = '';
     if (!filtered.length) {
