@@ -1412,7 +1412,10 @@
 
                 <div class="fg">
                     <label class="field-label">Nástroje k výkresu (voliteľné)</label>
-                    <div id="ad-tools-pick" class="tool-pick"></div>
+                    <div id="ad-tools-selected" style="margin-bottom:10px;"></div>
+                    <button type="button" class="btn btn-sm" style="width:100%;background:var(--input);border:1.5px dashed var(--border);color:var(--light);margin:0;padding:14px;font-size:15px;" onclick="openToolPickerModal()">
+                        🔧 Pridať nástroje
+                    </button>
                 </div>
 
                 <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
@@ -1744,6 +1747,26 @@
             <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="closeOldDrawingsModal()">Zavrieť</button>
             <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="remindOldDrawingsLater()">Pripomenúť o mesiac</button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL: Vybrať nástroje k výkresu -->
+<div id="modal-tool-picker" class="modal-bg" style="z-index:420;" onclick="closeToolPickerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Pridať nástroje</div>
+            <button class="modal-close" onclick="closeToolPickerModal()">✕</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5;">
+            Ťuknutím vyberiete nástroj. Zobrazené sú všetky nástroje z celej dielne — aj tie priradené k iným strojom.
+        </div>
+        <div id="tp-modal-cat-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
+        <div class="search-wrap" style="margin-bottom:12px;">
+            <span class="s-icon">🔍</span>
+            <input type="text" id="tp-modal-search" oninput="renderToolPickerModal()" placeholder="Priemer alebo názov...">
+        </div>
+        <div id="tp-modal-list" class="tool-pick"></div>
+        <button class="btn btn-success" style="margin-top:16px;" onclick="closeToolPickerModal()">✓ Hotovo</button>
     </div>
 </div>
 
@@ -2984,8 +3007,7 @@ window.pickMachine = (prefix, name) => {
     if (picker) picker.remove();
     // Aktualizovať box
     updateMachineBox(prefix);
-    // Prefix-specific akcie
-    if (prefix === 'ad') { selectedToolIds = []; if (window.renderDrawingToolPicker) renderDrawingToolPicker(); }
+    // Nástroje sú univerzálne pre celú dielňu - zmena stroja nemaže vybrané nástroje
 };
 
 window.addMachine = async () => {
@@ -3329,29 +3351,108 @@ window.onDrawingMachineChange = () => {
     const v = document.getElementById('ad-machine').value;
     if (v) localStorage.setItem('cnc_last_machine', v);
     updateMachineBox('ad');
-    selectedToolIds = [];
-    renderDrawingToolPicker();
+    // Nástroje sú univerzálne pre celú dielňu - zmena stroja nemaže vybrané nástroje
 };
 
+// Zobrazí vybrané nástroje pod tlačidlom "Pridať nástroje" ako odobrateľné chipy.
+// Ak nie je vybraný žiadny, zobrazí výzvu (a odkaz do sekcie Pridaj nástroj, ak dielňa nemá vôbec žiadne).
 window.renderDrawingToolPicker = () => {
-    const box = document.getElementById('ad-tools-pick');
+    const box = document.getElementById('ad-tools-selected');
     if (!box) return;
-    const machine = document.getElementById('ad-machine').value;
-    if (!machine) { box.innerHTML = '<span class="tp-empty">Najprv vyberte stroj</span>'; return; }
-    const pool = tools.filter(t => t.machine === machine);
-    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje</span>'; return; }
-    // odstráň z výberu nástroje, čo už neexistujú
-    selectedToolIds = selectedToolIds.filter(id => pool.some(t => t._id === id));
+
+    if (!tools.length) {
+        box.innerHTML = `
+            <div class="empty" style="padding:16px 10px;">
+                <div class="ei">🔧</div>
+                <p>Zatiaľ nemáte žiadne nástroje.<br>Pridajte si prvý v sekcii "Pridaj nástroj".</p>
+            </div>`;
+        return;
+    }
+
+    selectedToolIds = selectedToolIds.filter(id => tools.some(t => t._id === id));
+
+    if (!selectedToolIds.length) {
+        box.innerHTML = `<div style="font-size:13px;color:var(--muted);padding:4px 2px;">Žiadny nástroj zatiaľ nevybraný</div>`;
+        return;
+    }
+
+    box.innerHTML = '';
+    selectedToolIds.forEach(id => {
+        const t = tools.find(x => x._id === id);
+        if (!t) return;
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip sel';
+        chip.style.display = 'inline-flex';
+        chip.style.alignItems = 'center';
+        chip.style.gap = '6px';
+        const label = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
+        chip.innerHTML = `<span>${label}</span><span style="opacity:.8;">✕</span>`;
+        chip.onclick = () => {
+            selectedToolIds = selectedToolIds.filter(x => x !== id);
+            renderDrawingToolPicker();
+        };
+        box.appendChild(chip);
+    });
+};
+
+// ════════ MODAL: VÝBER NÁSTROJOV (kategórie + vyhľadávanie) ════════
+let tpModalCatFilter = '';
+
+window.openToolPickerModal = () => {
+    if (!tools.length) {
+        showToast('Zatiaľ nemáte žiadne nástroje — pridajte si ich v sekcii "Pridaj nástroj"', '');
+        return;
+    }
+    tpModalCatFilter = '';
+    document.getElementById('tp-modal-search').value = '';
+    renderToolPickerCatFilter();
+    renderToolPickerModal();
+    document.getElementById('modal-tool-picker').classList.add('open');
+};
+
+window.closeToolPickerModal = () => {
+    document.getElementById('modal-tool-picker').classList.remove('open');
+    renderDrawingToolPicker(); // obnoviť zobrazenie vybraných pod tlačidlom
+};
+
+function renderToolPickerCatFilter() {
+    const box = document.getElementById('tp-modal-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (tpModalCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { tpModalCatFilter = ''; renderToolPickerCatFilter(); renderToolPickerModal(); };
+    box.appendChild(allChip);
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (tpModalCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { tpModalCatFilter = cat.id; renderToolPickerCatFilter(); renderToolPickerModal(); };
+        box.appendChild(chip);
+    });
+}
+
+window.renderToolPickerModal = () => {
+    const box = document.getElementById('tp-modal-list');
+    if (!box) return;
+    const text = (document.getElementById('tp-modal-search').value || '').trim().toLowerCase();
+    // Nástroje sú spoločné pre celú dielňu - filter len podľa kategórie a textu, nikdy podľa stroja výkresu
+    let pool = tpModalCatFilter ? tools.filter(t => t.category === tpModalCatFilter) : tools;
+    if (text) {
+        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+    }
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Nič nenájdené</span>'; return; }
     box.innerHTML = '';
     pool.forEach(t => {
         const chip = document.createElement('div');
         chip.className = 'tp-chip' + (selectedToolIds.includes(t._id) ? ' sel' : '');
         const label = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
-        chip.textContent = label;
+        chip.textContent = label + (t.machine ? ` (${t.machine})` : '');
         chip.onclick = () => {
             const i = selectedToolIds.indexOf(t._id);
             if (i >= 0) selectedToolIds.splice(i, 1); else selectedToolIds.push(t._id);
-            renderDrawingToolPicker();
+            renderToolPickerModal();
         };
         box.appendChild(chip);
     });
