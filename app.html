@@ -40,34 +40,117 @@
             position: sticky; top: 0; z-index: 100;
             background: var(--steel);
             border-bottom: 1px solid var(--border);
-            height: 54px;
-            display: flex; align-items: center; padding: 0 16px;
-            justify-content: space-between;
+            min-height: 54px;
+            display: flex; align-items: center; padding: 8px 12px;
+            justify-content: space-between; gap: 8px;
+            width: 100%; max-width: 100vw;
+            overflow: hidden;
+            flex-wrap: nowrap;
         }
         .logo {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 20px; font-weight: 700;
+            font-size: 18px; font-weight: 700;
             color: var(--white); text-decoration: none;
+            flex-shrink: 0;
         }
         .logo span { color: var(--cut); }
 
         .user-info {
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 6px;
+            min-width: 0; flex-shrink: 1;
         }
         .user-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
+            width: 30px; height: 30px; min-width: 30px; border-radius: 50%;
             border: 2px solid var(--cut);
-            object-fit: cover;
+            object-fit: cover; flex-shrink: 0;
+        }
+        /* Avatar ako farebné koliesko s písmenom (keď nie je fotka) */
+        .user-avatar-letter {
+            width: 30px; height: 30px; min-width: 30px; border-radius: 50%;
+            border: 2px solid var(--cut);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff;
+            flex-shrink: 0; text-transform: uppercase;
         }
         .user-name {
             font-size: 13px; font-weight: 600; color: var(--light);
-            max-width: 100px; overflow: hidden;
+            max-width: 70px; overflow: hidden;
             text-overflow: ellipsis; white-space: nowrap;
+            flex-shrink: 1;
         }
+        /* ── OZUBENÉ KOLIESKO + SETTINGS MENU ── */
+        .settings-gear {
+            width: 38px; height: 38px; min-width: 38px;
+            border-radius: 10px; border: 1px solid var(--border);
+            background: var(--input); color: var(--light);
+            font-size: 19px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all .15s;
+        }
+        .settings-gear:hover { border-color: var(--cut); background: rgba(249,115,22,.1); }
+        .settings-gear:active { transform: scale(.92); }
+
+        .settings-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.6);
+            z-index: 600; display: none;
+            justify-content: flex-end; align-items: flex-start;
+        }
+        .settings-overlay.open { display: flex; }
+        .settings-panel {
+            background: var(--steel); border: 1px solid var(--border);
+            border-radius: 0 0 0 16px;
+            width: 300px; max-width: 88vw;
+            margin-top: 0;
+            padding: 8px 0 16px;
+            box-shadow: -8px 8px 32px rgba(0,0,0,.4);
+            animation: settingsDrop .18s ease;
+        }
+        @keyframes settingsDrop { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .settings-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+        }
+        .settings-panel-title { font-size: 16px; font-weight: 800; color: var(--white); }
+
+        .settings-item {
+            width: 100%; display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; background: none; border: none;
+            cursor: pointer; text-align: left; transition: background .12s;
+        }
+        .settings-item:hover { background: rgba(255,255,255,.04); }
+        .settings-item:active { background: rgba(255,255,255,.08); }
+        .settings-item-static { cursor: default; }
+        .settings-item-static:hover { background: none; }
+        .settings-item-icon { font-size: 19px; flex-shrink: 0; width: 24px; text-align: center; }
+        .settings-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+        .settings-item-title { font-size: 14px; font-weight: 700; color: var(--white); }
+        .settings-item-sub { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+
+        .settings-divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+        .settings-toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+        .settings-toggle input { opacity: 0; width: 0; height: 0; }
+        .settings-toggle-slider {
+            position: absolute; inset: 0; background: var(--input);
+            border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: .2s;
+        }
+        .settings-toggle-slider::before {
+            content: ''; position: absolute; width: 18px; height: 18px;
+            left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: .2s;
+        }
+        .settings-toggle input:checked + .settings-toggle-slider { background: rgba(249,115,22,.25); border-color: var(--cut); }
+        .settings-toggle input:checked + .settings-toggle-slider::before { transform: translateX(18px); background: var(--cut); }
+
+        .settings-note {
+            font-size: 11.5px; color: var(--muted); line-height: 1.5;
+            padding: 0 16px; margin-top: 4px;
+        }
+
         .btn-signout {
             background: none; border: 1px solid var(--border);
             border-radius: 7px; color: var(--muted);
-            font-size: 12px; padding: 5px 8px; cursor: pointer;
+            font-size: 12px; padding: 5px 7px; cursor: pointer;
+            flex-shrink: 0; white-space: nowrap;
         }
         .btn-signout:hover { border-color: var(--red); color: var(--red); }
 
@@ -510,6 +593,180 @@
 
         .div { height: 1px; background: var(--border); margin: 14px 0; }
 
+        /* ── STARÉ VÝKRESY - UPOZORNENIE ── */
+        .old-drawing-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--input); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; gap: 10px;
+        }
+        .old-drawing-info { min-width: 0; flex: 1; }
+        .old-drawing-number { font-weight: 700; font-size: 15px; color: var(--white); }
+        .old-drawing-age { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .old-drawing-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .odb {
+            border: none; border-radius: 7px; padding: 8px 11px;
+            font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .odb-keep { background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
+        .odb-del  { background: rgba(220,38,38,.15); color: #f87171; border: 1px solid rgba(220,38,38,.3); }
+
+        /* ── GALÉRIA FOTIEK ── */
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .photo-gallery:empty { display: none; margin: 0; }
+        .photo-thumb {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--input);
+        }
+        .photo-thumb img {
+            width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer;
+        }
+        .photo-thumb .photo-del {
+            position: absolute; top: 4px; right: 4px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(0,0,0,.75); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; cursor: pointer; border: none;
+        }
+        .photo-thumb .photo-num {
+            position: absolute; bottom: 4px; left: 4px;
+            background: rgba(0,0,0,.7); color: #fff;
+            font-size: 10px; font-weight: 700;
+            padding: 2px 6px; border-radius: 6px;
+        }
+        .photo-add-more {
+            aspect-ratio: 1; border-radius: 10px;
+            border: 1.5px dashed var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--muted); cursor: pointer;
+            background: var(--input);
+        }
+        .photo-add-more:hover { border-color: var(--cut); color: var(--cut); }
+
+        /* ── DETAIL CAROUSEL (viac fotiek) ── */
+        .detail-carousel {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--input);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+        .dc-track {
+            display: flex;
+            transition: transform .3s ease;
+        }
+        .dc-slide {
+            min-width: 100%; aspect-ratio: 4/3;
+            display: flex; align-items: center; justify-content: center;
+            cursor: zoom-in;
+        }
+        .dc-slide img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .dc-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(0,0,0,.55); border: none; color: #fff;
+            font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5; transition: background .15s;
+        }
+        .dc-arrow:hover { background: rgba(0,0,0,.75); }
+        .dc-arrow-left  { left: 8px; }
+        .dc-arrow-right { right: 8px; }
+        .dc-counter {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,.6); color: #fff;
+            font-size: 11px; font-weight: 700;
+            padding: 3px 9px; border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 5;
+        }
+        .dc-dots {
+            position: absolute; bottom: 10px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 5px; z-index: 5;
+        }
+        .dc-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,.4); transition: all .2s;
+            cursor: pointer;
+        }
+        .dc-dot.active { background: #fff; width: 16px; border-radius: 3px; }
+        .detail-photo-actions {
+            display: flex; gap: 8px; margin-bottom: 12px;
+        }
+        .detail-photo-actions .btn-sm { flex: 1; margin: 0; }
+
+        /* ── INLINE EDITOVATEĽNÉ POLE V DETAILE ── */
+        .d-field-editable {
+            position: relative; cursor: pointer;
+        }
+        .d-field-editable .d-edit-icon {
+            position: absolute; top: 10px; right: 12px;
+            font-size: 15px; opacity: .55;
+        }
+        .d-field-editable:active { background: rgba(249,115,22,.08); }
+        .d-edit-input {
+            width: 100%; padding: 10px 12px;
+            border: 1.5px solid var(--cut); border-radius: 8px;
+            background: var(--steel); color: var(--white);
+            font-size: 15px; font-family: 'Inter', sans-serif;
+        }
+        .d-edit-textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1.5px solid var(--cut); border-radius: 8px;
+            background: var(--steel); color: var(--white);
+            font-size: 14px; font-family: 'Inter', sans-serif;
+            line-height: 1.6; resize: vertical;
+        }
+        .d-edit-actions {
+            display: flex; gap: 8px; margin-top: 8px;
+        }
+        .d-edit-save, .d-edit-cancel {
+            flex: 1; padding: 9px; border-radius: 7px; border: none;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+        }
+        .d-edit-save { background: var(--green); color: #fff; }
+        .d-edit-cancel { background: var(--input); color: var(--muted); border: 1px solid var(--border); }
+
+        /* ── VYBRANÝ STROJ BOX ── */
+        .machine-selected-box {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(249,115,22,.12);
+            border: 1.5px solid rgba(249,115,22,.4);
+            border-radius: 11px;
+            padding: 12px 14px;
+        }
+        .msb-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+        .msb-icon { font-size: 17px; flex-shrink: 0; }
+        .msb-name {
+            font-size: 15px; font-weight: 700; color: var(--cut);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .msb-change {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 7px; padding: 6px 11px;
+            color: var(--light); font-size: 12px; font-weight: 600;
+            cursor: pointer; flex-shrink: 0; white-space: nowrap;
+        }
+        .msb-change:hover { background: rgba(255,255,255,.14); }
+        .machine-selected-box.empty {
+            background: rgba(255,255,255,.04);
+            border-color: var(--border);
+        }
+        .machine-selected-box.empty .msb-name { color: var(--muted); font-weight: 500; }
+
         /* ── ONBOARDING SPRIEVODCA ── */
         .onb-card {
             background: linear-gradient(150deg, #1e2d3d 0%, #223447 100%);
@@ -619,6 +876,29 @@
             color: var(--light); line-height: 1.25;
         }
         .tool-cat.selected .tool-cat-name { color: var(--cut); }
+
+        /* ── FILTER KATEGÓRIÍ PRI HĽADANÍ NÁSTROJOV ── */
+        .tool-cat-filter-row {
+            display: flex; gap: 8px; overflow-x: auto;
+            padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+        }
+        .tcf-chip {
+            display: flex; align-items: center; gap: 6px;
+            flex-shrink: 0;
+            background: var(--input); border: 1.5px solid var(--border);
+            border-radius: 20px; padding: 8px 14px;
+            font-size: 13px; font-weight: 600; color: var(--light);
+            cursor: pointer; white-space: nowrap; transition: all .15s;
+        }
+        .tcf-chip svg {
+            width: 16px; height: 16px; stroke: var(--muted); fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+        .tcf-chip.active {
+            background: rgba(249,115,22,.15); border-color: var(--cut); color: var(--cut);
+        }
+        .tcf-chip.active svg { stroke: var(--cut); }
         .r-card .r-title svg { width: 100%; height: 100%; stroke: var(--green); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
         /* ── IN-APP BROWSER WARNING ── */
@@ -824,12 +1104,68 @@
 <div class="topbar">
     <a href="index.html" class="logo">CNC<span>dok</span></a>
     <div class="user-info" id="topbar-user" style="display:none">
-        <img class="user-avatar" id="user-avatar" src="" alt="">
+        <img class="user-avatar" id="user-avatar" src="" alt="" style="display:none;">
+        <div class="user-avatar-letter" id="user-avatar-letter" style="display:none;">?</div>
         <span class="user-name" id="user-name"></span>
-        <button class="btn-signout" id="mode-toggle" onclick="toggleMode()" title="Prepnúť veľkosť menu" style="font-size:15px;">☰</button>
-        <button class="btn-signout" id="admin-key-btn" onclick="openAdminSettings()" title="Admin heslo" style="font-size:15px; display:none;">🔑</button>
-        <button class="btn-signout" onclick="window.open('https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400','_blank')" title="Spravovať predplatné" style="font-size:15px;">💳</button>
         <button class="btn-signout" onclick="signOut()">Odhlásiť</button>
+        <button class="settings-gear" onclick="toggleSettingsMenu()" title="Nastavenia">⚙️</button>
+    </div>
+</div>
+
+<!-- SETTINGS MENU (rozbaľ z ozubeného kolieska) -->
+<div id="settings-overlay" class="settings-overlay" onclick="closeSettingsMenu()">
+    <div class="settings-panel" onclick="event.stopPropagation()">
+        <div class="settings-panel-header">
+            <div class="settings-panel-title">Nastavenia</div>
+            <button class="modal-close" onclick="closeSettingsMenu()">✕</button>
+        </div>
+
+        <button class="settings-item" onclick="closeSettingsMenu(); restartOnboarding();">
+            <span class="settings-item-icon">❓</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Sprievodca / tutoriál</span>
+                <span class="settings-item-sub">Znova prejsť úvodným návodom</span>
+            </span>
+        </button>
+
+        <button class="settings-item" onclick="toggleMode()">
+            <span class="settings-item-icon" id="mode-toggle-icon">☰</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Zobrazenie sekcií</span>
+                <span class="settings-item-sub" id="mode-toggle-sub">Veľké dlaždice / kompaktný zoznam</span>
+            </span>
+        </button>
+
+        <button class="settings-item" id="admin-key-item" onclick="closeSettingsMenu(); openAdminSettings();" style="display:none;">
+            <span class="settings-item-icon">🔑</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Admin heslo</span>
+                <span class="settings-item-sub">Ochrana mazania záznamov</span>
+            </span>
+        </button>
+
+        <button class="settings-item" onclick="window.open('https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400','_blank')">
+            <span class="settings-item-icon">💳</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Spravovať predplatné</span>
+                <span class="settings-item-sub">Fakturácia cez Stripe</span>
+            </span>
+        </button>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-item settings-item-static">
+            <span class="settings-item-icon">☁️</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Ukladanie dát</span>
+                <span class="settings-item-sub" id="storage-mode-sub">Synchronizované s cloudom</span>
+            </span>
+            <label class="settings-toggle">
+                <input type="checkbox" id="local-only-toggle" onchange="toggleLocalOnlyMode()">
+                <span class="settings-toggle-slider"></span>
+            </label>
+        </div>
+        <div class="settings-note" id="local-only-note"></div>
     </div>
 </div>
 
@@ -876,7 +1212,7 @@
 <div class="app-screen" id="app-screen">
 
     <!-- SYNC BAR -->
-    <div class="sync-bar">
+    <div class="sync-bar" id="sync-bar">
         <div class="sync-dot" id="sync-dot"></div>
         <span id="sync-text">Pripojený · dáta synchronizované</span>
     </div>
@@ -946,8 +1282,8 @@
             </div>
 
             <div class="tile-del-row">
-                <button class="tile-del" onclick="openSection('sec-del-drawing')">🗑 Vymazať výkres</button>
-                <button class="tile-del" onclick="openSection('sec-del-tool')">🗑 Vymazať nástroj</button>
+                <button class="tile-del" onclick="openSection('sec-del-drawing')">✏️ Upraviť / vymazať výkres</button>
+                <button class="tile-del" onclick="openSection('sec-del-tool')">✏️ Upraviť / vymazať nástroj</button>
             </div>
         </div>
 
@@ -994,8 +1330,15 @@
             </div>
             <div class="section-body">
                 <div class="fg">
-                    <label class="field-label">Stroj (voliteľné)</label>
-                    <select id="search-machine-filter" onchange="renderDrawingSearch()">
+                    <label class="field-label">Stroj</label>
+                    <div class="machine-selected-box" id="sd-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="sd-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleSearchSelect('search-machine-filter')">zmeniť ▾</button>
+                    </div>
+                    <select id="search-machine-filter" onchange="onSearchMachineChange()" style="display:none;margin-top:8px;">
                         <option value="">— Všetky stroje —</option>
                     </select>
                 </div>
@@ -1022,36 +1365,56 @@
                 <div class="chevron">⌄</div>
             </div>
             <div class="section-body">
+                <!-- 1. FOTKY (viacero) -->
                 <div class="fg">
-                    <label class="field-label">Stroj</label>
-                    <select id="ad-machine" onchange="onDrawingMachineChange()"><option value="">— Vyberte stroj —</option></select>
-                </div>
-                <div class="fg">
-                    <label class="field-label">Číslo výkresu</label>
-                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001">
-                </div>
-                <div class="fg">
-                    <label class="field-label">Číslo programu</label>
-                    <input type="text" id="ad-program" placeholder="Napr. O1001">
-                </div>
-                <div class="fg">
-                    <label class="field-label">Poznámka / revízia</label>
-                    <textarea id="ad-note" rows="2" placeholder="Dôležité info, revízie..."></textarea>
-                </div>
-                <div class="fg">
-                    <label class="field-label">Fotka / sken výkresu</label>
+                    <label class="field-label">1 · Fotky / skeny výkresu</label>
+                    <div id="ad-photo-gallery" class="photo-gallery"></div>
                     <div style="display:flex; gap:8px;">
                         <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-cam').click()">📷 Odfotiť</button>
                         <button type="button" class="btn-photo" onclick="document.getElementById('ad-file-lib').click()">📁 Zo zariadenia</button>
                     </div>
-                    <input type="file" id="ad-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
-                    <input type="file" id="ad-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
+                    <input type="file" id="ad-file-cam" accept="image/*" capture="environment" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
+                    <input type="file" id="ad-file-lib" accept="image/*" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onDrawingFile(this)">
                     <div id="ad-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
                 </div>
+
+                <!-- 2. STROJ -->
+                <div class="fg">
+                    <label class="field-label">2 · Stroj</label>
+                    <div class="machine-selected-box" id="ad-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="ad-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleMachineSelect('ad')">zmeniť ▾</button>
+                    </div>
+                    <select id="ad-machine" onchange="onDrawingMachineChange()" style="display:none;margin-top:8px;"><option value="">— Vyberte stroj —</option></select>
+                </div>
+
+                <!-- 3. ČÍSLO VÝKRESU -->
+                <div class="fg">
+                    <label class="field-label">3 · Číslo výkresu</label>
+                    <input type="text" id="ad-number" placeholder="Napr. V-2026-001" oninput="checkDupNumber()">
+                    <div id="ad-dup-warn" style="font-size:13px;margin-top:6px;display:none;padding:9px 11px;border-radius:8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5;line-height:1.5;"></div>
+                </div>
+
+                <!-- 4. ČÍSLO PROGRAMU -->
+                <div class="fg">
+                    <label class="field-label">4 · Číslo programu</label>
+                    <input type="text" id="ad-program" placeholder="Napr. O1001">
+                </div>
+
+                <!-- 5. POZNÁMKA -->
+                <div class="fg">
+                    <label class="field-label">5 · Poznámka / revízia</label>
+                    <textarea id="ad-note" rows="2" placeholder="Dôležité info, revízie..."></textarea>
+                </div>
+
                 <div class="fg">
                     <label class="field-label">Nástroje k výkresu (voliteľné)</label>
                     <div id="ad-tools-pick" class="tool-pick"></div>
                 </div>
+
                 <button class="btn btn-success" onclick="saveDrawing()">✓ Uložiť výkres</button>
             </div>
         </div>
@@ -1062,8 +1425,8 @@
                 <div class="section-head-left">
                     <div class="section-icon si-red">🗑️</div>
                     <div>
-                        <div class="section-title">Vymaž výkres</div>
-                        <div class="section-sub">Vyhľadaj a odstráň</div>
+                        <div class="section-title">Upraviť / vymazať výkres</div>
+                        <div class="section-sub">Vyhľadaj, uprav alebo odstráň</div>
                     </div>
                 </div>
                 <div class="chevron">⌄</div>
@@ -1093,17 +1456,26 @@
             </div>
             <div class="section-body">
                 <div class="fg">
-                    <label class="field-label">Stroj (voliteľné)</label>
-                    <select id="tool-machine-filter" onchange="renderToolSearch()">
-                        <option value="">— Všetky stroje —</option>
-                    </select>
+                    <label class="field-label">Stroj</label>
+                    <div class="machine-selected-box" id="st-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="st-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleSearchSelect('tool-machine-filter')">zmeniť ▾</button>
+                    </div>
+                    <select id="tool-machine-filter" style="display:none;"><option value=""></option></select>
+                </div>
+                <div class="fg">
+                    <label class="field-label">Kategória</label>
+                    <div id="tool-cat-filter" class="tool-cat-filter-row"></div>
                 </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
                     <input type="text" id="inp-tool-search" oninput="renderToolSearch()" placeholder="Priemer alebo názov (D10, vrták...)">
                 </div>
                 <div id="tool-search-results">
-                    <div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>
+                    <div class="empty"><div class="ei">🔧</div><p>Zadajte priemer/názov alebo vyberte kategóriu</p></div>
                 </div>
             </div>
         </div>
@@ -1123,7 +1495,14 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj</label>
-                    <select id="at-machine"><option value="">— Vyberte stroj —</option></select>
+                    <div class="machine-selected-box" id="at-machine-box">
+                        <div class="msb-left">
+                            <span class="msb-icon">⚙️</span>
+                            <span class="msb-name" id="at-machine-name">—</span>
+                        </div>
+                        <button type="button" class="msb-change" onclick="toggleMachineSelect('at')">zmeniť ▾</button>
+                    </div>
+                    <select id="at-machine" onchange="onToolMachineChange()" style="display:none;margin-top:8px;"><option value="">— Vyberte stroj —</option></select>
                 </div>
                 <div class="fg">
                     <label class="field-label">Kategória nástroja</label>
@@ -1155,14 +1534,14 @@
             </div>
         </div>
 
-        <!-- VYMAŽ NÁSTROJ -->
+        <!-- UPRAVIŤ / VYMAZAŤ NÁSTROJ -->
         <div class="section" id="sec-del-tool">
             <div class="section-head" onclick="toggleSection('sec-del-tool')">
                 <div class="section-head-left">
-                    <div class="section-icon si-red">🗑️</div>
+                    <div class="section-icon si-red">✏️</div>
                     <div>
-                        <div class="section-title">Vymaž nástroj</div>
-                        <div class="section-sub">Vyhľadaj a odstráň</div>
+                        <div class="section-title">Upraviť / vymazať nástroj</div>
+                        <div class="section-sub">Vyhľadaj, uprav alebo odstráň</div>
                     </div>
                 </div>
                 <div class="chevron">⌄</div>
@@ -1173,7 +1552,7 @@
                     <input type="text" id="inp-del-tool" oninput="renderDelTool()" placeholder="Priemer alebo názov...">
                 </div>
                 <div id="del-tool-results">
-                    <div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov</p></div>
+                    <div class="empty"><div class="ei">✏️</div><p>Zadajte priemer alebo názov</p></div>
                 </div>
             </div>
         </div>
@@ -1191,6 +1570,9 @@
         <div id="modal-content"></div>
     </div>
 </div>
+<!-- Trvalé skryté inputy pre pridanie fotky v detaile – MIMO modal-content, aby ich prekreslenie neresetovalo -->
+<input type="file" id="detail-photo-cam" accept="image/*" capture="environment" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">
+<input type="file" id="detail-photo-lib" accept="image/*" multiple style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0;" onchange="addPhotoToDrawing(this)">
 
 <!-- MODAL: Nástroj otvorený Z VÝKRESU (okno navrchu) -->
 <div id="modal-tool" class="modal-bg" style="z-index:400;" onclick="closeToolModal()">
@@ -1211,6 +1593,11 @@
             <button class="modal-close" onclick="closeEditTools()">✕</button>
         </div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Ťuknutím pridáte alebo odoberiete nástroj. Označené sú priradené k výkresu.</div>
+        <div id="edittools-cat-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
+        <div class="search-wrap" style="margin-bottom:12px;">
+            <span class="s-icon">🔍</span>
+            <input type="text" id="edittools-search" oninput="renderEditToolsPicker()" placeholder="Priemer alebo názov...">
+        </div>
         <div id="edittools-pick" class="tool-pick" style="margin-bottom:16px;"></div>
         <button class="btn btn-success" onclick="saveEditTools()">✓ Uložiť nástroje</button>
     </div>
@@ -1226,6 +1613,138 @@
     <button id="zoom-close-btn" onclick="closeZoom()">✕</button>
     <button id="zoom-reset-btn" onclick="resetZoom()">↺ Reset</button>
     <div class="zoom-hint-bar">👌 Pinch = zoom · 2× tap = priblíž</div>
+</div>
+
+
+<!-- MODAL: Upraviť výkres -->
+<!-- MODAL: Upraviť nástroj -->
+<div id="modal-edit-tool" class="modal-bg" style="z-index:410;" onclick="closeEditToolModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Upraviť nástroj</div>
+            <button class="modal-close" onclick="closeEditToolModal()">✕</button>
+        </div>
+        <div class="fg">
+            <label class="field-label">Stroj</label>
+            <select id="et-machine"></select>
+        </div>
+        <div class="fg">
+            <label class="field-label">Kategória nástroja</label>
+            <select id="et-category" onchange="etUpdateSubtypes()"></select>
+        </div>
+        <div class="fg" id="et-subtype-wrap" style="display:none;">
+            <label class="field-label">Typ / vyhotovenie</label>
+            <select id="et-subtype"></select>
+        </div>
+        <div class="fg">
+            <label class="field-label" id="et-diam-label">Priemer / polomer / dĺžka</label>
+            <input type="text" id="et-diam" placeholder="Napr. D10, R0.8">
+        </div>
+        <div class="fg">
+            <label class="field-label">Poznámka / korekcia</label>
+            <textarea id="et-note" rows="3" placeholder="Dĺžková korekcia, otáčky, posuv..."></textarea>
+        </div>
+        <div class="fg">
+            <label class="field-label">Fotka nástroja</label>
+            <div id="et-photo-preview" style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-photo" onclick="document.getElementById('et-file-cam').click()">📷 Odfotiť</button>
+                <button type="button" class="btn-photo" onclick="document.getElementById('et-file-lib').click()">📁 Zo zariadenia</button>
+            </div>
+            <input type="file" id="et-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditToolFile(this)">
+            <input type="file" id="et-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditToolFile(this)">
+            <div id="et-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+        </div>
+        <button class="btn btn-success" onclick="saveEditTool()">✓ Uložiť zmeny</button>
+        <button class="btn btn-ghost" onclick="closeEditToolModal()">Zrušiť</button>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-bg" onclick="closeEditModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Upraviť výkres</div>
+            <button class="modal-close" onclick="closeEditModal()">✕</button>
+        </div>
+        <div class="fg">
+            <label class="field-label">Číslo výkresu</label>
+            <input type="text" id="ed-number" placeholder="Napr. V-2026-001">
+            <div id="ed-dup-warn" style="font-size:12px;color:var(--red);margin-top:5px;display:none;">⚠ Toto číslo už používa iný výkres</div>
+        </div>
+        <div class="fg">
+            <label class="field-label">Stroj</label>
+            <select id="ed-machine"></select>
+        </div>
+        <div class="fg">
+            <label class="field-label">Číslo programu</label>
+            <input type="text" id="ed-program" placeholder="Napr. O1001">
+        </div>
+        <div class="fg">
+            <label class="field-label">Poznámka / revízia</label>
+            <textarea id="ed-note" rows="3" placeholder="Technologické poznámky, revízie..."></textarea>
+        </div>
+        <div class="fg">
+            <label class="field-label">Fotka výkresu</label>
+            <div id="ed-photo-preview" style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-photo" onclick="document.getElementById('ed-file-cam').click()">📷 Nová fotka</button>
+                <button type="button" class="btn-photo" onclick="document.getElementById('ed-file-lib').click()">📁 Zo zariadenia</button>
+            </div>
+            <input type="file" id="ed-file-cam" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditFile(this)">
+            <input type="file" id="ed-file-lib" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" onchange="onEditFile(this)">
+            <div id="ed-file-status" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+        </div>
+        <div class="fg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+            <label class="field-label">🔧 Nástroje k výkresu</label>
+            <div id="em-tools-linked" style="margin-bottom:10px;"></div>
+            <div id="em-tools-cat-filter" class="tool-cat-filter-row" style="margin-bottom:10px;"></div>
+            <div class="search-wrap" style="margin-bottom:10px;">
+                <span class="s-icon">🔍</span>
+                <input type="text" id="em-tools-search" oninput="renderEmToolPicker()" placeholder="Priemer alebo názov...">
+            </div>
+            <div id="em-tools-pick" class="tool-pick" style="margin-bottom:10px;"></div>
+            <button type="button" class="btn btn-sm" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--light);margin:0 0 10px;" onclick="toggleEmNewTool()">➕ Vytvoriť nový nástroj</button>
+            <div id="em-new-tool-form" style="display:none;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px;">
+                <div class="fg">
+                    <label class="field-label">Kategória</label>
+                    <select id="em-tool-cat" onchange="emUpdateSubtypes()"></select>
+                </div>
+                <div class="fg" id="em-subtype-wrap" style="display:none;">
+                    <label class="field-label">Typ / vyhotovenie</label>
+                    <select id="em-tool-subtype"></select>
+                </div>
+                <div class="fg">
+                    <label class="field-label" id="em-diam-label">Priemer / polomer / dĺžka</label>
+                    <input type="text" id="em-tool-diam" placeholder="Napr. D10, R0.8">
+                </div>
+                <div class="fg">
+                    <label class="field-label">Poznámka</label>
+                    <input type="text" id="em-tool-note" placeholder="Voliteľné">
+                </div>
+                <button type="button" class="btn btn-success" style="margin-bottom:0;" onclick="emCreateAndLinkTool()">✓ Vytvoriť a priradiť</button>
+            </div>
+        </div>
+        <button class="btn btn-success" onclick="saveEditDrawing()">✓ Uložiť zmeny</button>
+        <button class="btn btn-ghost" onclick="closeEditModal()">Zrušiť</button>
+    </div>
+</div>
+
+<!-- MODAL: Staré výkresy -->
+<div id="modal-old-drawings" class="modal-bg" style="z-index:410;" onclick="closeOldDrawingsModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">📦 Staré výkresy</div>
+            <button class="modal-close" onclick="closeOldDrawingsModal()">✕</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+            Tieto výkresy sú staršie ako 2 roky. Ak sa už nepoužívajú, môžete ich vymazať a uvoľniť miesto. Ak sa ešte hodia, predĺžte ich.
+        </div>
+        <div id="old-drawings-list"></div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+            <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="closeOldDrawingsModal()">Zavrieť</button>
+            <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="remindOldDrawingsLater()">Pripomenúť o mesiac</button>
+        </div>
+    </div>
 </div>
 
 <!-- TOAST -->
@@ -1296,9 +1815,11 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut,
     sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence,
-    collection, addDoc, deleteDoc }
+    disableNetwork, enableNetwork,
+    collection, addDoc, deleteDoc, updateDoc }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAYEcK2dUUnERC0X6QtFnUcdgCpVNbVBwQ",
@@ -1312,14 +1833,80 @@ const firebaseConfig = {
 
 const app     = initializeApp(firebaseConfig);
 
-// Počítadlo návštevnosti (Google Analytics) — page_view sa loguje automaticky
-try { getAnalytics(app); } catch(e) { /* napr. blokovač reklám — appku to nesmie zhodiť */ }
+// Google Analytics — spustí sa len po súhlase s cookies (viď cookie lišta nižšie)
+window._cncApp = app;
+if (localStorage.getItem('cnc_cookie') === 'all') {
+    import("https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js")
+        .then(m => { try { m.getAnalytics(app); } catch(e){} });
+}
 const auth    = getAuth(app);
 const db      = getFirestore(app);
+const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
 // Offline persistence
 enableIndexedDbPersistence(db).catch(() => {});
+
+// ════════ REŽIM "IBA LOKÁLNE" (bez synchronizácie s cloudom) ════════
+// Používa oficiálne Firestore API disableNetwork/enableNetwork - vypne/zapne
+// sieťovú komunikáciu pre CELÝ Firestore naraz. Dáta sa naďalej čítajú/zapisujú
+// z lokálnej IndexedDB cache (vďaka enableIndexedDbPersistence vyššie),
+// len sa nič neposiela na server a nič sa z neho nesťahuje.
+const LOCAL_ONLY_KEY = 'cnc_local_only_mode';
+
+async function applyStorageMode() {
+    const localOnly = localStorage.getItem(LOCAL_ONLY_KEY) === '1';
+    try {
+        if (localOnly) await disableNetwork(db);
+        else await enableNetwork(db);
+    } catch (e) { /* uz v danom stave, alebo offline pri prepnuti - v poriadku */ }
+    updateStorageModeUI(localOnly);
+}
+
+function updateStorageModeUI(localOnly) {
+    const toggle = document.getElementById('local-only-toggle');
+    const sub    = document.getElementById('storage-mode-sub');
+    const note   = document.getElementById('local-only-note');
+    const syncBar = document.getElementById('sync-bar');
+    if (toggle) toggle.checked = localOnly;
+    if (sub) sub.textContent = localOnly ? 'Iba v tomto zariadení' : 'Synchronizované s cloudom';
+    if (note) note.textContent = localOnly
+        ? '⚠ Dáta sa neukladajú do cloudu. Ak stratíte alebo pokazíte zariadenie, dáta sa nedajú obnoviť.'
+        : 'Dáta sú zálohované a dostupné na všetkých vašich zariadeniach.';
+    if (syncBar) syncBar.style.display = localOnly ? 'none' : '';
+}
+
+window.toggleLocalOnlyMode = async () => {
+    const toggle = document.getElementById('local-only-toggle');
+    const goingLocal = toggle.checked;
+    if (goingLocal) {
+        const ok = confirm(
+            'Prepnúť na "iba lokálne" ukladanie?\n\n' +
+            'Vaše dáta prestanú byť zálohované do cloudu. Ak stratíte alebo pokazíte toto zariadenie, ' +
+            'výkresy a nástroje sa NEDAJÚ obnoviť.\n\nPokračovať?'
+        );
+        if (!ok) { toggle.checked = false; return; }
+    }
+    localStorage.setItem(LOCAL_ONLY_KEY, goingLocal ? '1' : '0');
+    await applyStorageMode();
+    showToast(goingLocal ? 'Prepnuté na lokálne ukladanie' : 'Synchronizácia s cloudom zapnutá', 'ok');
+};
+
+// ════════ SETTINGS MENU (ozubené koliesko) ════════
+window.toggleSettingsMenu = () => {
+    const ov = document.getElementById('settings-overlay');
+    const opening = !ov.classList.contains('open');
+    if (opening) {
+        // Obnoviť UI podľa aktuálneho stavu pri každom otvorení
+        updateStorageModeUI(localStorage.getItem(LOCAL_ONLY_KEY) === '1');
+        const compact = isCompact();
+        document.getElementById('mode-toggle-icon').textContent = compact ? '▦' : '☰';
+        document.getElementById('mode-toggle-sub').textContent = compact
+            ? 'Aktuálne: kompaktný zoznam' : 'Aktuálne: veľké dlaždice';
+    }
+    ov.classList.toggle('open');
+};
+window.closeSettingsMenu = () => document.getElementById('settings-overlay').classList.remove('open');
 
 // Service worker — appka sa da otvorit aj offline (uklada app shell)
 if ('serviceWorker' in navigator) {
@@ -1420,6 +2007,17 @@ const TOOL_CATEGORIES = [
         id: 'dokonc-tyc', name: 'Dokončovacie tyče',
         icon: '<svg viewBox="0 0 24 24"><path d="M3 12 L18 12 M18 10 L21 12 L18 14 Z M3 10 L3 14"/><circle cx="9" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>',
         subtypes: [], diamLabel: 'Priemer / dĺžka'
+    },
+    {
+        id: 'zavitnik', name: 'Závitník',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 2 L12 6 M9 2 L15 2"/><path d="M8 6 L16 6 L16 15 L12 21 L8 15 Z"/><path d="M8 8.5 L16 8.5 M8 11 L16 11 M8 13.5 L15 13.5"/></svg>',
+        subtypes: ['Metrický', 'Palcový', 'Rúrkový (BSP)', 'Trapézový'],
+        diamLabel: 'Označenie závitu (napr. M8, M10x1.25)'
+    },
+    {
+        id: 'uhlovy-45', name: 'Uhlové nástroje (45°)',
+        icon: '<svg viewBox="0 0 24 24"><path d="M4 20 L20 20 L20 4 Z"/><path d="M4 20 L14 10" stroke-dasharray="2 2"/><path d="M15 20 a4 4 0 0 0 -4 -4" fill="none"/></svg>',
+        subtypes: [], diamLabel: 'Priemer / polomer / dĺžka'
     },
     {
         id: 'ine', name: 'Iné',
@@ -1578,9 +2176,42 @@ function showApp(user) {
     document.getElementById('login-screen').classList.remove('visible');
     document.getElementById('app-screen').classList.add('visible');
     document.getElementById('topbar-user').style.display = 'flex';
-    document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Používateľ';
-    if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+
+    // Meno - z displayName alebo z emailu
+    const displayName = user.displayName?.split(' ')[0]
+        || (user.email ? user.email.split('@')[0] : 'Používateľ');
+    document.getElementById('user-name').textContent = displayName;
+
+    const imgEl    = document.getElementById('user-avatar');
+    const letterEl = document.getElementById('user-avatar-letter');
+
+    if (user.photoURL) {
+        // Google fotka
+        imgEl.src = user.photoURL;
+        imgEl.style.display = 'block';
+        letterEl.style.display = 'none';
+        // Fallback ak sa fotka nenačíta
+        imgEl.onerror = () => { imgEl.style.display = 'none'; showLetterAvatar(displayName, letterEl); };
+    } else {
+        // Email registrácia - farebné koliesko s písmenom
+        imgEl.style.display = 'none';
+        showLetterAvatar(displayName, letterEl);
+    }
     renderToolCategories();
+    // Skúsiť doriešiť nedokončené mazania fotiek z minulej offline session
+    processDeleteQueue();
+    // Obnoviť nastavenie ukladania (lokálne/cloud) z predošlej relácie
+    applyStorageMode();
+}
+
+function showLetterAvatar(name, el) {
+    const letter = (name || '?').charAt(0).toUpperCase();
+    // Farba podľa písmena - konzistentná
+    const colors = ['#f97316','#3b82f6','#10b981','#8b5cf6','#ec4899','#f59e0b','#06b6d4','#ef4444'];
+    const idx = letter.charCodeAt(0) % colors.length;
+    el.textContent = letter;
+    el.style.background = colors[idx];
+    el.style.display = 'flex';
 }
 
 // ════════ FIRESTORE REALTIME ════════
@@ -1632,7 +2263,7 @@ function listenData(uid) {
         updateSyncReminder();
 
         // Kladku (admin heslo) má len Firma. Trial aj Jednotlivec = voľné ruky.
-        const keyBtn = document.getElementById('admin-key-btn');
+        const keyBtn = document.getElementById('admin-key-item');
         if (keyBtn) keyBtn.style.display = (subTier === 'firma') ? '' : 'none';
         if (!adminChecked) {
             adminChecked = true;
@@ -2040,8 +2671,7 @@ window.onbAddMachine = async () => {
 window.onbOpenSection = (id) => {
     const sec = document.getElementById(id);
     if (!sec) return;
-    sec.classList.add('open');
-    setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    openSection(id);
 };
 
 window.dismissOnboarding = () => {
@@ -2058,6 +2688,19 @@ window.finishOnboarding = () => {
     showToast('Hotovo! Aplikácia je pripravená ✓', 'ok');
 };
 
+window.restartOnboarding = () => {
+    localStorage.removeItem('cnc_onb_done');
+    onbDismissed = false;
+    // Ak je v tiles režime, vrátiť sa domov aby bol sprievodca viditeľný
+    if (!isCompact() && document.getElementById('app-back').classList.contains('show')) {
+        backToTiles();
+    }
+    renderOnboarding();
+    const card = document.getElementById('onb-card');
+    if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    showToast('Sprievodca spustený', 'ok');
+};
+
 function renderAll() {
     renderMachines();
     updateCounts();
@@ -2066,7 +2709,99 @@ function renderAll() {
     renderToolCategories();
     if (window.renderDrawingToolPicker) renderDrawingToolPicker();
     renderOnboarding();
+    checkOldDrawings();
 }
+
+// ════════ STARÉ VÝKRESY (2+ roky) - UPOZORNENIE ════════
+const OLD_DRAWING_MS = 2 * 365 * 24 * 60 * 60 * 1000; // 2 roky v milisekundách
+const OLD_CHECK_KEY  = 'cnc_old_drawings_last_check';
+const OLD_SNOOZE_KEY = 'cnc_old_drawings_snooze_until';
+
+function checkOldDrawings() {
+    // Kontrolovať najviac raz za deň, nech to neotravuje pri každom otvorení appky
+    const lastCheck = parseInt(localStorage.getItem(OLD_CHECK_KEY) || '0', 10);
+    const now = Date.now();
+    if (now - lastCheck < 24 * 60 * 60 * 1000) return;
+
+    // Ak si používateľ nechal pripomenúť neskôr, rešpektuj to
+    const snoozeUntil = parseInt(localStorage.getItem(OLD_SNOOZE_KEY) || '0', 10);
+    if (now < snoozeUntil) return;
+
+    localStorage.setItem(OLD_CHECK_KEY, String(now));
+
+    const old = drawings.filter(d => d.createdAt && (now - d.createdAt) > OLD_DRAWING_MS);
+    if (!old.length) return;
+
+    renderOldDrawingsList(old);
+    document.getElementById('modal-old-drawings').classList.add('open');
+}
+
+function renderOldDrawingsList(list) {
+    const box = document.getElementById('old-drawings-list');
+    box.innerHTML = '';
+    list.forEach(d => {
+        const years = ((Date.now() - d.createdAt) / (365*24*60*60*1000)).toFixed(1);
+        const div = document.createElement('div');
+        div.className = 'old-drawing-item';
+        div.innerHTML = `
+            <div class="old-drawing-info">
+                <div class="old-drawing-number">${d.number}</div>
+                <div class="old-drawing-age">Stroj: ${d.machine} · staré ${years} roka</div>
+            </div>
+            <div class="old-drawing-actions">
+                <button class="odb odb-keep" onclick="extendOldDrawing('${d._id}')">Predĺžiť</button>
+                <button class="odb odb-del" onclick="deleteOldDrawing('${d._id}')">Vymazať</button>
+            </div>`;
+        box.appendChild(div);
+    });
+}
+
+window.extendOldDrawing = async (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', id), { createdAt: Date.now() });
+        d.createdAt = Date.now();
+        showToast('Výkres predĺžený ✓', 'ok');
+        removeOldDrawingRow(id);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+window.deleteOldDrawing = async (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    if (!confirm(`Vymazať výkres "${d.number}"? Táto akcia sa nedá vrátiť.`)) return;
+    try {
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', id));
+        if (d.photoPaths && d.photoPaths.length) d.photoPaths.forEach(p => deletePhotoFromStorage(p));
+        showToast('Výkres vymazaný', 'err');
+        removeOldDrawingRow(id);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vymazať: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+function removeOldDrawingRow(id) {
+    const remaining = document.querySelectorAll('#old-drawings-list .old-drawing-item');
+    // Prerenderuj zoznam podľa aktuálneho stavu drawings (jednoduchšie a spoľahlivejšie než mazať jeden riadok)
+    const now = Date.now();
+    const stillOld = drawings.filter(d => d.createdAt && (now - d.createdAt) > OLD_DRAWING_MS);
+    if (!stillOld.length) { closeOldDrawingsModal(); return; }
+    renderOldDrawingsList(stillOld);
+}
+
+window.closeOldDrawingsModal = () => {
+    document.getElementById('modal-old-drawings').classList.remove('open');
+};
+
+window.remindOldDrawingsLater = () => {
+    const in30days = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    localStorage.setItem(OLD_SNOOZE_KEY, String(in30days));
+    closeOldDrawingsModal();
+    showToast('Pripomenieme o mesiac', '');
+};
 
 // ════════ STROJE ════════
 function renderMachines() {
@@ -2095,7 +2830,163 @@ function renderMachines() {
         machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
         sel.value = cur;
     });
+    autoSelectMachine();
 }
+
+// Automaticky vybrať stroj (posledný použitý alebo prvý)
+function autoSelectMachine() {
+    if (!machines.length) {
+        updateMachineBox('ad'); updateMachineBox('at');
+        updateSearchBox('sd','search-machine-filter');
+        return;
+    }
+    const last = localStorage.getItem('cnc_last_machine');
+    const pick = (last && machines.includes(last)) ? last : machines[0];
+    // Formulár na pridanie výkresu - stroj je povinný, predvyplní sa
+    const adSel = document.getElementById('ad-machine');
+    if (adSel && !adSel.value) adSel.value = pick;
+    // Nástroj - stroj je voliteľný, NEVYPĹŇA sa automaticky (nech si užívateľ vedome zvolí, alebo nechá univerzálny)
+    // Filter pri hľadaní výkresov
+    const searchSel = document.getElementById('search-machine-filter');
+    if (searchSel && !searchSel.value) searchSel.value = pick;
+    updateMachineBox('ad');
+    updateMachineBox('at');
+    updateSearchBox('sd','search-machine-filter');
+}
+
+// Box pre vyhľadávacie filtre
+function updateSearchBox(prefix, selId) {
+    const sel  = document.getElementById(selId);
+    const box  = document.getElementById(prefix + '-machine-box');
+    const name = document.getElementById(prefix + '-machine-name');
+    if (!sel || !box || !name) return;
+    if (sel.value) {
+        name.textContent = sel.value;
+        box.classList.remove('empty');
+    } else {
+        name.textContent = machines.length ? 'Všetky stroje' : 'Najprv pridajte stroj';
+        box.classList.add('empty');
+    }
+}
+
+// Prepnúť select pri hľadaní
+window.toggleSearchSelect = (selId) => {
+    if (!machines.length) { showToast('Najprv pridajte stroj!', 'err'); return; }
+    const prefix = selId === 'search-machine-filter' ? 'sd' : 'st';
+    const box = document.getElementById(prefix + '-machine-box');
+    if (!box) return;
+    let picker = document.getElementById(prefix + '-search-picker');
+    if (picker) { picker.remove(); return; }
+
+    picker = document.createElement('div');
+    picker.id = prefix + '-search-picker';
+    picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;';
+    const sel = document.getElementById(selId);
+    const curVal = sel ? sel.value : '';
+    // "Všetky stroje" možnosť
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    const allSel = curVal === '';
+    allBtn.style.cssText = `padding:10px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ${allSel?'var(--cut)':'var(--border)'};background:${allSel?'rgba(249,115,22,.15)':'var(--input)'};color:${allSel?'var(--cut)':'var(--light)'};`;
+    allBtn.textContent = '📋 Všetky stroje';
+    allBtn.onclick = () => pickSearchMachine(selId, prefix, '');
+    picker.appendChild(allBtn);
+    machines.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSel = m === curVal;
+        btn.style.cssText = `padding:10px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ${isSel?'var(--cut)':'var(--border)'};background:${isSel?'rgba(249,115,22,.15)':'var(--input)'};color:${isSel?'var(--cut)':'var(--light)'};`;
+        btn.textContent = '⚙️ ' + m;
+        btn.onclick = () => pickSearchMachine(selId, prefix, m);
+        picker.appendChild(btn);
+    });
+    box.parentNode.insertBefore(picker, box.nextSibling);
+};
+
+window.pickSearchMachine = (selId, prefix, name) => {
+    const sel = document.getElementById(selId);
+    if (sel) sel.value = name;
+    if (name) localStorage.setItem('cnc_last_machine', name);
+    const picker = document.getElementById(prefix + '-search-picker');
+    if (picker) picker.remove();
+    updateSearchBox(prefix, selId);
+    if (selId === 'search-machine-filter') renderDrawingSearch();
+    else renderToolSearch();
+};
+
+window.onSearchMachineChange = () => {
+    const v = document.getElementById('search-machine-filter').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateSearchBox('sd','search-machine-filter');
+    document.getElementById('search-machine-filter').style.display = 'none';
+    renderDrawingSearch();
+};
+
+window.onToolFilterChange = () => {
+    const v = document.getElementById('tool-machine-filter').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateSearchBox('st','tool-machine-filter');
+    document.getElementById('tool-machine-filter').style.display = 'none';
+    renderToolSearch();
+};
+
+// Aktualizovať zobrazenie boxu so strojom
+function updateMachineBox(prefix) {
+    const sel  = document.getElementById(prefix + '-machine');
+    const box  = document.getElementById(prefix + '-machine-box');
+    const name = document.getElementById(prefix + '-machine-name');
+    if (!sel || !box || !name) return;
+    if (sel.value) {
+        name.textContent = sel.value;
+        box.classList.remove('empty');
+    } else if (prefix === 'at') {
+        // Nástroj - stroj je voliteľný
+        name.textContent = 'Bez konkrétneho stroja';
+        box.classList.add('empty');
+    } else {
+        name.textContent = machines.length ? 'Vyberte stroj' : 'Najprv pridajte stroj';
+        box.classList.add('empty');
+    }
+}
+
+// Prepnúť zobrazenie selectu
+window.toggleMachineSelect = (prefix) => {
+    if (!machines.length) { showToast('Najprv pridajte stroj!', 'err'); return; }
+    const box = document.getElementById(prefix + '-machine-box');
+    if (!box) return;
+    // Nájsť alebo vytvoriť kontajner s tlačidlami strojov
+    let picker = document.getElementById(prefix + '-machine-picker');
+    if (picker) { picker.remove(); return; } // toggle - zavrieť ak otvorený
+
+    picker = document.createElement('div');
+    picker.id = prefix + '-machine-picker';
+    picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;';
+    const sel = document.getElementById(prefix + '-machine');
+    const curVal = sel ? sel.value : '';
+    machines.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSel = m === curVal;
+        btn.style.cssText = `padding:10px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ${isSel?'var(--cut)':'var(--border)'};background:${isSel?'rgba(249,115,22,.15)':'var(--input)'};color:${isSel?'var(--cut)':'var(--light)'};`;
+        btn.textContent = '⚙️ ' + m;
+        btn.onclick = () => pickMachine(prefix, m);
+        picker.appendChild(btn);
+    });
+    box.parentNode.insertBefore(picker, box.nextSibling);
+};
+
+window.pickMachine = (prefix, name) => {
+    const sel = document.getElementById(prefix + '-machine');
+    if (sel) sel.value = name;
+    localStorage.setItem('cnc_last_machine', name);
+    // Zavrieť picker
+    const picker = document.getElementById(prefix + '-machine-picker');
+    if (picker) picker.remove();
+    // Aktualizovať box
+    updateMachineBox(prefix);
+    // Prefix-specific akcie
+    if (prefix === 'ad') { selectedToolIds = []; if (window.renderDrawingToolPicker) renderDrawingToolPicker(); }
+};
 
 window.addMachine = async () => {
     const inp = document.getElementById('new-machine');
@@ -2105,8 +2996,18 @@ window.addMachine = async () => {
     if (limitReached('machines', machines.length)) return;
     machines.push(name);
     inp.value = '';
+    localStorage.setItem('cnc_last_machine', name);
+    // Nastaviť nový stroj ako vybraný všade
+    ['ad-machine','at-machine','search-machine-filter','tool-machine-filter'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) sel.value = name;
+    });
     await saveToFirestore();
-    showToast('Stroj pridaný ✓', 'ok');
+    updateMachineBox('ad');
+    updateMachineBox('at');
+    updateSearchBox('sd','search-machine-filter');
+    updateSearchBox('st','tool-machine-filter');
+    showToast('Stroj "' + name + '" pridaný a vybraný ✓', 'ok');
 };
 
 window.deleteMachineConfirm = async () => {
@@ -2141,17 +3042,21 @@ window.renderDrawingSearch = () => {
     const machineF = document.getElementById('search-machine-filter').value;
     const box  = document.getElementById('drawing-search-results');
     let pool = machineF ? drawings.filter(d => d.machine === machineF) : drawings;
-    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Vyberte stroj alebo zadajte číslo</p></div>`; return; }
     let filtered;
     if (text) {
         const byNum  = pool.filter(d => d.number.toLowerCase().includes(text));
         const byProg = pool.filter(d => !d.number.toLowerCase().includes(text) && (d.program||'').toLowerCase().includes(text));
         filtered = [...byNum, ...byProg];
     } else {
-        filtered = pool;
+        filtered = pool; // bez textu zobraz celý zoznam (podľa vybraného stroja alebo úplne všetko)
     }
     box.innerHTML = '';
-    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Výkres nenájdený</p></div>`; return; }
+    if (!filtered.length) {
+        box.innerHTML = pool.length === 0 && !drawings.length
+            ? `<div class="empty"><div class="ei">📐</div><p>Zatiaľ žiadne výkresy</p></div>`
+            : `<div class="empty"><div class="ei">🔍</div><p>Výkres nenájdený</p></div>`;
+        return;
+    }
     filtered.forEach(d => {
         const card = document.createElement('div');
         card.className = 'r-card';
@@ -2161,14 +3066,50 @@ window.renderDrawingSearch = () => {
     });
 };
 
+let currentDetailId = null;
+
 window.openDetail = (number) => {
     const d = drawings.find(x => x.number === number);
     if (!d) return;
+    currentDetailId = d._id;
     const titleEl = document.getElementById('modal-detail-title');
     if (titleEl) titleEl.textContent = 'Detail výkresu';
-    const imgHtml = d.fileData ? `<div class="detail-img-wrap"><img src="${d.fileData}" onclick="zoomImage('${d.fileData}')" alt="Výkres"><div class="zoom-hint">👆 Kliknutím priblížite</div></div>` : '';
 
-    // Priradené nástroje (klik -> detail nástroja) + tlačidlo na úpravu
+    // Carousel fotiek (podporuje aj staré výkresy s jedným fileData)
+    const photos = (d.photos && d.photos.length) ? d.photos : (d.fileData ? [d.fileData] : []);
+    window._detailPhotos = photos;
+    window._detailSlide = 0;
+    let galleryHtml = '';
+    if (photos.length) {
+        const slides = photos.map((p, i) => `<div class="dc-slide" onclick="zoomImage('${p}')"><img src="${p}" alt="Výkres ${i+1}"></div>`).join('');
+        const dots = photos.length > 1
+            ? `<div class="dc-dots">${photos.map((_,i) => `<div class="dc-dot ${i===0?'active':''}" onclick="event.stopPropagation(); goToSlide(${i})"></div>`).join('')}</div>`
+            : '';
+        const arrows = photos.length > 1 ? `
+            <button class="dc-arrow dc-arrow-left" onclick="event.stopPropagation(); prevSlide()">‹</button>
+            <button class="dc-arrow dc-arrow-right" onclick="event.stopPropagation(); nextSlide()">›</button>` : '';
+        const counter = photos.length > 1 ? `<div class="dc-counter" id="dc-counter">1 / ${photos.length}</div>` : '';
+        galleryHtml = `
+            <div class="detail-carousel">
+                <div class="dc-track" id="dc-track">${slides}</div>
+                ${arrows}
+                ${counter}
+                ${dots}
+            </div>
+            <div class="detail-photo-actions">
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-cam').click()">📷 Odfotiť</button>
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-lib').click()">📁 Zo zariadenia</button>
+            </div>`;
+    } else {
+        galleryHtml = `
+            <div class="detail-photo-actions">
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-cam').click()">📷 Odfotiť</button>
+                <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-lib').click()">📁 Zo zariadenia</button>
+            </div>`;
+    }
+
+
+    // Priradené nástroje
     const ids = d.toolIds || [];
     const linked = ids.map(id => tools.find(t => t._id === id)).filter(Boolean);
     let toolsHtml = '<div class="det-tools"><div class="dt-head">🔧 Nástroje k výkresu</div>';
@@ -2184,11 +3125,11 @@ window.openDetail = (number) => {
     toolsHtml += '</div>';
 
     document.getElementById('modal-content').innerHTML = `
-        ${imgHtml}
-        <div class="d-field"><div class="d-key">Číslo výkresu</div><div class="d-val">${d.number}</div></div>
-        <div class="d-field"><div class="d-key">Číslo programu</div><div class="d-val">${d.program || '—'}</div></div>
-        <div class="d-field"><div class="d-key">Stroj</div><div class="d-val">${d.machine}</div></div>
-        <div class="d-field"><div class="d-key">Poznámka</div><div class="d-val" style="font-size:14px;line-height:1.65;">${d.note || '—'}</div></div>
+        ${galleryHtml}
+        ${renderEditableField('number', 'Číslo výkresu', d.number)}
+        ${renderEditableField('program', 'Číslo programu', d.program || '')}
+        ${renderMachineField(d.machine)}
+        ${renderEditableField('note', 'Poznámka', d.note || '', true)}
         ${toolsHtml}
     `;
     document.getElementById('modal-detail').classList.add('open');
@@ -2196,11 +3137,201 @@ window.openDetail = (number) => {
 
 window.closeModal = () => document.getElementById('modal-detail').classList.remove('open');
 
+// ════════ INLINE EDITÁCIA POLÍ V DETAILE ════════
+function renderEditableField(field, label, value, isTextarea) {
+    return `
+        <div class="d-field d-field-editable" id="df-${field}" onclick="startEditField('${field}', ${!!isTextarea})">
+            <div class="d-key">${label}</div>
+            <div class="d-val" id="dv-${field}" style="${isTextarea ? 'font-size:14px;line-height:1.65;' : ''}">${value || '—'}</div>
+            <span class="d-edit-icon">✏️</span>
+        </div>`;
+}
+
+function renderMachineField(machine) {
+    return `
+        <div class="d-field d-field-editable" id="df-machine" onclick="startEditMachine()">
+            <div class="d-key">Stroj</div>
+            <div class="d-val" id="dv-machine">${machine}</div>
+            <span class="d-edit-icon">✏️</span>
+        </div>`;
+}
+
+window.startEditField = (field, isTextarea) => {
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+    const container = document.getElementById('df-' + field);
+    const currentVal = field === 'number' ? d.number : field === 'program' ? (d.program || '') : (d.note || '');
+    const labelText = container.querySelector('.d-key').textContent;
+
+    const inputHtml = isTextarea
+        ? `<textarea class="d-edit-textarea" id="edit-input-${field}" rows="3">${currentVal}</textarea>`
+        : `<input type="text" class="d-edit-input" id="edit-input-${field}" value="${currentVal}">`;
+
+    container.innerHTML = `
+        <div class="d-key">${labelText}</div>
+        ${inputHtml}
+        <div class="d-edit-actions">
+            <button class="d-edit-save" onclick="event.stopPropagation(); saveFieldEdit('${field}')">✓ Uložiť</button>
+            <button class="d-edit-cancel" onclick="event.stopPropagation(); openDetail(drawings.find(x=>x._id==='${currentDetailId}').number)">Zrušiť</button>
+        </div>`;
+    container.onclick = null;
+    setTimeout(() => document.getElementById('edit-input-' + field)?.focus(), 50);
+};
+
+window.saveFieldEdit = async (field) => {
+    const inp = document.getElementById('edit-input-' + field);
+    if (!inp) return;
+    const val = inp.value.trim();
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+
+    if (field === 'number') {
+        if (!val) { showToast('Číslo výkresu nemôže byť prázdne!', 'err'); return; }
+        if (drawings.some(x => x._id !== currentDetailId && x.number.toLowerCase() === val.toLowerCase())) {
+            showToast('Výkres s týmto číslom už existuje!', 'err'); return;
+        }
+    }
+
+    const upd = {};
+    upd[field] = val;
+    updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), upd)
+        .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    d[field] = val; // okamžitá lokálna aktualizácia
+    showToast('Uložené ✓', 'ok');
+    openDetail(val && field === 'number' ? val : d.number);
+};
+
+window.startEditMachine = () => {
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+    const container = document.getElementById('df-machine');
+    let optsHtml = machines.map(m => `<option value="${m}" ${m === d.machine ? 'selected' : ''}>${m}</option>`).join('');
+    container.innerHTML = `
+        <div class="d-key">Stroj</div>
+        <select class="d-edit-input" id="edit-input-machine">${optsHtml}</select>
+        <div class="d-edit-actions">
+            <button class="d-edit-save" onclick="event.stopPropagation(); saveMachineEdit()">✓ Uložiť</button>
+            <button class="d-edit-cancel" onclick="event.stopPropagation(); openDetail(drawings.find(x=>x._id==='${currentDetailId}').number)">Zrušiť</button>
+        </div>`;
+    container.onclick = null;
+};
+
+window.saveMachineEdit = async () => {
+    const sel = document.getElementById('edit-input-machine');
+    if (!sel) return;
+    const val = sel.value;
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+    updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), { machine: val })
+        .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    d.machine = val;
+    localStorage.setItem('cnc_last_machine', val);
+    showToast('Uložené ✓', 'ok');
+    openDetail(d.number);
+};
+
+// ════════ PRIDAŤ FOTKU K EXISTUJÚCEMU VÝKRESU ════════
+window.addPhotoToDrawing = async (inputEl) => {
+    if (!inputEl) return;
+    if (!inputEl.files || !inputEl.files.length) return;
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+    const newFiles = Array.from(inputEl.files);
+    showToast(`Nahrávam ${newFiles.length} ${newFiles.length === 1 ? 'fotku' : 'fotky'}...`, '');
+
+    const existingPhotos = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
+    const existingPaths  = d.photoPaths ? [...d.photoPaths] : [];
+
+    const newPhotos = [];
+    const newPaths  = [];
+    try {
+        for (const f of newFiles) {
+            const dataUrl = await new Promise(res => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.readAsDataURL(f);
+            });
+            const compressed = await compressImage(dataUrl, 2400);
+            const { url, path } = await uploadPhotoToStorage(compressed, 'drawings');
+            newPhotos.push(url);
+            newPaths.push(path);
+        }
+    } catch (e) {
+        showToast('⚠ Nahrávanie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+        inputEl.value = '';
+        return;
+    }
+
+    const mergedPhotos = [...existingPhotos, ...newPhotos];
+    const mergedPaths  = [...existingPaths, ...newPaths];
+
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
+            photos: mergedPhotos, photoPaths: mergedPaths, fileData: mergedPhotos[0]
+        });
+        d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.fileData = mergedPhotos[0];
+        showToast('Fotky pridané ✓', 'ok');
+        openDetail(d.number);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa uložiť: ' + (e.message || 'skúste znova'), 'err');
+    }
+    inputEl.value = '';
+};
+
+// ════════ CAROUSEL NAVIGÁCIA ════════
+window.goToSlide = (i) => {
+    const photos = window._detailPhotos || [];
+    if (i < 0 || i >= photos.length) return;
+    window._detailSlide = i;
+    const track = document.getElementById('dc-track');
+    if (track) track.style.transform = `translateX(-${i * 100}%)`;
+    document.querySelectorAll('.dc-dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+    const counter = document.getElementById('dc-counter');
+    if (counter) counter.textContent = `${i + 1} / ${photos.length}`;
+};
+
+window.nextSlide = () => {
+    const photos = window._detailPhotos || [];
+    const next = (window._detailSlide + 1) % photos.length;
+    goToSlide(next);
+};
+
+window.prevSlide = () => {
+    const photos = window._detailPhotos || [];
+    const prev = (window._detailSlide - 1 + photos.length) % photos.length;
+    goToSlide(prev);
+};
+
+// Swipe gestá na carouseli (touch)
+let _dcTouchX = 0;
+document.addEventListener('touchstart', e => {
+    if (e.target.closest('.detail-carousel')) _dcTouchX = e.touches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+    if (!e.target.closest('.detail-carousel')) return;
+    const diff = e.changedTouches[0].clientX - _dcTouchX;
+    if (Math.abs(diff) > 50) {
+        if (diff < 0) window.nextSlide(); else window.prevSlide();
+    }
+});
+
 // ════════ VÝKRESY – PRIDAJ ════════
-let pendingDrawingFile = null;
 let selectedToolIds = [];
 
-window.onDrawingMachineChange = () => { selectedToolIds = []; renderDrawingToolPicker(); };
+window.onToolMachineChange = () => {
+    const v = document.getElementById('at-machine').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateMachineBox('at');
+    document.getElementById('at-machine').style.display = 'none';
+};
+
+window.onDrawingMachineChange = () => {
+    const v = document.getElementById('ad-machine').value;
+    if (v) localStorage.setItem('cnc_last_machine', v);
+    updateMachineBox('ad');
+    selectedToolIds = [];
+    renderDrawingToolPicker();
+};
 
 window.renderDrawingToolPicker = () => {
     const box = document.getElementById('ad-tools-pick');
@@ -2226,12 +3357,62 @@ window.renderDrawingToolPicker = () => {
     });
 };
 
+window.pendingDrawingPhotos = []; // pole { file, previewUrl }
+
 window.onDrawingFile = (input) => {
-    const f = input.files && input.files[0];
-    if (!f) return;
-    pendingDrawingFile = f;
-    const st = document.getElementById('ad-file-status');
-    if (st) st.textContent = '✓ Fotka pripravená: ' + (f.name || 'obrázok');
+    const files = input.files;
+    if (!files || !files.length) return;
+    Array.from(files).forEach(f => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            window.pendingDrawingPhotos.push({ file: f, dataUrl: e.target.result });
+            renderPhotoGallery('ad');
+        };
+        reader.readAsDataURL(f);
+    });
+    input.value = '';
+};
+
+function renderPhotoGallery(prefix) {
+    const gallery = document.getElementById(prefix + '-photo-gallery');
+    if (!gallery) return;
+    const photos = window.pendingDrawingPhotos;
+    gallery.innerHTML = '';
+    photos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'photo-thumb';
+        div.innerHTML = `
+            <img src="${p.dataUrl}" onclick="zoomImage('${p.dataUrl}')">
+            <div class="photo-num">${i + 1}</div>
+            <button class="photo-del" onclick="removePendingPhoto(${i})">✕</button>`;
+        gallery.appendChild(div);
+    });
+    const st = document.getElementById(prefix + '-file-status');
+    if (st) st.textContent = photos.length ? `✓ ${photos.length} ${photos.length === 1 ? 'fotka pripravená' : 'fotky pripravené'}` : '';
+}
+
+window.removePendingPhoto = (i) => {
+    window.pendingDrawingPhotos.splice(i, 1);
+    renderPhotoGallery('ad');
+};
+
+
+// ════════ KONTROLA DUPLICITY ČÍSLA VÝKRESU ════════
+window.checkDupNumber = () => {
+    const inp  = document.getElementById('ad-number');
+    const warn = document.getElementById('ad-dup-warn');
+    if (!inp || !warn) return;
+    const v = inp.value.trim().toLowerCase();
+    if (!v) { warn.style.display = 'none'; inp.style.borderColor = ''; return; }
+    const existing = drawings.find(d => d.number.toLowerCase() === v);
+    if (existing) {
+        warn.style.display = 'block';
+        warn.innerHTML = `⚠ <strong>Výkres "${existing.number}" už existuje</strong><br>Stroj: ${existing.machine} · Program: ${existing.program || '—'}<br><span style="color:var(--muted);">Použite iné číslo alebo upravte existujúci výkres.</span>`;
+        inp.style.borderColor = 'var(--red)';
+    } else {
+        warn.style.display = 'none';
+        inp.style.borderColor = '';
+    }
 };
 
 window.saveDrawing = async () => {
@@ -2244,44 +3425,135 @@ window.saveDrawing = async () => {
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
     if (limitReached('drawings', drawings.length)) return;
 
-    const doSave = async (fileData) => {
-        // Compress image if too large (max 800px wide)
-        let finalData = fileData;
-        if (fileData && fileData.startsWith('data:image')) {
-            finalData = await compressImage(fileData, 1800);
+    const photoCount = window.pendingDrawingPhotos.length;
+    showToast(photoCount ? `Nahrávam ${photoCount} ${photoCount === 1 ? 'fotku' : 'fotky'}...` : 'Ukladám...', '');
+
+    // Fotky nahrávame do Firebase Storage (žiadny limit veľkosti dokumentu) –
+    // komprimujeme len rozumne na rýchlejší prenos, kvalita ostáva vysoká pre čitateľné kóty.
+    const photos = [];      // URL adresy pre zobrazenie
+    const photoPaths = [];  // cesty v Storage pre neskoršie mazanie
+    try {
+        for (const p of window.pendingDrawingPhotos) {
+            const compressed = await compressImage(p.dataUrl, 2400); // vyššie rozlíšenie, bez tesného limitu
+            const { url, path } = await uploadPhotoToStorage(compressed, 'drawings');
+            photos.push(url);
+            photoPaths.push(path);
         }
-        const newDrawing = { machine, number, program, note, fileData: finalData || null, toolIds: [...selectedToolIds], createdAt: Date.now() };
-        // Zápis do podkolekcie. Offline sa uloží lokálne a nahrá pri wifi.
-        // Nečakáme na server – zoznam sa aktualizuje cez realtime listener.
-        addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing)
-            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
-        showToast('Výkres uložený ✓', 'ok');
-        ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('ad-machine').value = '';
-        document.getElementById('ad-file-cam').value = '';
-        document.getElementById('ad-file-lib').value = '';
-        document.getElementById('ad-file-status').textContent = '';
-        pendingDrawingFile = null;
-        selectedToolIds = [];
-        renderDrawingToolPicker();
-        document.getElementById('sec-add-drawing').classList.remove('open');
-        openSection('sec-search-drawing');
+    } catch (e) {
+        showToast('⚠ Nahrávanie fotiek zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+        return;
+    }
+
+    const newDrawing = {
+        machine, number, program, note,
+        photos: photos,
+        photoPaths: photoPaths,
+        fileData: photos[0] || null, // spätná kompatibilita so starým zobrazením (teraz URL)
+        toolIds: [...selectedToolIds],
+        createdAt: Date.now()
     };
 
-    if (pendingDrawingFile) {
-        const reader = new FileReader();
-        reader.onload = e => doSave(e.target.result);
-        reader.readAsDataURL(pendingDrawingFile);
-    } else {
-        doSave(null);
+    try {
+        await addDoc(collection(db, 'users', currentUser.uid, 'drawings'), newDrawing);
+        showToast('Výkres uložený ✓' + (photoCount ? ` (${photoCount} ${photoCount === 1 ? 'fotka' : 'fotiek'})` : ''), 'ok');
+    } catch (e) {
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+        return;
     }
+
+    ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ad-dup-warn').style.display = 'none';
+    document.getElementById('ad-number').style.borderColor = '';
+    updateMachineBox('ad');
+    window.pendingDrawingPhotos = [];
+    renderPhotoGallery('ad');
+    selectedToolIds = [];
+    renderDrawingToolPicker();
+    document.getElementById('sec-add-drawing').classList.remove('open');
+    openSection('sec-search-drawing');
 };
 
 // Compress image to max width
-function compressImage(dataUrl, maxWidth) {
+// ════════ UPLOAD FOTIEK DO FIREBASE STORAGE ════════
+// Namiesto ukladania Base64 priamo do Firestore (limit 1MB/dokument) nahrávame
+// obrázky ako súbory do Storage a v dokumente držíme len URL. Žiadny limit na počet/veľkosť fotiek.
+async function uploadPhotoToStorage(dataUrl, folder) {
+    const path = `users/${currentUser.uid}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
+    const ref = storageRef(storage, path);
+    await uploadString(ref, dataUrl, 'data_url');
+    const url = await getDownloadURL(ref);
+    return { url, path };
+}
+
+// ════════ SPOĽAHLIVÉ MAZANIE FOTIEK (fronta prežije výpadok internetu) ════════
+// Cesty na vymazanie sa najprv zapíšu do localStorage. Až PO úspešnom vymazaní
+// zo Storage sa z fronty odstránia. Ak nie je pripojenie, zostanú vo fronte
+// a skúsia sa znova pri ďalšom spustení aplikácie alebo návrate online.
+const DEL_QUEUE_KEY = 'cnc_pending_photo_deletes';
+
+function getDeleteQueue() {
+    try { return JSON.parse(localStorage.getItem(DEL_QUEUE_KEY) || '[]'); }
+    catch(e) { return []; }
+}
+
+function setDeleteQueue(queue) {
+    localStorage.setItem(DEL_QUEUE_KEY, JSON.stringify(queue));
+}
+
+function enqueuePhotoDelete(path) {
+    if (!path) return;
+    const queue = getDeleteQueue();
+    if (!queue.includes(path)) {
+        queue.push(path);
+        setDeleteQueue(queue);
+    }
+}
+
+async function deletePhotoFromStorage(path) {
+    if (!path) return;
+    enqueuePhotoDelete(path);       // najprv zapísať do trvalej fronty
+    await processDeleteQueue();     // hneď skúsiť spracovať
+}
+
+// Prejde celú frontu a pokúsi sa vymazať každú fotku zo Storage.
+// Úspešne vymazané odstráni z fronty; neúspešné (offline) tam ostanú na neskôr.
+let _processingQueue = false;
+async function processDeleteQueue() {
+    if (_processingQueue) return; // zabrániť súbežnému behu
+    _processingQueue = true;
+    try {
+        let queue = getDeleteQueue();
+        if (!queue.length) return;
+        const stillPending = [];
+        for (const path of queue) {
+            try {
+                await deleteObject(storageRef(storage, path));
+                // úspešne vymazané -> nepridávame do stillPending
+            } catch (e) {
+                if (e.code === 'storage/object-not-found') {
+                    // uz neexistuje (napr. uz vymazane inokedy) -> beriem ako hotove
+                } else {
+                    // pravdepodobne offline alebo docasna chyba -> skus neskor
+                    stillPending.push(path);
+                }
+            }
+        }
+        setDeleteQueue(stillPending);
+        if (stillPending.length) {
+            console.log(`CNCdok: ${stillPending.length} fotiek čaká na vymazanie zo servera (offline)`);
+        }
+    } finally {
+        _processingQueue = false;
+    }
+}
+
+// Skúsiť frontu spracovať pri štarte aplikácie a pri návrate pripojenia
+window.addEventListener('online', () => { processDeleteQueue(); });
+
+function compressImage(dataUrl, maxWidth, customMaxChars) {
     // Vyuzijeme takmer cely 1 MB na jeden dokument -> ostrejsia fotka (citanie kot).
-    // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod 1 MB.
-    const MAX_CHARS = 950000; // bezpecne pod limit Firestore 1 MB/dokument
+    // Poistka: ak je vysledok privelky, sam znizi kvalitu/rozmer, nech sa zmesti pod limit.
+    const MAX_CHARS = customMaxChars || 950000; // bezpecne pod limit Firestore 1 MB/dokument
     return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
@@ -2297,11 +3569,14 @@ function compressImage(dataUrl, maxWidth) {
             let q = 0.85;
             let out = render(width, q);
             // 1) najprv znizuj kvalitu
-            while (out.length > MAX_CHARS && q > 0.4) { q = Math.round((q - 0.1) * 100) / 100; out = render(width, q); }
-            // 2) ak stale velke, znizuj aj rozmer
-            while (out.length > MAX_CHARS && width > 700) { width = Math.round(width * 0.85); out = render(width, 0.7); }
+            while (out.length > MAX_CHARS && q > 0.35) { q = Math.round((q - 0.1) * 100) / 100; out = render(width, q); }
+            // 2) ak stale velke, znizuj aj rozmer (bez spodnej hranice 700px – pokracuj kym sa nezmesti)
+            while (out.length > MAX_CHARS && width > 250) { width = Math.round(width * 0.8); out = render(width, 0.5); }
+            // 3) posledna poistka – ak sa aj tak nezmestilo (extremne male MAX_CHARS), vrat najmensiu rozumnu verziu
+            if (out.length > MAX_CHARS) { out = render(250, 0.35); }
             resolve(out);
         };
+        img.onerror = () => resolve(dataUrl); // radsej povodny obrazok nez nic
         img.src = dataUrl;
     });
 }
@@ -2310,17 +3585,315 @@ function compressImage(dataUrl, maxWidth) {
 window.renderDelDrawing = () => {
     const text = document.getElementById('inp-del-drawing').value.trim().toLowerCase();
     const box  = document.getElementById('del-drawing-results');
-    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte číslo výkresu</p></div>`; return; }
-    const filtered = drawings.filter(d => d.number.toLowerCase().includes(text) || d.program.toLowerCase().includes(text));
+    const filtered = text
+        ? drawings.filter(d => d.number.toLowerCase().includes(text) || (d.program||'').toLowerCase().includes(text))
+        : drawings; // bez textu zobraz úplne všetky výkresy
     box.innerHTML = '';
-    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
+    if (!filtered.length) {
+        box.innerHTML = drawings.length === 0
+            ? `<div class="empty"><div class="ei">📐</div><p>Zatiaľ žiadne výkresy</p></div>`
+            : `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`;
+        return;
+    }
     filtered.forEach(d => {
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${d.number}</div><div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}</div><button class="btn btn-danger btn-sm" onclick="window._delDrawing('${d._id}')">🗑 Vymazať</button>`;
+        card.innerHTML = `
+            <div class="r-title">${d.number}</div>
+            <div class="r-meta">Stroj: ${d.machine} · Program: ${d.program || '—'}${d.note ? '<br>Pozn.: ' + d.note.substring(0,50) + (d.note.length>50?'…':'') : ''}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn btn-sm" style="flex:1; background:var(--blue); color:#fff; margin:0;" onclick="window._editDrawing('${d._id}')">✏️ Upraviť</button>
+                <button class="btn btn-danger btn-sm" style="flex:1; margin:0;" onclick="window._delDrawing('${d._id}')">🗑 Vymazať</button>
+            </div>`;
         box.appendChild(card);
     });
 };
+
+// ════════ EDITÁCIA VÝKRESU ════════
+let editingId = null;
+let pendingEditFile = null;
+
+window._editDrawing = (id) => {
+    const d = drawings.find(x => x._id === id);
+    if (!d) return;
+    editingId = id;
+    pendingEditFile = null;
+    document.getElementById('ed-number').value  = d.number || '';
+    document.getElementById('ed-program').value = d.program || '';
+    document.getElementById('ed-note').value    = d.note || '';
+    // Stroje
+    const sel = document.getElementById('ed-machine');
+    sel.innerHTML = '';
+    machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
+    sel.value = d.machine || '';
+    // Všetky fotky s možnosťou vymazať každú jednotlivo
+    renderEditPhotos(d);
+    document.getElementById('ed-file-status').textContent = '';
+    document.getElementById('ed-dup-warn').style.display = 'none';
+    // Nástroje priradené k výkresu
+    emEditToolIds = [...(d.toolIds || [])];
+    emToolsCatFilter = '';
+    document.getElementById('em-tools-search').value = '';
+    document.getElementById('em-new-tool-form').style.display = 'none';
+    renderEmLinkedTools();
+    renderEmToolsCatFilter();
+    renderEmToolPicker();
+    document.getElementById('modal-edit').classList.add('open');
+};
+
+function renderEditPhotos(d) {
+    const prev = document.getElementById('ed-photo-preview');
+    const photos = (d.photos && d.photos.length) ? d.photos : (d.fileData ? [d.fileData] : []);
+    if (!photos.length) {
+        prev.innerHTML = `<div style="font-size:13px;color:var(--muted);">Bez fotky</div>`;
+        return;
+    }
+    prev.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">` +
+        photos.map((p, i) => `
+            <div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+                <img src="${p}" style="width:100%;height:100%;object-fit:cover;display:block;" onclick="zoomImage('${p}')">
+                <button onclick="event.stopPropagation(); deleteEditPhoto(${i})" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(220,38,38,.9);color:#fff;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>`).join('') +
+        `</div>`;
+}
+
+window.deleteEditPhoto = async (index) => {
+    const d = drawings.find(x => x._id === editingId);
+    if (!d) return;
+    if (!confirm('Vymazať túto fotku z výkresu?')) return;
+
+    const photos = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
+    const paths  = d.photoPaths ? [...d.photoPaths] : [];
+
+    const removedPath = paths[index];
+    photos.splice(index, 1);
+    if (paths.length) paths.splice(index, 1);
+
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), {
+            photos: photos,
+            photoPaths: paths,
+            fileData: photos[0] || null
+        });
+        d.photos = photos; d.photoPaths = paths; d.fileData = photos[0] || null;
+        if (removedPath) deletePhotoFromStorage(removedPath);
+        showToast('Fotka vymazaná ✓', 'ok');
+        renderEditPhotos(d);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vymazať: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+window.closeEditModal = () => {
+    document.getElementById('modal-edit').classList.remove('open');
+    editingId = null;
+    pendingEditFile = null;
+};
+
+window.onEditFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingEditFile = f;
+    document.getElementById('ed-file-status').textContent = '✓ Nová fotka pripravená: ' + f.name;
+    input.value = '';
+};
+
+window.saveEditDrawing = async () => {
+    if (!editingId) return;
+    const number  = document.getElementById('ed-number').value.trim();
+    const machine = document.getElementById('ed-machine').value;
+    const program = document.getElementById('ed-program').value.trim();
+    const note    = document.getElementById('ed-note').value.trim();
+    if (!number) { showToast('Zadajte číslo výkresu!', 'err'); return; }
+    // Kontrola duplicity (okrem seba)
+    if (drawings.some(d => d._id !== editingId && d.number.toLowerCase() === number.toLowerCase())) {
+        showToast('Výkres s týmto číslom už existuje!', 'err'); return;
+    }
+
+    const upd = { number, machine, program, note, toolIds: [...emEditToolIds] };
+    if (pendingEditFile) {
+        try {
+            const dataUrl = await new Promise(res => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.readAsDataURL(pendingEditFile);
+            });
+            const compressed = await compressImage(dataUrl, 2400);
+            const { url, path } = await uploadPhotoToStorage(compressed, 'drawings');
+            upd.fileData = url;
+            upd.photos = [url];
+            upd.photoPaths = [path];
+        } catch (e) {
+            showToast('⚠ Nahrávanie fotky zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+            return;
+        }
+    }
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), upd);
+        const dd = drawings.find(x => x._id === editingId);
+        if (dd) dd.toolIds = [...emEditToolIds];
+        showToast('Zmeny uložené ✓', 'ok');
+        closeEditModal();
+        setTimeout(() => window.renderDelDrawing(), 200);
+    } catch (e) {
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+// ════════ NÁSTROJE PRIAMO V EDITÁCII VÝKRESU ════════
+let emEditToolIds = [];
+
+function renderEmLinkedTools() {
+    const box = document.getElementById('em-tools-linked');
+    if (!box) return;
+    const linked = emEditToolIds.map(id => tools.find(t => t._id === id)).filter(Boolean);
+    if (!linked.length) {
+        box.innerHTML = `<div style="font-size:13px;color:var(--muted);">Žiadne priradené nástroje</div>`;
+        return;
+    }
+    box.innerHTML = linked.map(t => `
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--input);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:6px;">
+            <div style="min-width:0;">
+                <div style="font-weight:700;font-size:14px;color:var(--white);">${t.diameter || t.name || 'nástroj'}</div>
+                <div style="font-size:12px;color:var(--muted);">${t.name || ''}</div>
+            </div>
+            <button type="button" onclick="emUnlinkTool('${t._id}')" style="background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#f87171;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">Odobrať</button>
+        </div>`).join('');
+}
+
+window.emUnlinkTool = (id) => {
+    emEditToolIds = emEditToolIds.filter(x => x !== id);
+    renderEmLinkedTools();
+    renderEmToolPicker();
+};
+
+let emToolsCatFilter = ''; // '' = všetky kategórie, pre editáciu výkresu
+
+function renderEmToolsCatFilter() {
+    const box = document.getElementById('em-tools-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (emToolsCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { emToolsCatFilter = ''; renderEmToolsCatFilter(); renderEmToolPicker(); };
+    box.appendChild(allChip);
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (emToolsCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { emToolsCatFilter = cat.id; renderEmToolsCatFilter(); renderEmToolPicker(); };
+        box.appendChild(chip);
+    });
+}
+
+function renderEmToolPicker() {
+    const box = document.getElementById('em-tools-pick');
+    if (!box) return;
+    const text = (document.getElementById('em-tools-search').value || '').trim().toLowerCase();
+    // Nástroje sú spoločné pre celú dielňu - filter len podľa kategórie a textu
+    let pool = emToolsCatFilter ? tools.filter(t => t.category === emToolsCatFilter) : tools;
+    if (text) {
+        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+    }
+    const unlinked = pool.filter(t => !emEditToolIds.includes(t._id));
+    if (!unlinked.length) {
+        box.innerHTML = `<div class="tp-empty">Žiadne ďalšie nástroje nenájdené</div>`;
+        return;
+    }
+    box.innerHTML = '';
+    unlinked.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tp-chip';
+        chip.textContent = (t.diameter || t.name || 'nástroj');
+        chip.onclick = () => {
+            emEditToolIds.push(t._id);
+            renderEmLinkedTools();
+            renderEmToolPicker();
+        };
+        box.appendChild(chip);
+    });
+}
+
+window.toggleEmNewTool = () => {
+    const form = document.getElementById('em-new-tool-form');
+    const show = form.style.display === 'none';
+    form.style.display = show ? 'block' : 'none';
+    if (show) emFillCategorySelect();
+};
+
+function emFillCategorySelect() {
+    const sel = document.getElementById('em-tool-cat');
+    sel.innerHTML = '';
+    TOOL_CATEGORIES.forEach(cat => {
+        const o = document.createElement('option');
+        o.value = cat.id; o.textContent = cat.name;
+        sel.appendChild(o);
+    });
+    emUpdateSubtypes();
+}
+
+window.emUpdateSubtypes = () => {
+    const catId = document.getElementById('em-tool-cat').value;
+    const cat = TOOL_CATEGORIES.find(c => c.id === catId);
+    const wrap = document.getElementById('em-subtype-wrap');
+    const sel  = document.getElementById('em-tool-subtype');
+    if (cat && cat.subtypes.length) {
+        wrap.style.display = 'block';
+        sel.innerHTML = '<option value="">— Vyberte typ —</option>';
+        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); });
+    } else {
+        wrap.style.display = 'none';
+        sel.innerHTML = '';
+    }
+    document.getElementById('em-diam-label').textContent = cat ? cat.diamLabel : 'Priemer / polomer / dĺžka';
+};
+
+window.emCreateAndLinkTool = async () => {
+    const d = drawings.find(x => x._id === editingId);
+    if (!d) return;
+    const catId   = document.getElementById('em-tool-cat').value;
+    const cat     = TOOL_CATEGORIES.find(c => c.id === catId);
+    const subtype = document.getElementById('em-tool-subtype').value;
+    const diam    = document.getElementById('em-tool-diam').value.trim();
+    const note    = document.getElementById('em-tool-note').value.trim();
+    if (!cat) { showToast('Vyberte kategóriu!', 'err'); return; }
+    if (cat.subtypes.length && !subtype) { showToast('Vyberte typ nástroja!', 'err'); return; }
+    if (!diam) { showToast('Vyplňte ' + cat.diamLabel.toLowerCase() + '!', 'err'); return; }
+    if (limitReached('tools', tools.length)) return;
+
+    const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
+    const newTool = {
+        machine: d.machine, name, diameter: diam,
+        type: subtype || cat.name, category: cat.id, catName: cat.name,
+        note, fileData: null, filePath: null, createdAt: Date.now()
+    };
+
+    try {
+        const ref = await addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool);
+        newTool._id = ref.id;
+        tools.push(newTool); // okamžitá lokálna dostupnosť pred realtime syncom
+        emEditToolIds.push(ref.id);
+        showToast('Nástroj vytvorený a priradený ✓', 'ok');
+        document.getElementById('em-tool-diam').value = '';
+        document.getElementById('em-tool-note').value = '';
+        document.getElementById('em-new-tool-form').style.display = 'none';
+        renderEmLinkedTools();
+        renderEmToolPicker();
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vytvoriť nástroj: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+// Kontrola duplicity pri písaní v edit modali
+document.addEventListener('DOMContentLoaded', () => {
+    const en = document.getElementById('ed-number');
+    if (en) en.addEventListener('input', () => {
+        const v = en.value.trim().toLowerCase();
+        const dup = v && drawings.some(d => d._id !== editingId && d.number.toLowerCase() === v);
+        document.getElementById('ed-dup-warn').style.display = dup ? 'block' : 'none';
+    });
+});
 
 window._delDrawing = async (id) => {
     const d = drawings.find(x => x._id === id);
@@ -2329,22 +3902,52 @@ window._delDrawing = async (id) => {
     if (!await requireAdminPassword()) return;
     deleteDoc(doc(db, 'users', currentUser.uid, 'drawings', id))
         .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    // Vymazať aj fotky zo Storage (nezablokovať UI čakaním)
+    if (d.photoPaths && d.photoPaths.length) {
+        d.photoPaths.forEach(p => deletePhotoFromStorage(p));
+    }
     showToast('Výkres vymazaný', 'err');
     window.renderDelDrawing();
 };
 
 // ════════ NÁSTROJE – HĽADAJ ════════
+let toolCatFilter = ''; // '' = všetky kategórie
+
+function renderToolCatFilter() {
+    const box = document.getElementById('tool-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    // Chip "Všetky"
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (toolCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { toolCatFilter = ''; renderToolCatFilter(); renderToolSearch(); };
+    box.appendChild(allChip);
+    // Chip pre každú kategóriu
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (toolCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { toolCatFilter = cat.id; renderToolCatFilter(); renderToolSearch(); };
+        box.appendChild(chip);
+    });
+}
+
 window.renderToolSearch = () => {
     const text = document.getElementById('inp-tool-search').value.trim().toLowerCase();
-    const machineF = document.getElementById('tool-machine-filter').value;
     const box  = document.getElementById('tool-search-results');
-    let pool = machineF ? tools.filter(t => t.machine === machineF) : tools;
-    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>`; return; }
+    // Najprv filter podľa kategórie, potom podľa textu
+    let pool = toolCatFilter ? tools.filter(t => t.category === toolCatFilter) : tools;
     const filtered = text
         ? pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text))
-        : pool;
+        : pool; // bez textu zobraz celý (prípadne kategóriou filtrovaný) zoznam
     box.innerHTML = '';
-    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`; return; }
+    if (!filtered.length) {
+        box.innerHTML = tools.length === 0
+            ? `<div class="empty"><div class="ei">🔧</div><p>Zatiaľ žiadne nástroje</p></div>`
+            : `<div class="empty"><div class="ei">🔍</div><p>Nástroj nenájdený</p></div>`;
+        return;
+    }
     filtered.forEach(t => {
         const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
         const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
@@ -2390,20 +3993,49 @@ window.closeToolModal = () => document.getElementById('modal-tool').classList.re
 
 // ── Úprava nástrojov priradených k výkresu ──
 let editDrawingId = null, editDrawingNumber = null, editMachine = null, editToolIds = [];
+let editToolsCatFilter = ''; // '' = všetky kategórie, pre modal-edittools
+
 window.openEditTools = (id) => {
     const d = drawings.find(x => x._id === id);
     if (!d) return;
     editDrawingId = id; editDrawingNumber = d.number; editMachine = d.machine;
     editToolIds = [...(d.toolIds || [])];
+    editToolsCatFilter = '';
+    document.getElementById('edittools-search').value = '';
+    renderEditToolsCatFilter();
     renderEditToolsPicker();
     document.getElementById('modal-edittools').classList.add('open');
 };
+
+function renderEditToolsCatFilter() {
+    const box = document.getElementById('edittools-cat-filter');
+    if (!box) return;
+    box.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'tcf-chip' + (editToolsCatFilter === '' ? ' active' : '');
+    allChip.innerHTML = `<span>📋</span><span>Všetky</span>`;
+    allChip.onclick = () => { editToolsCatFilter = ''; renderEditToolsCatFilter(); renderEditToolsPicker(); };
+    box.appendChild(allChip);
+    TOOL_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'tcf-chip' + (editToolsCatFilter === cat.id ? ' active' : '');
+        chip.innerHTML = `${cat.icon}<span>${cat.name}</span>`;
+        chip.onclick = () => { editToolsCatFilter = cat.id; renderEditToolsCatFilter(); renderEditToolsPicker(); };
+        box.appendChild(chip);
+    });
+}
+
 window.renderEditToolsPicker = () => {
     const box = document.getElementById('edittools-pick');
     if (!box) return;
-    const pool = tools.filter(t => t.machine === editMachine);
-    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje. Najprv ich pridajte v sekcii Nástroje.</span>'; return; }
-    editToolIds = editToolIds.filter(id => pool.some(t => t._id === id));
+    const text = (document.getElementById('edittools-search').value || '').trim().toLowerCase();
+    // Nástroje sú spoločné pre celú dielňu - zobraz všetky, filtrované len kategóriou a textom
+    let pool = editToolsCatFilter ? tools.filter(t => t.category === editToolsCatFilter) : tools;
+    if (text) {
+        pool = pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text));
+    }
+    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Žiadne nástroje nenájdené</span>'; return; }
+    editToolIds = editToolIds.filter(id => tools.some(t => t._id === id)); // len odstráň neexistujúce
     box.innerHTML = '';
     pool.forEach(t => {
         const chip = document.createElement('div');
@@ -2454,17 +4086,29 @@ window.saveTool = async () => {
     const name = subtype ? `${cat.name} – ${subtype}` : cat.name;
 
     const doSaveTool = async (fileData) => {
-        let finalData = fileData;
+        let finalUrl = null;
+        let finalPath = null;
         if (fileData && fileData.startsWith('data:image')) {
-            finalData = await compressImage(fileData, 1800);
+            try {
+                const compressed = await compressImage(fileData, 2000);
+                const { url, path } = await uploadPhotoToStorage(compressed, 'tools');
+                finalUrl = url; finalPath = path;
+            } catch (e) {
+                showToast('⚠ Nahrávanie fotky zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+                return;
+            }
         }
-        const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalData || null, createdAt: Date.now() };
-        addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool)
-            .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
-        showToast('Nástroj uložený ✓', 'ok');
+        const newTool = { machine, name, diameter: diam, type: subtype || cat.name, category: cat.id, catName: cat.name, note, fileData: finalUrl, filePath: finalPath, createdAt: Date.now() };
+        try {
+            await addDoc(collection(db, 'users', currentUser.uid, 'tools'), newTool);
+            showToast('Nástroj uložený ✓', 'ok');
+        } catch (e) {
+            showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+            return;
+        }
         document.getElementById('at-diam').value = '';
         document.getElementById('at-note').value = '';
-        document.getElementById('at-machine').value = '';
+        updateMachineBox('at');  // stroj zostáva vybraný
         document.getElementById('at-subtype').value = '';
         document.getElementById('tool-subtype-wrap').style.display = 'none';
         document.getElementById('at-file-cam').value = '';
@@ -2490,16 +4134,173 @@ window.saveTool = async () => {
 window.renderDelTool = () => {
     const text = document.getElementById('inp-del-tool').value.trim().toLowerCase();
     const box  = document.getElementById('del-tool-results');
-    if (!text) { box.innerHTML = `<div class="empty"><div class="ei">🗑️</div><p>Zadajte priemer alebo názov</p></div>`; return; }
-    const filtered = tools.filter(t => t.diameter.toLowerCase().includes(text) || t.name.toLowerCase().includes(text));
+    const filtered = text
+        ? tools.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text))
+        : tools; // bez textu zobraz úplne všetky nástroje
     box.innerHTML = '';
-    if (!filtered.length) { box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`; return; }
+    if (!filtered.length) {
+        box.innerHTML = tools.length === 0
+            ? `<div class="empty"><div class="ei">🔧</div><p>Zatiaľ žiadne nástroje</p></div>`
+            : `<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>`;
+        return;
+    }
     filtered.forEach(t => {
         const card = document.createElement('div');
         card.className = 'r-card del';
-        card.innerHTML = `<div class="r-title">${t.name} — ${t.diameter}</div><div class="r-meta">Stroj: ${t.machine}</div><button class="btn btn-danger btn-sm" onclick="window._delTool('${t._id}')">🗑 Vymazať</button>`;
+        card.innerHTML = `
+            <div class="r-title">${t.name} — ${t.diameter}</div>
+            <div class="r-meta">Stroj: ${t.machine}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn btn-sm" style="flex:1; background:var(--blue); color:#fff; margin:0;" onclick="window._editTool('${t._id}')">✏️ Upraviť</button>
+                <button class="btn btn-danger btn-sm" style="flex:1; margin:0;" onclick="window._delTool('${t._id}')">🗑 Vymazať</button>
+            </div>`;
         box.appendChild(card);
     });
+};
+
+// ════════ EDITÁCIA NÁSTROJA ════════
+let editingToolId = null;
+let pendingEditToolFile = null;
+
+window._editTool = (id) => {
+    const t = tools.find(x => x._id === id);
+    if (!t) return;
+    editingToolId = id;
+    pendingEditToolFile = null;
+
+    // Stroje
+    const msel = document.getElementById('et-machine');
+    msel.innerHTML = '';
+    machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; msel.appendChild(o); });
+    msel.value = t.machine || '';
+
+    // Kategórie
+    const csel = document.getElementById('et-category');
+    csel.innerHTML = '';
+    TOOL_CATEGORIES.forEach(cat => { const o = document.createElement('option'); o.value = cat.id; o.textContent = cat.name; csel.appendChild(o); });
+    csel.value = t.category || TOOL_CATEGORIES[0].id;
+    etUpdateSubtypes(t.type);
+
+    document.getElementById('et-diam').value = t.diameter || '';
+    document.getElementById('et-note').value = t.note || '';
+    document.getElementById('et-file-status').textContent = '';
+
+    renderEditToolPhoto(t);
+    document.getElementById('modal-edit-tool').classList.add('open');
+};
+
+function renderEditToolPhoto(t) {
+    const prev = document.getElementById('et-photo-preview');
+    if (t.fileData) {
+        prev.innerHTML = `
+            <div style="position:relative;max-width:200px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+                <img src="${t.fileData}" style="width:100%;display:block;" onclick="zoomImage('${t.fileData}')">
+                <button onclick="event.stopPropagation(); deleteEditToolPhoto()" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(220,38,38,.9);color:#fff;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>`;
+    } else {
+        prev.innerHTML = `<div style="font-size:13px;color:var(--muted);">Bez fotky</div>`;
+    }
+}
+
+window.deleteEditToolPhoto = async () => {
+    const t = tools.find(x => x._id === editingToolId);
+    if (!t) return;
+    if (!confirm('Vymazať fotku nástroja?')) return;
+    const oldPath = t.filePath;
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'tools', editingToolId), { fileData: null, filePath: null });
+        t.fileData = null; t.filePath = null;
+        if (oldPath) deletePhotoFromStorage(oldPath);
+        showToast('Fotka vymazaná ✓', 'ok');
+        renderEditToolPhoto(t);
+    } catch (e) {
+        showToast('⚠ Nepodarilo sa vymazať: ' + (e.message || 'skúste znova'), 'err');
+    }
+};
+
+window.etUpdateSubtypes = (preselect) => {
+    const catId = document.getElementById('et-category').value;
+    const cat = TOOL_CATEGORIES.find(c => c.id === catId);
+    const wrap = document.getElementById('et-subtype-wrap');
+    const sel  = document.getElementById('et-subtype');
+    if (cat && cat.subtypes.length) {
+        wrap.style.display = 'block';
+        sel.innerHTML = '<option value="">— Vyberte typ —</option>';
+        cat.subtypes.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); });
+        if (preselect) sel.value = preselect;
+    } else {
+        wrap.style.display = 'none';
+        sel.innerHTML = '';
+    }
+    document.getElementById('et-diam-label').textContent = cat ? cat.diamLabel : 'Priemer / polomer / dĺžka';
+};
+
+window.onEditToolFile = (input) => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    pendingEditToolFile = f;
+    document.getElementById('et-file-status').textContent = '✓ Nová fotka pripravená: ' + (f.name || 'obrázok');
+    input.value = '';
+};
+
+window.closeEditToolModal = () => {
+    document.getElementById('modal-edit-tool').classList.remove('open');
+    editingToolId = null;
+    pendingEditToolFile = null;
+};
+
+window.saveEditTool = async () => {
+    if (!editingToolId) return;
+    const t = tools.find(x => x._id === editingToolId);
+    if (!t) return;
+
+    const machine = document.getElementById('et-machine').value;
+    const catId   = document.getElementById('et-category').value;
+    const cat     = TOOL_CATEGORIES.find(c => c.id === catId);
+    const subtype = document.getElementById('et-subtype').value;
+    const diam    = document.getElementById('et-diam').value.trim();
+    const note    = document.getElementById('et-note').value.trim();
+
+    if (!diam) { showToast('Vyplňte rozmer nástroja!', 'err'); return; }
+    if (cat && cat.subtypes.length && !subtype) { showToast('Vyberte typ nástroja!', 'err'); return; }
+
+    const name = subtype ? `${cat.name} – ${subtype}` : (cat ? cat.name : t.name);
+    const upd = {
+        machine, name, diameter: diam,
+        type: subtype || (cat ? cat.name : t.type),
+        category: cat ? cat.id : t.category,
+        catName: cat ? cat.name : t.catName,
+        note
+    };
+
+    if (pendingEditToolFile) {
+        try {
+            const dataUrl = await new Promise(res => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.readAsDataURL(pendingEditToolFile);
+            });
+            const compressed = await compressImage(dataUrl, 2000);
+            const { url, path } = await uploadPhotoToStorage(compressed, 'tools');
+            const oldPath = t.filePath;
+            upd.fileData = url;
+            upd.filePath = path;
+            if (oldPath) deletePhotoFromStorage(oldPath); // stará fotka už nie je potrebná
+        } catch (e) {
+            showToast('⚠ Nahrávanie fotky zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+            return;
+        }
+    }
+
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'tools', editingToolId), upd);
+        Object.assign(t, upd); // okamžitá lokálna aktualizácia
+        showToast('Zmeny uložené ✓', 'ok');
+        closeEditToolModal();
+        setTimeout(() => window.renderDelTool(), 200);
+    } catch (e) {
+        showToast('⚠ Uloženie zlyhalo: ' + (e.message || 'skúste znova'), 'err');
+    }
 };
 
 window._delTool = async (id) => {
@@ -2509,6 +4310,7 @@ window._delTool = async (id) => {
     if (!await requireAdminPassword()) return;
     deleteDoc(doc(db, 'users', currentUser.uid, 'tools', id))
         .catch(() => showToast('Zmena sa uloží pri wifi', ''));
+    if (t.filePath) deletePhotoFromStorage(t.filePath);
     showToast('Nástroj vymazaný', 'err');
     window.renderDelTool();
 };
@@ -2532,13 +4334,32 @@ function updateCounts() {
 function isCompact() { return document.body.classList.contains('mode-compact'); }
 
 window.toggleSection = (id) => {
+    const sec = document.getElementById(id);
+    const wasOpen = sec.classList.contains('open');
     // Kompaktný = klasické rozbaľovanie; Veľký = hlavička nezbaľuje
-    if (isCompact()) document.getElementById(id).classList.toggle('open');
-    else document.getElementById(id).classList.add('open');
+    if (isCompact()) sec.classList.toggle('open');
+    else sec.classList.add('open');
+    // Ak sa sekcia práve otvorila (predtým bola zavretá), naplň zoznam hneď
+    if (!wasOpen) renderSectionContent(id);
 };
+
+// Mapovanie ID sekcie -> render funkcia, ktorá naplní zoznam hneď pri otvorení
+// (predtým sa zoznamy plnili len cez oninput pri písaní, takže boli prázdne až do prvého úderu klávesy)
+const SECTION_RENDER_MAP = {
+    'sec-search-drawing': () => window.renderDrawingSearch && window.renderDrawingSearch(),
+    'sec-del-drawing':    () => window.renderDelDrawing && window.renderDelDrawing(),
+    'sec-search-tool':    () => { renderToolCatFilter(); window.renderToolSearch && window.renderToolSearch(); },
+    'sec-del-tool':       () => window.renderDelTool && window.renderDelTool(),
+};
+
+function renderSectionContent(id) {
+    const fn = SECTION_RENDER_MAP[id];
+    if (fn) fn();
+}
 
 window.openSection = (id) => {
     const sec = document.getElementById(id);
+    renderSectionContent(id);
     if (isCompact()) {                       // v zozname len rozbaľ danú sekciu
         sec.classList.add('open');
         sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2693,5 +4514,42 @@ window.showToast = (msg, type='') => {
 </script>
 <!-- SUBSCRIPTION GATE (Trial / Free / Premium) -->
 <script type="module" src="subscription.js"></script>
+
+<!-- COOKIE CONSENT -->
+<div id="cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:99999; background:#1a2332; border-top:1px solid rgba(255,255,255,0.12); padding:16px; box-shadow:0 -4px 24px rgba(0,0,0,0.4);">
+  <div style="max-width:560px; margin:0 auto;">
+    <div style="font-size:14px; color:#e2e8f0; line-height:1.6; margin-bottom:14px;">
+      🍪 Používame nevyhnutné cookies pre prihlásenie a fungovanie aplikácie a voliteľne <strong>Google Analytics</strong> na meranie návštevnosti.
+      <a href="privacy.html" style="color:#f97316; text-decoration:underline;">Viac info</a>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button onclick="cookieAccept()" style="flex:1; min-width:130px; padding:12px; background:#f97316; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">Súhlasím so všetkým</button>
+      <button onclick="cookieReject()" style="flex:1; min-width:130px; padding:12px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;">Len nevyhnutné</button>
+    </div>
+  </div>
+</div>
+
+<script>
+window.cookieAccept = () => {
+    localStorage.setItem('cnc_cookie', 'all');
+    document.getElementById('cookie-banner').style.display = 'none';
+    if (window._cncApp) {
+        import("https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js")
+            .then(m => { try { m.getAnalytics(window._cncApp); } catch(e){} });
+    }
+};
+window.cookieReject = () => {
+    localStorage.setItem('cnc_cookie', 'essential');
+    document.getElementById('cookie-banner').style.display = 'none';
+};
+(function() {
+    const c = localStorage.getItem('cnc_cookie');
+    if (c !== 'all' && c !== 'essential') {
+        const b = document.getElementById('cookie-banner');
+        if (b) b.style.display = 'block';
+    }
+})();
+</script>
+
 </body>
 </html>
