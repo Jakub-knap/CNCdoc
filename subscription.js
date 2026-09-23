@@ -226,7 +226,7 @@ function openPremiumInfo(result) {
     if (result.periodEnd) {
         const end = new Date(result.periodEnd);
         const days = Math.max(0, Math.ceil((end.getTime() - Date.now()) / DAY_MS));
-        const dateStr = end.toLocaleDateString("sk-SK", { day: "numeric", month: "numeric", year: "numeric" });
+        const dateStr = end.toLocaleDateString(window.CNC_LANG === "en" ? "en-GB" : "sk-SK", { day: "numeric", month: "numeric", year: "numeric" });
         endHtml = `
             <div class="spi-row"><span>Platné do</span><strong>${dateStr}</strong></div>
             <div class="spi-row"><span>Zostáva</span><strong>${days} ${dayWord(days)}</strong></div>`;

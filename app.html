@@ -2,6 +2,7 @@
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
+    <script src="i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>CNCdok</title>
     <link rel="manifest" href="/manifest.json">
@@ -140,6 +141,59 @@
         }
         .settings-toggle input:checked + .settings-toggle-slider { background: rgba(249,115,22,.25); border-color: var(--cut); }
         .settings-toggle input:checked + .settings-toggle-slider::before { transform: translateX(18px); background: var(--cut); }
+
+        .lang-switch { display: flex; gap: 6px; flex-shrink: 0; }
+        .lang-btn {
+            background: var(--input); border: 1.5px solid var(--border); color: var(--muted);
+            border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer;
+        }
+        html[lang="sk"] .lang-btn[data-lang="sk"],
+        html[lang="en"] .lang-btn[data-lang="en"] {
+            border-color: var(--cut); color: var(--cut); background: rgba(249,115,22,.12);
+        }
+        .login-lang { justify-content: center; margin-top: 18px; }
+
+        .settings-group-title {
+            font-size: 12px; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .6px;
+            padding: 4px 16px 8px;
+        }
+        .storage-opt {
+            width: calc(100% - 24px); margin: 0 12px 8px;
+            display: flex; gap: 12px; align-items: flex-start; text-align: left;
+            background: var(--input); border: 1.5px solid var(--border);
+            border-radius: 12px; padding: 12px; cursor: pointer; transition: all .15s;
+        }
+        .storage-opt.active { border-color: var(--green); background: rgba(16,185,129,.08); }
+        .storage-opt.active.local { border-color: var(--cut); background: rgba(249,115,22,.08); }
+        .storage-opt-radio {
+            width: 20px; height: 20px; min-width: 20px; border-radius: 50%;
+            border: 2px solid var(--muted); margin-top: 2px; position: relative;
+        }
+        .storage-opt.active .storage-opt-radio { border-color: var(--green); }
+        .storage-opt.active.local .storage-opt-radio { border-color: var(--cut); }
+        .storage-opt.active .storage-opt-radio::after {
+            content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--green);
+        }
+        .storage-opt.active.local .storage-opt-radio::after { background: var(--cut); }
+        .storage-opt-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .storage-opt-title { font-size: 14px; font-weight: 700; color: var(--white); }
+        .storage-opt-tag {
+            font-size: 10px; font-weight: 800; color: var(--green);
+            background: rgba(16,185,129,.15); padding: 2px 7px; border-radius: 10px;
+            margin-left: 4px; vertical-align: middle;
+        }
+        .storage-opt-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
+        .storage-opt-desc strong { color: #fb923c; }
+
+        /* Upozornenie na hlavnej obrazovke, keď je zapnutý režim "len v zariadení" */
+        .local-mode-banner {
+            display: none; align-items: center; gap: 8px;
+            padding: 8px 16px; font-size: 12.5px; font-weight: 600;
+            background: #1f1305; color: #fb923c;
+            border-bottom: 1px solid rgba(249,115,22,.3); cursor: pointer;
+        }
+        .local-mode-banner.visible { display: flex; }
 
         .settings-note {
             font-size: 11.5px; color: var(--muted); line-height: 1.5;
@@ -1180,7 +1234,7 @@
             </span>
         </button>
 
-        <button class="settings-item" onclick="window.open('https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400','_blank')">
+        <button class="settings-item" id="billing-settings-item" onclick="window.open('https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400','_blank')">
             <span class="settings-item-icon">💳</span>
             <span class="settings-item-text">
                 <span class="settings-item-title">Spravovať predplatné</span>
@@ -1188,20 +1242,36 @@
             </span>
         </button>
 
+        <div class="settings-item settings-item-static">
+            <span class="settings-item-icon">🌐</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Jazyk / Language</span>
+            </span>
+            <span class="lang-switch" data-no-tr>
+                <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">SK</button>
+                <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+            </span>
+        </div>
+
         <div class="settings-divider"></div>
 
-        <div class="settings-item settings-item-static">
-            <span class="settings-item-icon">☁️</span>
-            <span class="settings-item-text">
-                <span class="settings-item-title">Ukladanie dát</span>
-                <span class="settings-item-sub" id="storage-mode-sub">Synchronizované s cloudom</span>
+        <div class="settings-group-title">Kde sa ukladajú vaše dáta?</div>
+
+        <button type="button" class="storage-opt" id="storage-opt-cloud" onclick="setStorageMode(false)">
+            <span class="storage-opt-radio"></span>
+            <span class="storage-opt-body">
+                <span class="storage-opt-title">☁️ Zariadenie + cloud <span class="storage-opt-tag">odporúčané</span></span>
+                <span class="storage-opt-desc">Dáta sú v mobile aj zálohované na serveri. Keď mobil stratíte alebo pokazíte, prihlásite sa na novom a všetko tam bude. Funguje aj bez internetu, zosynchronizuje sa po pripojení.</span>
             </span>
-            <label class="settings-toggle">
-                <input type="checkbox" id="local-only-toggle" onchange="toggleLocalOnlyMode()">
-                <span class="settings-toggle-slider"></span>
-            </label>
-        </div>
-        <div class="settings-note" id="local-only-note"></div>
+        </button>
+
+        <button type="button" class="storage-opt" id="storage-opt-local" onclick="setStorageMode(true)">
+            <span class="storage-opt-radio"></span>
+            <span class="storage-opt-body">
+                <span class="storage-opt-title">📱 Len v tomto zariadení</span>
+                <span class="storage-opt-desc">Čísla výkresov, programy, poznámky a nástroje sa neodosielajú na server. <strong>Bez zálohy</strong> — ak mobil stratíte, pokazíte alebo vymažete dáta prehliadača, nedajú sa obnoviť. Iné zariadenia ich neuvidia. Fotky sa aj tak ukladajú do zabezpečeného úložiska, preto pri ich pridávaní treba internet.</span>
+            </span>
+        </button>
     </div>
 </div>
 
@@ -1242,6 +1312,10 @@
     </div>
 
     <p class="login-note" style="margin-top:16px;">Vaše dáta sú uložené bezpečne na vašom účte.</p>
+    <div class="lang-switch login-lang" data-no-tr>
+        <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">Slovenčina</button>
+        <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</button>
+    </div>
 </div>
 
 <!-- APP -->
@@ -1271,6 +1345,11 @@
                 <span>Pridať na plochu · funguje offline</span>
             </div>
         </div>
+
+    <!-- Upozornenie: režim len v zariadení -->
+    <div class="local-mode-banner" id="local-mode-banner" onclick="toggleSettingsMenu()">
+        <span>📱</span><span>Ukladá sa len v tomto zariadení — bez zálohy. Zmeniť v ⚙️</span>
+    </div>
         <button class="install-btn" id="install-btn">⬇ Inštalovať</button>
         <button class="install-dismiss" onclick="dismissInstall()">✕</button>
     </div>
@@ -1927,32 +2006,39 @@ async function applyStorageMode() {
 }
 
 function updateStorageModeUI(localOnly) {
-    const toggle = document.getElementById('local-only-toggle');
-    const sub    = document.getElementById('storage-mode-sub');
-    const note   = document.getElementById('local-only-note');
+    const optCloud = document.getElementById('storage-opt-cloud');
+    const optLocal = document.getElementById('storage-opt-local');
+    if (optCloud) optCloud.classList.toggle('active', !localOnly);
+    if (optLocal) { optLocal.classList.toggle('active', localOnly); optLocal.classList.add('local'); }
     const syncBar = document.getElementById('sync-bar');
-    if (toggle) toggle.checked = localOnly;
-    if (sub) sub.textContent = localOnly ? 'Iba v tomto zariadení' : 'Synchronizované s cloudom';
-    if (note) note.textContent = localOnly
-        ? '⚠ Dáta sa neukladajú do cloudu. Ak stratíte alebo pokazíte zariadenie, dáta sa nedajú obnoviť.'
-        : 'Dáta sú zálohované a dostupné na všetkých vašich zariadeniach.';
     if (syncBar) syncBar.style.display = localOnly ? 'none' : '';
+    const banner = document.getElementById('local-mode-banner');
+    if (banner) banner.classList.toggle('visible', localOnly);
 }
 
-window.toggleLocalOnlyMode = async () => {
-    const toggle = document.getElementById('local-only-toggle');
-    const goingLocal = toggle.checked;
-    if (goingLocal) {
-        const ok = confirm(
-            'Prepnúť na "iba lokálne" ukladanie?\n\n' +
-            'Vaše dáta prestanú byť zálohované do cloudu. Ak stratíte alebo pokazíte toto zariadenie, ' +
-            'výkresy a nástroje sa NEDAJÚ obnoviť.\n\nPokračovať?'
-        );
-        if (!ok) { toggle.checked = false; return; }
-    }
+window.setStorageMode = async (goingLocal) => {
+    const isLocal = localStorage.getItem(LOCAL_ONLY_KEY) === '1';
+    if (goingLocal === isLocal) return; // už je vybrané
+
+    const ok = goingLocal
+        ? confirm(
+            'Ukladať LEN V TOMTO ZARIADENÍ?\n\n' +
+            '• Nové a upravené výkresy a nástroje sa prestanú zálohovať na server.\n' +
+            '• Ak mobil stratíte, pokazíte alebo vymažete dáta prehliadača, tieto zmeny sa NEDAJÚ obnoviť.\n' +
+            '• Na iných zariadeniach ich neuvidíte.\n' +
+            '• To, čo už je v cloude, tam zostane.\n\n' +
+            'Prepnúť?')
+        : confirm(
+            'Zapnúť ZÁLOHU DO CLOUDU?\n\n' +
+            '• Všetko, čo ste uložili len v tomto zariadení, sa teraz nahrá na server.\n' +
+            '• Dáta budú zálohované a uvidíte ich na všetkých zariadeniach, kde sa prihlásite.\n' +
+            '• Appka bude fungovať aj bez internetu, zosynchronizuje sa po pripojení.\n\n' +
+            'Zapnúť?');
+    if (!ok) return;
+
     localStorage.setItem(LOCAL_ONLY_KEY, goingLocal ? '1' : '0');
     await applyStorageMode();
-    showToast(goingLocal ? 'Prepnuté na lokálne ukladanie' : 'Synchronizácia s cloudom zapnutá', 'ok');
+    showToast(goingLocal ? '📱 Ukladá sa len v tomto zariadení' : '☁️ Záloha do cloudu zapnutá', 'ok');
 };
 
 // ════════ SETTINGS MENU (ozubené koliesko) ════════
