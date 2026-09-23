@@ -899,6 +899,21 @@
             background: rgba(249,115,22,.15); border-color: var(--cut); color: var(--cut);
         }
         .tcf-chip.active svg { stroke: var(--cut); }
+
+        /* ── VÝBEROVÉ KARTY NÁSTROJOV (modaly na priradenie k výkresu) ── */
+        .tool-pick-card { cursor: pointer; transition: all .15s; }
+        .tool-pick-card:hover { border-left-color: var(--cut); }
+        .tool-pick-selected {
+            border-left-color: var(--green) !important;
+            background: rgba(16,185,129,.08);
+        }
+        .tpc-check {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--green); color: #06240f;
+            font-size: 12px; font-weight: 800;
+            margin-left: 8px; vertical-align: middle;
+        }
         .r-card .r-title svg { width: 100%; height: 100%; stroke: var(--green); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
         /* ── IN-APP BROWSER WARNING ── */
@@ -1413,7 +1428,7 @@
                 <div class="fg">
                     <label class="field-label">Nástroje k výkresu (voliteľné)</label>
                     <div id="ad-tools-selected" style="margin-bottom:10px;"></div>
-                    <button type="button" class="btn btn-sm" style="width:100%;background:var(--input);border:1.5px dashed var(--border);color:var(--light);margin:0;padding:14px;font-size:15px;" onclick="openToolPickerModal()">
+                    <button type="button" class="btn btn-success" style="width:100%;" onclick="openToolPickerModal()">
                         🔧 Pridať nástroje
                     </button>
                 </div>
@@ -3154,7 +3169,7 @@ window.openDetail = (number) => {
     } else {
         toolsHtml += '<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Žiadne priradené nástroje</div>';
     }
-    toolsHtml += `<button class="btn btn-sm" style="width:100%;margin-top:4px;background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="openEditTools('${d._id}')">✏️ Upraviť nástroje</button>`;
+    toolsHtml += `<button class="btn btn-success" style="width:100%;margin-top:4px;" onclick="openEditTools('${d._id}')">✏️ Upraviť nástroje</button>`;
     toolsHtml += '</div>';
 
     document.getElementById('modal-content').innerHTML = `
@@ -3492,19 +3507,24 @@ window.renderToolPickerModal = () => {
     if (text) {
         pool = pool.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text) || normText(t.type).includes(text));
     }
-    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Nič nenájdené</span>'; return; }
+    if (!pool.length) { box.innerHTML = '<div class="empty"><div class="ei">🔍</div><p>Nič nenájdené</p></div>'; return; }
     box.innerHTML = '';
     pool.forEach(t => {
-        const chip = document.createElement('div');
-        chip.className = 'tp-chip' + (selectedToolIds.includes(t._id) ? ' sel' : '');
-        const label = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
-        chip.textContent = label + (t.machine ? ` (${t.machine})` : '');
-        chip.onclick = () => {
+        const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
+        const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
+        const photoTag = t.fileData ? ' 📷' : '';
+        const isSel = selectedToolIds.includes(t._id);
+        const card = document.createElement('div');
+        card.className = 'r-card tool tool-pick-card' + (isSel ? ' tool-pick-selected' : '');
+        card.innerHTML = `
+            <div class="r-title">${iconHtml}${t.diameter}${photoTag}${isSel ? '<span class="tpc-check">✓</span>' : ''}</div>
+            <div class="r-meta">${t.name}<br>${t.machine ? 'Stroj: ' + t.machine : '<span style="color:var(--muted);">Univerzálny nástroj</span>'}${t.note ? '<br>Poznámka: ' + t.note : ''}</div>`;
+        card.onclick = () => {
             const i = selectedToolIds.indexOf(t._id);
             if (i >= 0) selectedToolIds.splice(i, 1); else selectedToolIds.push(t._id);
             renderToolPickerModal();
         };
-        box.appendChild(chip);
+        box.appendChild(card);
     });
 };
 
@@ -3949,20 +3969,25 @@ function renderEmToolPicker() {
     }
     const unlinked = pool.filter(t => !emEditToolIds.includes(t._id));
     if (!unlinked.length) {
-        box.innerHTML = `<div class="tp-empty">Žiadne ďalšie nástroje nenájdené</div>`;
+        box.innerHTML = `<div class="empty"><div class="ei">🔍</div><p>Žiadne ďalšie nástroje nenájdené</p></div>`;
         return;
     }
     box.innerHTML = '';
     unlinked.forEach(t => {
-        const chip = document.createElement('div');
-        chip.className = 'tp-chip';
-        chip.textContent = (t.diameter || t.name || 'nástroj');
-        chip.onclick = () => {
+        const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
+        const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
+        const photoTag = t.fileData ? ' 📷' : '';
+        const card = document.createElement('div');
+        card.className = 'r-card tool tool-pick-card';
+        card.innerHTML = `
+            <div class="r-title">${iconHtml}${t.diameter}${photoTag}</div>
+            <div class="r-meta">${t.name}<br>${t.machine ? 'Stroj: ' + t.machine : '<span style="color:var(--muted);">Univerzálny nástroj</span>'}${t.note ? '<br>Poznámka: ' + t.note : ''}</div>`;
+        card.onclick = () => {
             emEditToolIds.push(t._id);
             renderEmLinkedTools();
             renderEmToolPicker();
         };
-        box.appendChild(chip);
+        box.appendChild(card);
     });
 }
 
@@ -4185,19 +4210,25 @@ window.renderEditToolsPicker = () => {
     if (text) {
         pool = pool.filter(t => normText(t.diameter).includes(text) || normText(t.name).includes(text) || normText(t.type).includes(text));
     }
-    if (!pool.length) { box.innerHTML = '<span class="tp-empty">Žiadne nástroje nenájdené</span>'; return; }
+    if (!pool.length) { box.innerHTML = '<div class="empty"><div class="ei">🔍</div><p>Žiadne nástroje nenájdené</p></div>'; return; }
     editToolIds = editToolIds.filter(id => tools.some(t => t._id === id)); // len odstráň neexistujúce
     box.innerHTML = '';
     pool.forEach(t => {
-        const chip = document.createElement('div');
-        chip.className = 'tp-chip' + (editToolIds.includes(t._id) ? ' sel' : '');
-        chip.textContent = (t.diameter || t.name || 'nástroj') + (t.name && t.diameter ? ' · ' + t.name : '');
-        chip.onclick = () => {
+        const cat = TOOL_CATEGORIES.find(c => c.id === t.category);
+        const iconHtml = cat ? `<span style="display:inline-flex;width:22px;height:22px;color:var(--green);vertical-align:middle;margin-right:6px;">${cat.icon}</span>` : '';
+        const photoTag = t.fileData ? ' 📷' : '';
+        const isSel = editToolIds.includes(t._id);
+        const card = document.createElement('div');
+        card.className = 'r-card tool tool-pick-card' + (isSel ? ' tool-pick-selected' : '');
+        card.innerHTML = `
+            <div class="r-title">${iconHtml}${t.diameter}${photoTag}${isSel ? '<span class="tpc-check">✓</span>' : ''}</div>
+            <div class="r-meta">${t.name}<br>${t.machine ? 'Stroj: ' + t.machine : '<span style="color:var(--muted);">Univerzálny nástroj</span>'}${t.note ? '<br>Poznámka: ' + t.note : ''}</div>`;
+        card.onclick = () => {
             const i = editToolIds.indexOf(t._id);
             if (i >= 0) editToolIds.splice(i, 1); else editToolIds.push(t._id);
             renderEditToolsPicker();
         };
-        box.appendChild(chip);
+        box.appendChild(card);
     });
 };
 window.saveEditTools = () => {
