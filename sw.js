@@ -1,8 +1,12 @@
 // CNCdok service worker — appka sa da otvorit aj offline
-const CACHE = 'cncdok-v1';
+//
+// DOLEZITE: pri kazdej vacsej zmene appky zvys cislo verzie nizsie (v2 -> v3 ...).
+// Stara pamat sa tym automaticky vymaze a vsetci dostanu cerstve subory.
+const CACHE = 'cncdok-v2';
 const SHELL = [
   './app.html',
   './index.html',
+  './subscription.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -26,26 +30,36 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = req.url;
 
-  // Nikdy necachuj Firebase/Firestore/Auth volania — riesi to Firestore sam (offline persistence)
+  // Nikdy necachuj Firebase/Firestore/Auth/Storage volania — riesi to Firebase sam
   if (req.method !== 'GET') return;
   if (url.includes('googleapis.com') || url.includes('identitytoolkit') ||
-      url.includes('securetoken') || url.includes('firebaseio') || url.includes('firebaseinstallations')) {
-    return; // nechaj prehliadac / Firestore
+      url.includes('securetoken') || url.includes('firebaseio') ||
+      url.includes('firebaseinstallations') || url.includes('firebasestorage')) {
+    return;
   }
 
-  // HTML stranky -> network-first (online = cerstva verzia, offline = z cache)
-  if (req.mode === 'navigate' || url.endsWith('.html')) {
+  const sameOrigin = new URL(url).origin === self.location.origin;
+
+  // VLASTNE SUBORY APPKY (html, subscription.js, manifest...) -> network-first:
+  // online = vzdy najnovsia verzia z Vercelu, offline = posledna ulozena kopia.
+  // (Predtym boli .js subory cache-first, takze sa novsia verzia nikdy nestiahla.)
+  if (req.mode === 'navigate' || sameOrigin) {
     e.respondWith(
       fetch(req).then((resp) => {
-        const copy = resp.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        if (resp && resp.ok) {
+          const copy = resp.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
         return resp;
-      }).catch(() => caches.match(req).then((r) => r || caches.match('./app.html')))
+      }).catch(() =>
+        caches.match(req).then((r) => r || (req.mode === 'navigate' ? caches.match('./app.html') : undefined))
+      )
     );
     return;
   }
 
-  // Ostatne (Firebase SDK z gstatic, fonty, ikony) -> cache-first + doplnenie do cache
+  // CUDZIE SUBORY (Firebase SDK z gstatic, fonty) -> cache-first.
+  // Maju pevne cislo verzie v adrese, takze sa nemenia - cache je tu bezpecna a rychla.
   e.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
