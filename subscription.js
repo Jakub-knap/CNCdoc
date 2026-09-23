@@ -37,6 +37,27 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 
 // ════════════════════════════════════════════════════════════════
+//  DETEKCIA GOOGLE PLAY / ANDROID TWA OBALU
+//  Google Play Billing pravidlá vyžadujú, aby appka distribuovaná
+//  cez Play Store nepoužívala externé platobné brány (napr. Stripe)
+//  pre nákupy v appke. Appka mimo Play Store (web, priamy .apk z webu)
+//  týmto pravidlám nepodlieha.
+//
+//  Rozpoznanie: Android TWA (Trusted Web Activity), ktorý generuje
+//  napr. PWABuilder pre Play Store appku, nastavuje document.referrer
+//  na "android-app://<balíček>". Web ani priamo nainštalovaná PWA
+//  (Pridať na plochu) toto nemá.
+// ════════════════════════════════════════════════════════════════
+function isPlayStoreEnvironment() {
+    try {
+        return document.referrer.startsWith('android-app://');
+    } catch (e) {
+        return false;
+    }
+}
+const IN_PLAY_STORE = isPlayStoreEnvironment();
+
+// ════════════════════════════════════════════════════════════════
 //  NASTAVENIA
 // ════════════════════════════════════════════════════════════════
 const TRIAL_DAYS = 30;        // dĺžka skúšobnej doby pre nových
@@ -52,16 +73,6 @@ const CHECKOUT_LINKS = {
 };
 // Kam smeruje "Aktivovať" v appke (nech si používateľ vyberie plán).
 const UPGRADE_URL = "index.html#cennik";
-
-// Doména, kde sa dá appka otvoriť ako bežná webstránka (pre Android verziu).
-const WEB_URL = "https://cncdok.sk";
-
-// Beží appka zabalená ako Android appka (TWA)? Android nastavuje referrer
-// v tvare "android-app://<balíček>". V bežnom prehliadači/PWA je referrer
-// prázdny alebo iná URL.
-// POZOR: pre Google Play politiku NESMIE Android verzia spúšťať Stripe
-// platbu vo vnútri appky – predplatné sa dá aktivovať len na webe.
-const IS_TWA = /^android-app:\/\//.test(document.referrer || "");
 
 // Sekcie, ktoré sa vo Free režime zamknú. Prázdne pole = zamkni všetky .section.
 const LOCK_SELECTOR = ".section";
@@ -84,7 +95,12 @@ function evaluateMode(data) {
                 return { mode: "free" }; // expirované, webhook to mal vypnúť
             }
         }
-        return { mode: "premium" };
+        return {
+            mode: "premium",
+            periodEnd: sub.currentPeriodEnd || null,   // ISO dátum konca aktuálneho obdobia
+            plan: sub.plan || null,                    // 'month' / 'year'
+            tier: sub.tier || null                     // 'solo' / 'firma'
+        };
     }
 
     // 2) Beží ešte trial? → Trial
@@ -168,17 +184,76 @@ function ensureStatusStrip() {
     else document.body.insertBefore(strip, document.body.firstChild);
 
     strip.querySelector(".sub-status-cta")
-         .addEventListener("click", openUpgrade);
+         .addEventListener("click", () => (ctaHandler || openUpgrade)());
     return strip;
 }
 
-function setStatus(state, text, ctaLabel) {
+let ctaHandler = null; // čo robí tlačidlo v pruhu (Aktivovať / Platnosť)
+
+function setStatus(state, text, ctaLabel, onCta) {
     const strip = ensureStatusStrip();
     strip.className = "visible " + state;     // state: loading|trial|premium|free
     strip.querySelector(".sub-status-text").textContent = text;
     const cta = strip.querySelector(".sub-status-cta");
+    ctaHandler = onCta || null;
     if (ctaLabel) { cta.style.display = ""; cta.textContent = ctaLabel; }
     else cta.style.display = "none";
+}
+
+// ════════════════════════════════════════════════════════════════
+//  OKNO "PLATNOSŤ PREDPLATNÉHO" (pre Premium účet)
+// ════════════════════════════════════════════════════════════════
+const BILLING_PORTAL_URL = "https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400";
+
+function openPremiumInfo(result) {
+    injectStyles();
+    let m = document.getElementById("sub-premium-info");
+    if (!m) {
+        m = document.createElement("div");
+        m.id = "sub-premium-info";
+        m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("visible"); });
+        document.body.appendChild(m);
+    }
+
+    const tierName = result.tier === "firma" ? "Partia / Firma"
+                   : result.tier === "solo"  ? "Jednotlivec"
+                   : "Premium";
+    const planName = result.plan === "year"  ? "ročné"
+                   : result.plan === "month" ? "mesačné"
+                   : null;
+
+    let endHtml;
+    if (result.periodEnd) {
+        const end = new Date(result.periodEnd);
+        const days = Math.max(0, Math.ceil((end.getTime() - Date.now()) / DAY_MS));
+        const dateStr = end.toLocaleDateString("sk-SK", { day: "numeric", month: "numeric", year: "numeric" });
+        endHtml = `
+            <div class="spi-row"><span>Platné do</span><strong>${dateStr}</strong></div>
+            <div class="spi-row"><span>Zostáva</span><strong>${days} ${dayWord(days)}</strong></div>`;
+    } else {
+        endHtml = `<div class="spi-row"><span>Platné do</span><strong>bez obmedzenia</strong></div>`;
+    }
+
+    m.innerHTML = `
+        <div class="sub-up-card">
+            <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
+            <div class="spi-badge">★ Premium účet</div>
+            <div class="spi-rows">
+                <div class="spi-row"><span>Tarif</span><strong>${tierName}</strong></div>
+                ${planName ? `<div class="spi-row"><span>Predplatné</span><strong>${planName}</strong></div>` : ""}
+                ${endHtml}
+            </div>
+            ${result.plan ? `<p class="sub-up-note" style="margin:0 0 16px;">Predplatné sa na konci obdobia automaticky obnoví, pokiaľ ho nezrušíte.</p>` : ""}
+            ${result.plan ? `<button class="sub-up-btn ghost" type="button" data-act="portal">💳 Spravovať predplatné</button>` : ""}
+            <button class="sub-up-btn" type="button" data-act="close">Zavrieť</button>
+        </div>`;
+
+    m.querySelector(".sub-up-x").onclick = () => m.classList.remove("visible");
+    m.querySelector('[data-act="close"]').onclick = () => m.classList.remove("visible");
+    const portal = m.querySelector('[data-act="portal"]');
+    if (portal) portal.onclick = () => window.open(BILLING_PORTAL_URL, "_blank");
+
+    m.classList.add("visible");
 }
 
 function hideStatus() {
@@ -232,44 +307,25 @@ function ensureUpgradeModal() {
 
     const el = document.createElement("div");
     el.id = "sub-upgrade";
-
-    if (IS_TWA) {
-        // Android appka: žiadne tlačidlo na Stripe checkout, len návod na web.
-        el.innerHTML = `
-            <div class="sub-up-card">
-                <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
-                <div class="sub-up-logo">CNC<span>dok</span></div>
-                <h2 class="sub-up-title">Aktivujte predplatné</h2>
-                <p class="sub-up-text">
-                    Skúšobná doba sa skončila. Predplatné si aktivujete na
-                    webovej stránke <strong>${WEB_URL.replace(/^https?:\/\//, "")}</strong> —
-                    otvorte ju v internetovom prehliadači (Chrome/Safari),
-                    nie v tejto aplikácii. Po zaplatení sa prístup v appke
-                    odomkne automaticky.
-                </p>
-                <button class="sub-up-signout" type="button">Odhlásiť sa</button>
-            </div>`;
-    } else {
-        el.innerHTML = `
-            <div class="sub-up-card">
-                <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
-                <div class="sub-up-logo">CNC<span>dok</span></div>
-                <h2 class="sub-up-title">Aktivujte predplatné</h2>
-                <p class="sub-up-text">
-                    Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
-                    strojom a nástrojom si vyberte plán.
-                </p>
-                <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
-                <button class="sub-up-signout" type="button">Odhlásiť sa</button>
-                <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
-            </div>`;
-    }
+    el.innerHTML = `
+        <div class="sub-up-card">
+            <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
+            <div class="sub-up-logo">CNC<span>dok</span></div>
+            <h2 class="sub-up-title">Aktivujte predplatné</h2>
+            <p class="sub-up-text">
+                Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
+                strojom a nástrojom si vyberte plán.
+            </p>
+            <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
+            <button class="sub-up-signout" type="button">Odhlásiť sa</button>
+            <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
+        </div>`;
     document.body.appendChild(el);
 
     el.addEventListener("click", (e) => { if (e.target === el) closeUpgrade(); });
     el.querySelector(".sub-up-x").addEventListener("click", closeUpgrade);
-    const gotoBtn = el.querySelector('[data-goto="cennik"]');
-    if (gotoBtn) gotoBtn.addEventListener("click", () => { window.location.href = UPGRADE_URL; });
+    el.querySelector('[data-goto="cennik"]')
+      .addEventListener("click", () => { window.location.href = UPGRADE_URL; });
     el.querySelector(".sub-up-signout").addEventListener("click", () => {
         if (typeof window.signOut === "function") window.signOut();
         else auth.signOut();
@@ -280,6 +336,7 @@ function openUpgrade()  { ensureUpgradeModal(); document.getElementById("sub-upg
 function closeUpgrade() { const m = document.getElementById("sub-upgrade"); if (m) m.classList.remove("visible"); }
 
 function startCheckout(plan) {
+    if (IN_PLAY_STORE) return; // poistka - v Play Store appke sa platba nikdy nespúšťa
     const user = auth.currentUser;
     if (!user) { window.location.href = "app.html?checkout=" + encodeURIComponent(plan); return; }
     const url = buildCheckoutUrl(plan, user.uid, user.email);
@@ -291,8 +348,17 @@ function startCheckout(plan) {
 //  APLIKOVANIE STAVU
 // ════════════════════════════════════════════════════════════════
 function applyMode(result) {
+    // Google Play verzia: žiadne platby cez Stripe v appke (Play Billing policy).
+    // Appka sa správa ako plne odomknutá, bez zámkov a bez výzvy na platbu.
+    if (IN_PLAY_STORE) {
+        hideStatus();
+        lockSections(false);
+        closeUpgrade();
+        return;
+    }
+
     if (result.mode === "premium") {
-        setStatus("premium", "★ Premium účet");
+        setStatus("premium", "★ Premium účet", "Platnosť ›", () => openPremiumInfo(result));
         lockSections(false);
         closeUpgrade();
     } else if (result.mode === "trial") {
@@ -311,6 +377,16 @@ function applyMode(result) {
 // ════════════════════════════════════════════════════════════════
 installLockGuard();
 
+// Skryť tlačidlo "Spravovať predplatné" (Stripe) v Play Store verzii appky
+if (IN_PLAY_STORE) {
+    document.addEventListener("DOMContentLoaded", hideBillingButton);
+    hideBillingButton(); // pre prípad že skript beží po DOMContentLoaded
+}
+function hideBillingButton() {
+    const btn = document.getElementById("billing-settings-item");
+    if (btn) btn.style.display = "none";
+}
+
 onAuthStateChanged(auth, async (user) => {
     if (subUnsub) { subUnsub(); subUnsub = null; }
 
@@ -322,19 +398,13 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     // 0) Deep-link z index.html: ?checkout=monthly|yearly → rovno na Stripe
-    //    V Android appke (TWA) sa checkout NIKDY nespúšťa – len sa vyčistí
-    //    URL a ukáže sa návod na aktiváciu cez web.
-    if (!checkoutHandled) {
+    //    V Play Store verzii sa toto NIKDY nesmie spustiť (Play Billing policy).
+    if (!checkoutHandled && !IN_PLAY_STORE) {
         checkoutHandled = true;
         const plan = new URLSearchParams(window.location.search).get("checkout");
         if (plan && CHECKOUT_LINKS[plan]) {
-            if (IS_TWA) {
-                history.replaceState(null, "", window.location.pathname);
-                openUpgrade();
-            } else {
-                const url = buildCheckoutUrl(plan, user.uid, user.email);
-                if (url) { window.location.replace(url); return; }
-            }
+            const url = buildCheckoutUrl(plan, user.uid, user.email);
+            if (url) { window.location.replace(url); return; }
         }
     }
 
@@ -389,6 +459,34 @@ function injectStyles() {
 
     #sub-status.free { background: #1a0b0b; color: #f87171; }
     #sub-status.free .sub-status-dot { background: #f87171; }
+
+    #sub-status.premium .sub-status-cta {
+        background: transparent; color: #34d399; border: 1px solid rgba(52,211,153,.45);
+    }
+
+    /* ── OKNO PLATNOSŤ PREDPLATNÉHO ── */
+    #sub-premium-info {
+        position: fixed; inset: 0; z-index: 9600;
+        background: rgba(8,10,14,.88); backdrop-filter: blur(6px);
+        display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    #sub-premium-info.visible { display: flex; }
+    .spi-badge {
+        display: inline-block; background: rgba(52,211,153,.12); color: #34d399;
+        border: 1px solid rgba(52,211,153,.35); border-radius: 20px;
+        padding: 6px 14px; font-size: 14px; font-weight: 800; margin-bottom: 18px;
+    }
+    .spi-rows {
+        background: #0b0f15; border: 1px solid #232a36; border-radius: 12px;
+        padding: 4px 14px; margin-bottom: 16px; text-align: left;
+    }
+    .spi-row {
+        display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        padding: 11px 0; border-bottom: 1px solid #1b2230; font-size: 14px;
+    }
+    .spi-row:last-child { border-bottom: none; }
+    .spi-row span { color: #9aa4b2; }
+    .spi-row strong { color: #fff; font-weight: 700; }
 
     /* ── ZAMKNUTÁ SEKCIA ── */
     .section.sub-locked { position: relative; opacity: .85; }
