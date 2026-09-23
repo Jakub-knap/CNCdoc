@@ -5,7 +5,6 @@
     <script src="i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>CNCdok</title>
-    <link rel="canonical" href="https://cncdok.sk/app.html">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#f97316">
@@ -153,6 +152,44 @@
             border-color: var(--cut); color: var(--cut); background: rgba(249,115,22,.12);
         }
         .login-lang { justify-content: center; margin-top: 18px; }
+
+        /* ── PRENOS DÁT (QR) ── */
+        .tr-title { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+        .tr-desc { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
+        .tr-desc b { color: var(--light); }
+        .tr-sub { font-size: 13px; color: var(--muted); text-align: center; margin: 8px 0 14px; }
+        .tr-center { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
+        .tr-qr { background: #fff; padding: 14px; border-radius: 14px; width: fit-content; margin: 4px auto 12px; }
+        .tr-qr img, .tr-qr canvas { display: block; }
+        .tr-code {
+            text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 30px;
+            font-weight: 700; letter-spacing: 5px; color: var(--cut);
+        }
+        .tr-box { background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 2px 14px; margin-bottom: 14px; }
+        .tr-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .tr-row:last-child { border-bottom: none; }
+        .tr-row span { color: var(--muted); }
+        .tr-row strong { color: var(--white); text-align: right; word-break: break-word; }
+        .tr-note { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 4px 0 14px; }
+        .tr-bar { height: 12px; background: var(--input); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .tr-bar-fill { height: 100%; width: 0; background: var(--green); transition: width .4s; }
+        .tr-video-wrap { position: relative; width: 100%; max-width: 320px; aspect-ratio: 1; margin: 0 auto; border-radius: 14px; overflow: hidden; background: #000; }
+        .tr-video-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .tr-video-frame { position: absolute; inset: 18%; border: 3px solid var(--cut); border-radius: 12px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
+        .tr-or { text-align: center; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin: 12px 0 8px; }
+        .tr-code-input { display: flex; gap: 8px; margin-bottom: 10px; }
+        .tr-code-input input { flex: 1; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 3px; text-align: center; }
+        .tr-code-input .btn { width: auto; margin: 0; padding: 0 20px; }
+        .tr-mach {
+            display: flex; align-items: center; gap: 12px; cursor: pointer;
+            background: var(--input); border: 1.5px solid var(--border); border-radius: 11px;
+            padding: 11px 12px; margin-bottom: 8px;
+        }
+        .tr-mach input { width: 20px; height: 20px; accent-color: var(--cut); flex-shrink: 0; }
+        .tr-mach-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .tr-mach-name { font-size: 14px; font-weight: 700; color: var(--white); }
+        .tr-mach-cnt { font-size: 12px; color: var(--muted); }
+        .tr-mach:has(input:checked) { border-color: var(--cut); background: rgba(249,115,22,.08); }
 
         .settings-group-title {
             font-size: 12px; font-weight: 700; color: var(--muted);
@@ -1246,6 +1283,22 @@
             </span>
         </div>
 
+        <button class="settings-item" onclick="closeSettingsMenu(); openReceiveTransfer();">
+            <span class="settings-item-icon">📥</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Prijať dáta z iného účtu</span>
+                <span class="settings-item-sub">Zobrazí QR kód na naskenovanie</span>
+            </span>
+        </button>
+
+        <button class="settings-item" onclick="closeSettingsMenu(); openSendTransfer();">
+            <span class="settings-item-icon">📤</span>
+            <span class="settings-item-text">
+                <span class="settings-item-title">Odoslať dáta do iného účtu</span>
+                <span class="settings-item-sub">Naskenujete QR kód na druhom zariadení</span>
+            </span>
+        </button>
+
         <div class="settings-divider"></div>
 
         <div class="settings-group-title">Kde sa ukladajú vaše dáta?</div>
@@ -1882,6 +1935,17 @@
     </div>
 </div>
 
+<!-- MODAL: Prenos dát medzi účtami -->
+<div id="modal-transfer" class="modal-bg" style="z-index:440;" onclick="trClose()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Prenos dát</div>
+            <button class="modal-close" id="tr-close" onclick="trClose()">✕</button>
+        </div>
+        <div id="tr-body"></div>
+    </div>
+</div>
+
 <!-- TOAST -->
 <!-- ADMIN PASSWORD MODAL -->
 <div class="modal-ov" id="admin-modal">
@@ -2034,6 +2098,383 @@ window.setStorageMode = async (goingLocal) => {
     showToast(goingLocal ? '📱 Ukladá sa len v tomto zariadení' : '☁️ Záloha do cloudu zapnutá', 'ok');
 };
 
+// ════════════════════════════════════════════════════════════════
+//  PRENOS DÁT MEDZI ÚČTAMI (QR kód) — prijímač zobrazí QR, odosielateľ
+//  ho naskenuje. Kopírovanie robí server (/api/transfer), nikto nikomu
+//  nedáva heslo. Dáta odosielateľa zostanú bez zmeny (kópia).
+// ════════════════════════════════════════════════════════════════
+const TR_API   = '/api/transfer';
+const QR_LIB   = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+const JSQR_LIB = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+const TR_ACTIVE_KEY = 'cnc_tr_active';
+let trPoll = null, trStream = null, trScanRaf = null, trCopying = false;
+
+const trEsc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const trSleep = (ms) => new Promise(r => setTimeout(r, ms));
+// slovenský tvar podľa počtu: 1 výkres, 2 výkresy, 5 výkresov
+const trPl = (n, one, few, many) => n + ' ' + (n === 1 ? one : (n >= 2 && n <= 4) ? few : many);
+const trCounts = (d, t) => trPl(d, 'výkres', 'výkresy', 'výkresov') + ' · ' + trPl(t, 'nástroj', 'nástroje', 'nástrojov');
+
+function trLoadScript(src, globalName) {
+    if (window[globalName]) return Promise.resolve();
+    return new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = src; s.onload = () => res(); s.onerror = () => rej(Object.assign(new Error('lib'), { code: 'lib_failed' }));
+        document.head.appendChild(s);
+    });
+}
+
+async function trApi(body) {
+    if (!navigator.onLine) throw Object.assign(new Error('offline'), { code: 'offline' });
+    const token = await currentUser.getIdToken();
+    let r;
+    try {
+        r = await fetch(TR_API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+    } catch (e) { throw Object.assign(new Error('offline'), { code: 'offline' }); }
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw Object.assign(new Error(j.error || 'http_' + r.status), { code: j.error || 'http_' + r.status, detail: j });
+    return j;
+}
+
+const TR_ERR = {
+    code_expired:     'Kód už neplatí. Na prijímajúcom zariadení vytvorte nový.',
+    code_used:        'Tento kód už bol použitý. Na prijímajúcom zariadení vytvorte nový.',
+    code_not_found:   'Taký kód neexistuje. Skontrolujte, či ste ho zadali správne.',
+    same_account:     'Obe zariadenia sú prihlásené rovnakým účtom, dáta tu už máte.',
+    nothing_to_send:  'Pre vybrané stroje nemáte žiadne výkresy ani nástroje.',
+    nothing_selected: 'Vyberte aspoň jeden stroj.',
+    not_signed_in:    'Nie ste prihlásený.',
+    offline:          'Prenos potrebuje internet. Pripojte sa na wifi alebo mobilné dáta.',
+    lib_failed:       'Nepodarilo sa načítať potrebné súčasti. Skontrolujte internet.',
+    http_404:         'Funkcia prenosu ešte nie je nasadená na serveri.',
+    server_error:     'Chyba na serveri, skúste znova.',
+    forbidden:        'Na tento prenos nemáte oprávnenie.',
+    account_inactive: 'Váš účet nemá aktívne predplatné. Prenos dát je dostupný počas skúšobnej doby alebo s Premium.',
+    receiver_inactive:'Prijímajúci účet nemá aktívne predplatné, preto nemôže prijať dáta.',
+    sender_inactive:  'Odosielajúci účet už nemá aktívne predplatné, preto nemôže odoslať dáta.',
+};
+const trErrMsg = (e) => TR_ERR[e && e.code] || 'Chyba prenosu, skúste znova.';
+
+function trOpen(html) {
+    document.getElementById('tr-body').innerHTML = html;
+    document.getElementById('tr-close').style.display = trCopying ? 'none' : '';
+    document.getElementById('modal-transfer').classList.add('open');
+}
+function trStopPoll() { if (trPoll) { clearInterval(trPoll); trPoll = null; } }
+function trStopCamera() {
+    if (trScanRaf) { cancelAnimationFrame(trScanRaf); trScanRaf = null; }
+    if (trStream) { trStream.getTracks().forEach(t => t.stop()); trStream = null; }
+}
+window.trClose = () => {
+    if (trCopying) { showToast('Kopírovanie ešte beží — nechajte okno otvorené', ''); return; }
+    trStopPoll(); trStopCamera();
+    document.getElementById('modal-transfer').classList.remove('open');
+};
+function trShowError(msg, retry) {
+    trOpen(`<div class="tr-title">⚠️ Prenos sa nepodaril</div>
+        <p class="tr-desc">${trEsc(msg)}</p>
+        ${retry ? `<button class="btn btn-success" onclick="${retry}">Skúsiť znova</button>` : ''}
+        <button class="btn btn-ghost" onclick="trClose()">Zavrieť</button>`);
+}
+// Prekročený limit plánu prijímača — dve vety: čo sa stalo a čo s tým
+function trLimitText(l, receiver) {
+    if (l.kind === 'drawings_machine') {
+        return `Plán Firma povoľuje najviac ${l.limit} výkresov na jeden stroj. Stroj „${l.machine}“ má teraz ${l.current}, prenos by pridal ${l.incoming}.`;
+    }
+    const subject = receiver ? 'Tento účet' : 'Prijímajúci účet';
+    const plan = l.plan === 'firma' ? 'plán Firma' : l.plan === 'trial' ? 'skúšobná verzia' : 'plán Jednotlivec';
+    const unit = { machines: ['stroj', 'stroje', 'strojov'], tools: ['nástroj', 'nástroje', 'nástrojov'], drawings: ['výkres', 'výkresy', 'výkresov'] }[l.kind];
+    return `${subject} (${plan}) môže mať najviac ${trPl(l.limit, ...unit)}. Teraz má ${l.current}, prenos by pridal ${l.incoming}.`;
+}
+function trShowFail(e, receiver, code) {
+    if (e && e.code === 'limit_exceeded' && e.detail && e.detail.limit) {
+        const l = e.detail.limit, firma = l.plan === 'firma';
+        const tip = receiver
+            ? (firma ? 'Na druhom zariadení vyberte menej strojov a odošlite znova.' : 'Prejdite na plán Firma, alebo na druhom zariadení vyberte menej strojov.')
+            : (firma ? 'Vyberte menej strojov a skúste znova.' : 'Vyberte menej strojov, alebo nech prijímajúci účet prejde na plán Firma.');
+        trOpen(`<div class="tr-title">🔒 Limit plánu</div>
+            <p class="tr-desc">${trEsc(trLimitText(l, receiver))}</p>
+            <p class="tr-desc">${tip}</p>
+            ${receiver
+                ? `<button class="btn btn-ghost" onclick="trReject('${code}')">Odmietnuť</button>`
+                : `<button class="btn btn-success" onclick="trShowSelect('${code}', window._trReceiver)">Vybrať inak</button>
+                   <button class="btn btn-ghost" onclick="trClose()">Zavrieť</button>`}`);
+        return;
+    }
+    trShowError(trErrMsg(e));
+}
+function trRow(label, value) { return `<div class="tr-row"><span>${label}</span><strong>${value}</strong></div>`; }
+
+// ────────── PRIJÍMAČ (napr. firemný tablet) ──────────
+window.openReceiveTransfer = async () => {
+    trStopPoll(); trStopCamera();
+    trOpen(`<div class="tr-center"><div class="spinner"></div><p class="tr-sub">Pripravujem kód...</p></div>`);
+    // Nedokončený prenos (napr. appka sa zavrela počas kopírovania) → pokračovať
+    const active = localStorage.getItem(TR_ACTIVE_KEY);
+    if (active) {
+        try { const s = await trApi({ action: 'status', code: active }); if (s.status === 'copying') return trRunCopy(active); } catch (e) {}
+        localStorage.removeItem(TR_ACTIVE_KEY);
+    }
+    try {
+        await trLoadScript(QR_LIB, 'QRCode');
+        const { code, expiresAt } = await trApi({ action: 'create' });
+        trShowCode(code, expiresAt);
+    } catch (e) { trShowError(trErrMsg(e), 'openReceiveTransfer()'); }
+};
+
+function trShowCode(code, expiresAt) {
+    trOpen(`<div class="tr-title">📥 Prijať dáta</div>
+        <p class="tr-desc">Na zariadení s dátami otvorte ⚙️ Nastavenia → <b>Odoslať dáta do iného účtu</b> a naskenujte tento kód.</p>
+        <div class="tr-qr" id="tr-qr"></div>
+        <div class="tr-code" data-no-tr>${code.slice(0, 3)} ${code.slice(3)}</div>
+        <div class="tr-sub" id="tr-timer"></div>
+        <button class="btn btn-ghost" onclick="trClose()">Zrušiť</button>`);
+    new QRCode(document.getElementById('tr-qr'), { text: 'CNCDOK:' + code, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+    const tick = async () => {
+        const left = expiresAt - Date.now();
+        const el = document.getElementById('tr-timer');
+        if (left <= 0) {
+            trStopPoll();
+            trShowError('Kód vypršal. Vytvorte nový.', 'openReceiveTransfer()');
+            return;
+        }
+        if (el) el.textContent = 'Kód platí ešte ' + Math.floor(left / 60000) + ':' + String(Math.floor(left / 1000) % 60).padStart(2, '0');
+        try {
+            const s = await trApi({ action: 'status', code });
+            if (s.status === 'sent' && trPoll) { trStopPoll(); trShowIncoming(code, s); }
+        } catch (e) {}
+    };
+    tick();
+    trPoll = setInterval(tick, 2000);
+}
+
+function trShowIncoming(code, s) {
+    const m = s.summary.machines ? s.summary.machines.map(trEsc).join(', ') : 'všetky stroje';
+    trOpen(`<div class="tr-title">📥 Prijať dáta?</div>
+        <div class="tr-box">
+            ${trRow('Od', trEsc(s.senderEmail))}
+            ${trRow('Stroje', m)}
+            ${trRow('Výkresy', s.summary.drawings)}
+            ${trRow('Nástroje', s.summary.tools)}
+        </div>
+        <p class="tr-note">Dáta sa skopírujú do tohto účtu. Výkresy s číslom, ktoré tu už máte, sa preskočia a rovnaké nástroje sa nezdvoja.</p>
+        <button class="btn btn-success" onclick="trAccept('${code}')">✓ Prijať</button>
+        <button class="btn btn-ghost" onclick="trReject('${code}')">Odmietnuť</button>`);
+}
+
+// Firemný účet s admin heslom: prijatie dát potvrdiť heslom
+async function trAdminOk() {
+    if (subTier !== 'firma' || !adminHash) return true;
+    const entered = await showAdminModal({
+        title: '🔒 Prijať dáta',
+        desc: 'Prijatie dát do tohto účtu potvrďte admin heslom.',
+        okText: 'Prijať'
+    });
+    if (entered === null) return false;
+    if (await sha256(entered) === adminHash) return true;
+    showToast('Nesprávne heslo', 'err');
+    return false;
+}
+
+window.trAccept = async (code) => {
+    if (!(await trAdminOk())) return;
+    try {
+        await trApi({ action: 'accept', code });
+        localStorage.setItem(TR_ACTIVE_KEY, code);
+        trRunCopy(code);
+    } catch (e) { trShowFail(e, true, code); }
+};
+
+window.trReject = async (code) => {
+    try { await trApi({ action: 'reject', code }); } catch (e) {}
+    trClose();
+    showToast('Prenos odmietnutý', '');
+};
+
+async function trRunCopy(code) {
+    trCopying = true;
+    trOpen(`<div class="tr-title">⏳ Kopírujem dáta...</div>
+        <p class="tr-desc">Nechajte appku otvorenú, kým sa prenos nedokončí.</p>
+        <div class="tr-bar"><div class="tr-bar-fill" id="tr-bar-fill"></div></div>
+        <div class="tr-sub" id="tr-prog"></div>`);
+    let fails = 0;
+    while (true) {
+        try {
+            const r = await trApi({ action: 'step', code });
+            fails = 0;
+            const p = r.progress;
+            if (p) {
+                const total = p.toolsTotal + p.drawingsTotal || 1;
+                const done = Math.min(total, p.toolsDone + p.drawingsDone);
+                const fill = document.getElementById('tr-bar-fill');
+                if (fill) fill.style.width = Math.round(done / total * 100) + '%';
+                const txt = document.getElementById('tr-prog');
+                if (txt) txt.textContent = 'Nástroje ' + Math.min(p.toolsDone, p.toolsTotal) + '/' + p.toolsTotal + ' · Výkresy ' + Math.min(p.drawingsDone, p.drawingsTotal) + '/' + p.drawingsTotal;
+            }
+            if (r.status === 'done') {
+                trCopying = false;
+                localStorage.removeItem(TR_ACTIVE_KEY);
+                trShowDone(r.stats, true);
+                return;
+            }
+            if (r.status === 'busy') await trSleep(3000);
+        } catch (e) {
+            if (++fails >= 5) {
+                trCopying = false;
+                trShowError(trErrMsg(e) + ' Prenos dokončíte neskôr: ⚙️ → Prijať dáta z iného účtu.');
+                return;
+            }
+            await trSleep(3000);
+        }
+    }
+}
+
+function trShowDone(st, receiver) {
+    st = st || {};
+    trOpen(`<div class="tr-title">✅ Hotovo</div>
+        ${receiver ? `<div class="tr-box">
+            ${trRow('Skopírované výkresy', st.drawingsCopied || 0)}
+            ${st.drawingsSkipped ? trRow('Preskočené (už existovali)', st.drawingsSkipped) : ''}
+            ${trRow('Nové nástroje', st.toolsCopied || 0)}
+            ${st.toolsReused ? trRow('Prepojené na existujúce nástroje', st.toolsReused) : ''}
+            ${trRow('Fotky', st.photosCopied || 0)}
+        </div>` : `<p class="tr-desc">Dáta sú skopírované na druhé zariadenie. Vo vašom účte zostalo všetko bez zmeny.</p>`}
+        <button class="btn btn-success" onclick="trClose()">Zavrieť</button>`);
+    if (receiver) showToast('Dáta prijaté ✓', 'ok');
+}
+
+// ────────── ODOSIELATEĽ (napr. súkromný mobil) ──────────
+window.openSendTransfer = async () => {
+    trStopPoll(); trStopCamera();
+    if (localStorage.getItem(LOCAL_ONLY_KEY) === '1') {
+        trShowError('Máte zapnuté ukladanie len v tomto zariadení, server preto vaše dáta nevidí a nemôže ich poslať. V ⚙️ Nastaveniach zapnite „Zariadenie + cloud“, počkajte na synchronizáciu a skúste znova.');
+        return;
+    }
+    if (dwPending || tlPending) {
+        trShowError('Niektoré výkresy alebo nástroje ešte nie sú nahraté na server. Pripojte sa na wifi, počkajte, kým sa všetko nahrá, a skúste znova.');
+        return;
+    }
+    if (!drawings.length && !tools.length) {
+        trShowError('V tomto účte zatiaľ nemáte žiadne výkresy ani nástroje na odoslanie.');
+        return;
+    }
+    trOpen(`<div class="tr-title">📤 Odoslať dáta</div>
+        <p class="tr-desc">Na zariadení, ktoré má dáta prijať, otvorte ⚙️ Nastavenia → <b>Prijať dáta z iného účtu</b> a naskenujte jeho QR kód.</p>
+        <div class="tr-video-wrap"><video id="tr-video" playsinline muted></video><div class="tr-video-frame"></div></div>
+        <div class="tr-sub" id="tr-cam-msg">Spúšťam kameru...</div>
+        <div class="tr-or">alebo zadajte kód</div>
+        <div class="tr-code-input">
+            <input type="text" id="tr-code-in" maxlength="7" placeholder="napr. K7P 2QX" autocomplete="off" autocapitalize="characters">
+            <button class="btn btn-success" onclick="trUseCode(document.getElementById('tr-code-in').value)">OK</button>
+        </div>
+        <button class="btn btn-ghost" onclick="trClose()">Zrušiť</button>`);
+    trStartCamera();
+};
+
+async function trStartCamera() {
+    const msg = (t) => { const el = document.getElementById('tr-cam-msg'); if (el) el.textContent = t; };
+    try {
+        await trLoadScript(JSQR_LIB, 'jsQR');
+        trStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const v = document.getElementById('tr-video');
+        if (!v) { trStopCamera(); return; }
+        v.srcObject = trStream;
+        await v.play();
+        msg('Namierte kameru na QR kód');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const scan = () => {
+            if (!trStream) return;
+            if (v.readyState >= 2 && v.videoWidth) {
+                const w = 480, h = Math.round(v.videoHeight * w / v.videoWidth);
+                canvas.width = w; canvas.height = h;
+                ctx.drawImage(v, 0, 0, w, h);
+                const res = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'dontInvert' });
+                if (res && res.data && res.data.indexOf('CNCDOK:') === 0) {
+                    trStopCamera();
+                    if (navigator.vibrate) navigator.vibrate(80);
+                    trUseCode(res.data.slice(7));
+                    return;
+                }
+            }
+            trScanRaf = requestAnimationFrame(scan);
+        };
+        scan();
+    } catch (e) {
+        trStopCamera();
+        msg('Kameru sa nepodarilo spustiť. Zadajte kód ručne.');
+    }
+}
+
+window.trUseCode = async (raw) => {
+    const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length !== 6) { showToast('Kód má 6 znakov', 'err'); return; }
+    trStopCamera();
+    trOpen(`<div class="tr-center"><div class="spinner"></div><p class="tr-sub">Overujem kód...</p></div>`);
+    try {
+        const { receiverEmail } = await trApi({ action: 'check', code });
+        trShowSelect(code, receiverEmail);
+    } catch (e) { trShowError(trErrMsg(e), 'openSendTransfer()'); }
+};
+
+function trShowSelect(code, receiverEmail) {
+    window._trReceiver = receiverEmail;
+    const names = [...new Set([...machines, ...drawings.map(d => d.machine).filter(Boolean)])];
+    window._trNames = names;
+    const rows = names.map((m, i) => {
+        const dc = drawings.filter(d => d.machine === m).length;
+        const tc = tools.filter(t => t.machine === m).length;
+        return `<label class="tr-mach"><input type="checkbox" class="tr-mcb" value="${i}" onchange="trSelChanged()">
+            <span class="tr-mach-text"><span class="tr-mach-name" data-no-tr>⚙️ ${trEsc(m)}</span><span class="tr-mach-cnt">${trCounts(dc, tc)}</span></span></label>`;
+    }).join('');
+    trOpen(`<div class="tr-title">📤 Čo chcete odoslať?</div>
+        <div class="tr-box">${trRow('Komu', trEsc(receiverEmail))}</div>
+        <label class="tr-mach tr-all"><input type="checkbox" id="tr-all" onchange="trAllChanged()" checked>
+            <span class="tr-mach-text"><span class="tr-mach-name">📋 Všetko</span><span class="tr-mach-cnt">${trCounts(drawings.length, tools.length)}</span></span></label>
+        ${names.length ? `<div class="tr-or">alebo vyberte stroje</div>${rows}` : ''}
+        <p class="tr-note">Odošle sa kópia, vo vašom účte zostane všetko bez zmeny. K výkresom sa pribalia aj nástroje, ktoré majú priradené.</p>
+        <button class="btn btn-success" onclick="trSend('${code}')">📤 Odoslať</button>
+        <button class="btn btn-ghost" onclick="trClose()">Zrušiť</button>`);
+}
+window.trShowSelect = trShowSelect;   // volá ho tlačidlo "Vybrať inak"
+window.trAllChanged = () => {
+    if (document.getElementById('tr-all').checked) document.querySelectorAll('.tr-mcb').forEach(c => c.checked = false);
+};
+window.trSelChanged = () => {
+    const any = [...document.querySelectorAll('.tr-mcb')].some(c => c.checked);
+    document.getElementById('tr-all').checked = !any;
+};
+
+window.trSend = async (code) => {
+    const all = document.getElementById('tr-all').checked;
+    const selected = [...document.querySelectorAll('.tr-mcb')].filter(c => c.checked).map(c => window._trNames[+c.value]);
+    if (!all && !selected.length) { showToast('Vyberte aspoň jeden stroj.', 'err'); return; }
+    trOpen(`<div class="tr-center"><div class="spinner"></div><p class="tr-sub">Odosielam...</p></div>`);
+    try {
+        await trApi(all ? { action: 'send', code, all: true } : { action: 'send', code, machines: selected });
+    } catch (e) { trShowFail(e, false, code); return; }
+    trOpen(`<div class="tr-title">📨 Odoslané</div>
+        <p class="tr-desc">Teraz potvrďte prijatie na druhom zariadení.</p>
+        <div class="tr-center"><div class="spinner"></div></div>
+        <div class="tr-sub" id="tr-send-state">Čaká sa na potvrdenie...</div>
+        <button class="btn btn-ghost" onclick="trClose()">Zavrieť</button>`);
+    trPoll = setInterval(async () => {
+        try {
+            const s = await trApi({ action: 'status', code });
+            const el = document.getElementById('tr-send-state');
+            if (s.status === 'copying' && el && s.progress) {
+                el.textContent = 'Druhé zariadenie kopíruje dáta: ' + Math.min(s.progress.drawingsDone, s.progress.drawingsTotal) + '/' + s.progress.drawingsTotal;
+            } else if (s.status === 'done') {
+                trStopPoll(); trShowDone(s.stats, false);
+            } else if (s.status === 'rejected') {
+                trStopPoll(); trShowError('Druhé zariadenie prenos odmietlo.');
+            } else if (s.status === 'expired') {
+                trStopPoll(); trShowError(TR_ERR.code_expired);
+            }
+        } catch (e) {}
+    }, 2000);
+};
+
 // ════════ SETTINGS MENU (ozubené koliesko) ════════
 window.toggleSettingsMenu = () => {
     const ov = document.getElementById('settings-overlay');
@@ -2070,12 +2511,19 @@ let subTier = null;            // tarif: 'solo' | 'firma' | null (trial/neznámy
 // Limity plánu Jednotlivec. Firma / trial / neznámy = bez limitu.
 // Limity plánov. Trial sa správa ako Jednotlivec (najprísnejší).
 // Firma má tiež strop — bráni to zdieľaniu jedného účtu viacerými firmami.
+// Firma: výkresy sa počítajú NA JEDEN STROJ (150 na stroj), ostatné spolu.
+// Rovnaké čísla musia byť aj v api/transfer.js (LIMITS).
 const PLAN_LIMITS = {
     solo:  { machines: 1,  drawings: 100, tools: 60 },
     firma: { machines: 10, drawings: 150, tools: 90 },
 };
 function planLimit(kind) {
     return (subTier === 'firma') ? PLAN_LIMITS.firma[kind] : PLAN_LIMITS.solo[kind];
+}
+// Počet výkresov, ktorý sa porovnáva s limitom: Firma = na danom stroji, inak všetky.
+function drawingCountForLimit(machine, excludeId) {
+    const list = drawings.filter(d => d._id !== excludeId);
+    return (subTier === 'firma') ? list.filter(d => d.machine === machine).length : list.length;
 }
 // Vráti true a ukáže hlášku, ak je limit dosiahnutý.
 // Normalizácia textu pre hľadanie bez ohľadu na diakritiku (á/a, č/c, š/s...)
@@ -2093,7 +2541,9 @@ function limitReached(kind, count) {
     const label = { machines: 'strojov', drawings: 'výkresov', tools: 'nástrojov' }[kind];
     const isFirma = (subTier === 'firma');
     const kto = isFirma ? 'Plán Firma' : (subTier === 'solo' ? 'Plán Jednotlivec' : 'Skúšobná verzia');
-    let msg = `${kto} je obmedzený na ${planLimit(kind)} ${label}.`;
+    let msg = (kind === 'drawings' && isFirma)
+        ? `Plán Firma je obmedzený na ${planLimit(kind)} výkresov na jeden stroj.`
+        : `${kto} je obmedzený na ${planLimit(kind)} ${label}.`;
     if (!isFirma) msg += ' Pre viac zvoľte plán Firma.';
     showLimitModal(msg, isFirma);
     return true;
@@ -3369,6 +3819,7 @@ window.saveMachineEdit = async () => {
     const val = sel.value;
     const d = drawings.find(x => x._id === currentDetailId);
     if (!d) return;
+    if (val !== d.machine && limitReached('drawings', drawingCountForLimit(val, d._id))) return;
     updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), { machine: val })
         .catch(() => showToast('Zmena sa uloží pri wifi', ''));
     d.machine = val;
@@ -3693,7 +4144,7 @@ window.saveDrawing = async () => {
     if (!machine) { showToast('Vyberte stroj!', 'err'); return; }
     if (!number)  { showToast('Zadajte číslo výkresu!', 'err'); return; }
     if (drawings.some(d => d.number === number)) { showToast('Výkres s týmto číslom už existuje!', 'err'); return; }
-    if (limitReached('drawings', drawings.length)) return;
+    if (limitReached('drawings', drawingCountForLimit(machine))) return;
 
     const photoCount = window.pendingDrawingPhotos.length;
     showToast(photoCount ? `Nahrávam ${photoCount} ${photoCount === 1 ? 'fotku' : 'fotky'}...` : 'Ukladám...', '');
@@ -3979,6 +4430,8 @@ window.saveEditDrawing = async () => {
     if (drawings.some(d => d._id !== editingId && d.number.toLowerCase() === number.toLowerCase())) {
         showToast('Výkres s týmto číslom už existuje!', 'err'); return;
     }
+    const orig = drawings.find(d => d._id === editingId);
+    if (orig && machine !== orig.machine && limitReached('drawings', drawingCountForLimit(machine, editingId))) return;
 
     const upd = { number, machine, program, note, toolIds: [...emEditToolIds] };
     if (pendingEditFile) {
