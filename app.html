@@ -1218,14 +1218,6 @@
             </span>
         </button>
 
-        <button class="settings-item" onclick="toggleMode()">
-            <span class="settings-item-icon" id="mode-toggle-icon">☰</span>
-            <span class="settings-item-text">
-                <span class="settings-item-title">Zobrazenie sekcií</span>
-                <span class="settings-item-sub" id="mode-toggle-sub">Veľké dlaždice / kompaktný zoznam</span>
-            </span>
-        </button>
-
         <button class="settings-item" id="admin-key-item" onclick="closeSettingsMenu(); openAdminSettings();" style="display:none;">
             <span class="settings-item-icon">🔑</span>
             <span class="settings-item-text">
@@ -2048,10 +2040,6 @@ window.toggleSettingsMenu = () => {
     if (opening) {
         // Obnoviť UI podľa aktuálneho stavu pri každom otvorení
         updateStorageModeUI(localStorage.getItem(LOCAL_ONLY_KEY) === '1');
-        const compact = isCompact();
-        document.getElementById('mode-toggle-icon').textContent = compact ? '▦' : '☰';
-        document.getElementById('mode-toggle-sub').textContent = compact
-            ? 'Aktuálne: kompaktný zoznam' : 'Aktuálne: veľké dlaždice';
     }
     ov.classList.toggle('open');
 };
@@ -4686,7 +4674,7 @@ window.setMode = (mode) => {
 };
 window.toggleMode = () => setMode(isCompact() ? 'tiles' : 'compact');
 // nastav uložený režim (predvolený = veľké dlaždice)
-setMode(localStorage.getItem('cnc_mode') || 'tiles');
+setMode('tiles'); // voľba režimu bola odstránená z Nastavení, vždy veľké dlaždice
 
 // ════════ ZOOM S NAVIGÁCIOU MEDZI FOTKAMI ════════
 // _z.scale/x/y = aktuálna transformácia. Zoom sa počíta okolo bodu dotyku (nie okolo rohu),
