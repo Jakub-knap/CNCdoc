@@ -2,7 +2,7 @@
 //
 // DOLEZITE: pri kazdej vacsej zmene appky zvys cislo verzie nizsie (v2 -> v3 ...).
 // Stara pamat sa tym automaticky vymaze a vsetci dostanu cerstve subory.
-const CACHE = 'cncdok-v7';
+const CACHE = 'cncdok-v8';
 const SHELL = [
   './app.html',
   './index.html',

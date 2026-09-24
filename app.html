@@ -148,6 +148,7 @@
             border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer;
         }
         html[lang="sk"] .lang-btn[data-lang="sk"],
+        html[lang="cs"] .lang-btn[data-lang="cz"],
         html[lang="en"] .lang-btn[data-lang="en"] {
             border-color: var(--cut); color: var(--cut); background: rgba(249,115,22,.12);
         }
@@ -1279,6 +1280,7 @@
             </span>
             <span class="lang-switch" data-no-tr>
                 <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">SK</button>
+                <button type="button" class="lang-btn" data-lang="cz" onclick="setLanguage('cz')">CZ</button>
                 <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
             </span>
         </div>
@@ -1315,7 +1317,7 @@
             <span class="storage-opt-radio"></span>
             <span class="storage-opt-body">
                 <span class="storage-opt-title">📱 Len v tomto zariadení</span>
-                <span class="storage-opt-desc">Čísla výkresov, programy, poznámky a nástroje sa neodosielajú na server. <strong>Bez zálohy</strong> — ak mobil stratíte, pokazíte alebo vymažete dáta prehliadača, nedajú sa obnoviť. Iné zariadenia ich neuvidia. Fotky sa aj tak ukladajú do zabezpečeného úložiska, preto pri ich pridávaní treba internet.</span>
+                <span class="storage-opt-desc">Výkresy, fotky, programy, poznámky ani nástroje sa neodosielajú na server, zostanú len v tomto zariadení. <strong>Bez zálohy</strong> — ak mobil stratíte, pokazíte alebo vymažete dáta prehliadača, nedajú sa obnoviť. Iné zariadenia ich neuvidia. Na serveri je len váš prihlasovací účet a predplatné.</span>
             </span>
         </button>
     </div>
@@ -1360,6 +1362,7 @@
     <p class="login-note" style="margin-top:16px;">Vaše dáta sú uložené bezpečne na vašom účte.</p>
     <div class="lang-switch login-lang" data-no-tr>
         <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">Slovenčina</button>
+        <button type="button" class="lang-btn" data-lang="cz" onclick="setLanguage('cz')">Čeština</button>
         <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</button>
     </div>
 </div>
@@ -2080,14 +2083,14 @@ window.setStorageMode = async (goingLocal) => {
     const ok = goingLocal
         ? confirm(
             'Ukladať LEN V TOMTO ZARIADENÍ?\n\n' +
-            '• Nové a upravené výkresy a nástroje sa prestanú zálohovať na server.\n' +
+            '• Nové a upravené výkresy vrátane fotiek a nástroje sa prestanú odosielať na server.\n' +
             '• Ak mobil stratíte, pokazíte alebo vymažete dáta prehliadača, tieto zmeny sa NEDAJÚ obnoviť.\n' +
             '• Na iných zariadeniach ich neuvidíte.\n' +
-            '• To, čo už je v cloude, tam zostane.\n\n' +
+            '• To, čo už je v cloude, tam zostane. Ak nechcete mať na serveri nič, zapnite tento režim ešte pred pridaním prvého výkresu.\n\n' +
             'Prepnúť?')
         : confirm(
             'Zapnúť ZÁLOHU DO CLOUDU?\n\n' +
-            '• Všetko, čo ste uložili len v tomto zariadení, sa teraz nahrá na server.\n' +
+            '• Všetko, čo ste uložili len v tomto zariadení, vrátane fotiek, sa teraz nahrá na server.\n' +
             '• Dáta budú zálohované a uvidíte ich na všetkých zariadeniach, kde sa prihlásite.\n' +
             '• Appka bude fungovať aj bez internetu, zosynchronizuje sa po pripojení.\n\n' +
             'Zapnúť?');
@@ -2095,8 +2098,52 @@ window.setStorageMode = async (goingLocal) => {
 
     localStorage.setItem(LOCAL_ONLY_KEY, goingLocal ? '1' : '0');
     await applyStorageMode();
+    if (goingLocal && navigator.storage && navigator.storage.persist) { try { await navigator.storage.persist(); } catch (e) {} }
     showToast(goingLocal ? '📱 Ukladá sa len v tomto zariadení' : '☁️ Záloha do cloudu zapnutá', 'ok');
+    // Znovu načítať, aby sa podľa nového režimu nastavilo všetko vrátane overovania predplatného
+    setTimeout(() => location.reload(), 900);
 };
+
+// Fotky uložené len v telefóne → po prepnutí na cloud ich nahrať na server
+let _migratingPhotos = false;
+async function migrateLocalPhotos() {
+    if (_migratingPhotos || localStorage.getItem(LOCAL_ONLY_KEY) === '1' || !navigator.onLine || !currentUser) return;
+    const dList = drawings.filter(d => (d.photos || []).some(isLocalPhoto) || isLocalPhoto(d.fileData));
+    const tList = tools.filter(t => isLocalPhoto(t.fileData));
+    if (!dList.length && !tList.length) return;
+    _migratingPhotos = true;
+    showToast('⬆️ Nahrávam fotky z tohto zariadenia do cloudu...', '');
+    let failed = 0;
+    try {
+        for (const d of dList) {
+            const photos = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
+            const paths = [...(d.photoPaths || [])];
+            const done = [];
+            for (let i = 0; i < photos.length; i++) {
+                if (!isLocalPhoto(photos[i])) continue;
+                const id = photos[i].slice(LOCAL_PHOTO_PREFIX.length);
+                const blob = await localPhotoGet(id);
+                if (!blob) { failed++; continue; }
+                const up = await uploadPhotoToCloud(await blobToDataUrl(blob), 'drawings');
+                photos[i] = up.url; paths[i] = up.path; done.push(id);
+            }
+            await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', d._id), { photos, photoPaths: paths, fileData: photos[0] || null });
+            for (const id of done) { try { await localPhotoDel(id); } catch (e) {} }
+        }
+        for (const t of tList) {
+            const id = t.fileData.slice(LOCAL_PHOTO_PREFIX.length);
+            const blob = await localPhotoGet(id);
+            if (!blob) { failed++; continue; }
+            const up = await uploadPhotoToCloud(await blobToDataUrl(blob), 'tools');
+            await updateDoc(doc(db, 'users', currentUser.uid, 'tools', t._id), { fileData: up.url, filePath: up.path });
+            try { await localPhotoDel(id); } catch (e) {}
+        }
+        showToast(failed ? '⚠ Niektoré fotky sa v tomto zariadení nenašli' : 'Fotky sú nahraté do cloudu ✓', failed ? 'err' : 'ok');
+    } catch (e) {
+        showToast('Fotky sa nahrajú neskôr, keď bude internet', '');
+    } finally { _migratingPhotos = false; }
+}
+window.addEventListener('online', () => setTimeout(migrateLocalPhotos, 3000));
 
 // ════════════════════════════════════════════════════════════════
 //  PRENOS DÁT MEDZI ÚČTAMI (QR kód) — prijímač zobrazí QR, odosielateľ
@@ -2348,6 +2395,10 @@ window.openSendTransfer = async () => {
     trStopPoll(); trStopCamera();
     if (localStorage.getItem(LOCAL_ONLY_KEY) === '1') {
         trShowError('Máte zapnuté ukladanie len v tomto zariadení, server preto vaše dáta nevidí a nemôže ich poslať. V ⚙️ Nastaveniach zapnite „Zariadenie + cloud“, počkajte na synchronizáciu a skúste znova.');
+        return;
+    }
+    if (drawings.some(d => (d.photos || []).some(isLocalPhoto) || isLocalPhoto(d.fileData)) || tools.some(t => isLocalPhoto(t.fileData))) {
+        trShowError('Niektoré fotky sú uložené len v tomto zariadení a ešte sa nenahrali do cloudu. Pripojte sa na internet, počkajte, kým sa nahrajú, a skúste znova.');
         return;
     }
     if (dwPending || tlPending) {
@@ -2800,6 +2851,10 @@ function showApp(user) {
     processDeleteQueue();
     // Obnoviť nastavenie ukladania (lokálne/cloud) z predošlej relácie
     applyStorageMode();
+    if (localStorage.getItem(LOCAL_ONLY_KEY) === '1' && navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});   // požiadať prehliadač, nech dáta v zariadení nemaže
+    }
+    setTimeout(migrateLocalPhotos, 5000);              // fotky z telefónu, ktoré ešte nie sú v cloude
 }
 
 function showLetterAvatar(name, el) {
@@ -4200,7 +4255,62 @@ window.saveDrawing = async () => {
 // ════════ UPLOAD FOTIEK DO FIREBASE STORAGE ════════
 // Namiesto ukladania Base64 priamo do Firestore (limit 1MB/dokument) nahrávame
 // obrázky ako súbory do Storage a v dokumente držíme len URL. Žiadny limit na počet/veľkosť fotiek.
+// ════════ FOTKY LEN V ZARIADENÍ (režim "Len v tomto zariadení") ════════
+// Fotka sa uloží do IndexedDB v telefóne a vo výkrese je adresa /local-photo/<id>.
+// Zobrazuje ju service worker (sw.js); keď nie je aktívny, zachráni to záloha nižšie.
+// Po prepnutí na "Zariadenie + cloud" sa fotky samé nahrajú na server (migrateLocalPhotos).
+const LOCAL_PHOTO_PREFIX = '/local-photo/';
+const isLocalPhoto = (u) => typeof u === 'string' && u.indexOf(LOCAL_PHOTO_PREFIX) === 0;
+let _localDbP = null;
+function localDb() {
+    if (!_localDbP) _localDbP = new Promise((res, rej) => {
+        const r = indexedDB.open('cncdok-local', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('photos');
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => { _localDbP = null; rej(r.error); };
+    });
+    return _localDbP;
+}
+async function localPhotoOp(mode, fn) {
+    const d = await localDb();
+    return new Promise((res, rej) => {
+        const tx = d.transaction('photos', mode);
+        const req = fn(tx.objectStore('photos'));
+        tx.oncomplete = () => res(req && req.result);
+        tx.onerror = () => rej(tx.error);
+    });
+}
+const localPhotoPut = (id, blob) => localPhotoOp('readwrite', s => s.put(blob, id));
+const localPhotoGet = (id) => localPhotoOp('readonly', s => s.get(id));
+const localPhotoDel = (id) => localPhotoOp('readwrite', s => s.delete(id));
+function dataUrlToBlob(d) {
+    const i = d.indexOf(','), mime = (d.slice(5, i).split(';')[0]) || 'image/jpeg';
+    const bin = atob(d.slice(i + 1)), arr = new Uint8Array(bin.length);
+    for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+    return new Blob([arr], { type: mime });
+}
+const blobToDataUrl = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+
+// Záloha: keď service worker nezobrazí fotku z telefónu, načítať ju priamo z IndexedDB
+window.addEventListener('error', async (e) => {
+    const img = e.target;
+    if (!img || img.tagName !== 'IMG') return;
+    const src = img.getAttribute('src') || '';
+    if (!isLocalPhoto(src) || img.dataset.localTried === src) return;
+    img.dataset.localTried = src;
+    try { const b = await localPhotoGet(src.slice(LOCAL_PHOTO_PREFIX.length)); if (b) img.src = URL.createObjectURL(b); } catch (err) {}
+}, true);
+
 async function uploadPhotoToStorage(dataUrl, folder) {
+    if (localStorage.getItem(LOCAL_ONLY_KEY) === '1') {
+        const id = `${folder}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+        await localPhotoPut(id, dataUrlToBlob(dataUrl));
+        return { url: LOCAL_PHOTO_PREFIX + id, path: 'local:' + id };
+    }
+    return uploadPhotoToCloud(dataUrl, folder);
+}
+
+async function uploadPhotoToCloud(dataUrl, folder) {
     const path = `users/${currentUser.uid}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
     const ref = storageRef(storage, path);
     await uploadString(ref, dataUrl, 'data_url');
@@ -4234,6 +4344,10 @@ function enqueuePhotoDelete(path) {
 
 async function deletePhotoFromStorage(path) {
     if (!path) return;
+    if (path.indexOf('local:') === 0) {                 // fotka uložená len v telefóne
+        try { await localPhotoDel(path.slice(6)); } catch (e) {}
+        return;
+    }
     enqueuePhotoDelete(path);       // najprv zapísať do trvalej fronty
     await processDeleteQueue();     // hneď skúsiť spracovať
 }
