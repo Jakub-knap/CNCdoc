@@ -2,7 +2,7 @@
 //
 // DOLEZITE: pri kazdej vacsej zmene appky zvys cislo verzie nizsie (v2 -> v3 ...).
 // Stara pamat sa tym automaticky vymaze a vsetci dostanu cerstve subory.
-const CACHE = 'cncdok-v6';
+const CACHE = 'cncdok-v7';
 const SHELL = [
   './app.html',
   './index.html',
@@ -12,6 +12,20 @@ const SHELL = [
   './icon-192.png',
   './icon-512.png'
 ];
+
+function readLocalPhoto(id) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('cncdok-local', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('photos');
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const tx = r.result.transaction('photos', 'readonly');
+      const q = tx.objectStore('photos').get(id);
+      q.onsuccess = () => res(q.result || null);
+      q.onerror = () => rej(q.error);
+    };
+  });
+}
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -40,6 +54,16 @@ self.addEventListener('fetch', (e) => {
   }
 
   const sameOrigin = new URL(url).origin === self.location.origin;
+
+  // FOTKY ULOŽENÉ LEN V TELEFÓNE (režim "Len v tomto zariadení") — z IndexedDB, nikdy z internetu
+  if (sameOrigin && new URL(url).pathname.indexOf('/local-photo/') === 0) {
+    const id = decodeURIComponent(new URL(url).pathname.slice('/local-photo/'.length));
+    e.respondWith(readLocalPhoto(id).then((blob) => blob
+      ? new Response(blob, { headers: { 'Content-Type': blob.type || 'image/jpeg', 'Cache-Control': 'no-store' } })
+      : new Response('', { status: 404 })
+    ).catch(() => new Response('', { status: 404 })));
+    return;
+  }
 
   // VLASTNE SUBORY APPKY (html, subscription.js, manifest...) -> network-first:
   // online = vzdy najnovsia verzia z Vercelu, offline = posledna ulozena kopia.

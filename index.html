@@ -2,6 +2,7 @@
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
+    <script src="i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CNCdok – Digitálne výkresy pre dielňu</title>
     <link rel="manifest" href="/manifest.json">
@@ -561,6 +562,30 @@
             position: relative;
         }
 
+        /* ── Prepínač jazyka ── */
+        .lang-top { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; z-index: 5; }
+        .lang-top button {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: var(--muted);
+            border-radius: 8px; padding: 6px 11px; font-size: 12px; font-weight: 700; cursor: pointer;
+        }
+        html[lang="sk"] .lang-top button[data-lang="sk"],
+        html[lang="en"] .lang-top button[data-lang="en"] { color: var(--cut); border-color: var(--cut); background: rgba(249,115,22,.12); }
+
+        /* ── Štítok "Nové" pri funkcii ── */
+        .feat-new {
+            display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .5px;
+            color: var(--cut); background: rgba(249,115,22,.14); border-radius: 10px;
+            padding: 2px 8px; margin-left: 6px; vertical-align: middle; text-transform: uppercase;
+        }
+
+        /* ── Poznámka pod kartami ukladania ── */
+        .storage-note {
+            max-width: 560px; margin: 16px auto 0; font-size: 13px; color: var(--muted);
+            line-height: 1.55; text-align: center;
+        }
+        .storage-card.recommended { border-color: rgba(16,185,129,.35); }
+        .storage-card .badge.green { background: rgba(16,185,129,.15); color: #10b981; }
+
         .footer-note {
             margin-top: 60px;
             font-size: 13px;
@@ -573,6 +598,10 @@
 
 <!-- ═══ HERO ═══ -->
 <section class="hero">
+    <div class="lang-top" data-no-tr>
+        <button type="button" data-lang="sk" onclick="setLanguage('sk')">SK</button>
+        <button type="button" data-lang="en" onclick="setLanguage('en')">EN</button>
+    </div>
     <div class="logo-wrap">
         <div class="logo-icon">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -588,12 +617,11 @@
     <p class="hero-tag">Digitálna dielňa</p>
     <h1>Koniec so<br><em>šanónmi</em> pri stroji</h1>
     <p class="hero-sub">
-        Všetky výkresy, nástroje a programy prehľadne v mobile — 
-        vždy po ruke, aj keď máte ruky od oleja.
+        Všetky výkresy, nástroje a programy prehľadne v mobile alebo tablete — vždy po ruke, aj keď máte ruky od oleja.
     </p>
 
     <a href="app.html" class="cta-btn">▶ Otvoriť aplikáciu</a>
-    <p class="cta-sub">Funguje bez internetu · Ukladá dáta lokálne</p>
+    <p class="cta-sub">Funguje aj bez internetu · Slovensky aj anglicky</p>
 </section>
 
 <!-- ═══ FEATURES ═══ -->
@@ -605,29 +633,57 @@
         <div class="feat-card">
             <div class="feat-icon">📐</div>
             <div>
-                <div class="feat-title">Výkresy so skenmi</div>
-                <div class="feat-desc">Odfotte alebo nahrajte sken výkresu. Číslo, program, poznámky — všetko na jednom mieste. Žiadne hľadanie v šanónoch.</div>
+                <div class="feat-title">Výkresy s fotkami</div>
+                <div class="feat-desc">Odfotíte výkres mobilom, aj viac pohľadov naraz. Číslo, program, poznámky a revízie na jednom mieste. Kóty si priblížite prstami.</div>
             </div>
         </div>
         <div class="feat-card">
             <div class="feat-icon">🔍</div>
             <div>
                 <div class="feat-title">Rýchle vyhľadávanie</div>
-                <div class="feat-desc">Zadáte číslo výkresu alebo programu a máte detail do 2 sekúnd. Filtrujete podľa stroja.</div>
+                <div class="feat-desc">Zadáte číslo výkresu alebo programu a máte ho do 2 sekúnd. Hľadá aj bez mäkčeňov a dĺžňov, filtruje podľa stroja.</div>
             </div>
         </div>
         <div class="feat-card">
             <div class="feat-icon">🔧</div>
             <div>
-                <div class="feat-title">Databáza nástrojov</div>
-                <div class="feat-desc">Vrták D10, závitník M8, korekcie — evidujte nástroje per stroj. Nikdy viac zbytočné hľadanie.</div>
+                <div class="feat-title">Nástroje pre celú dielňu</div>
+                <div class="feat-desc">Vrtáky, frézy, závitníky, sústružnícke nože — s kategóriami a filtrom. Jeden nástroj priradíte k výkresom na hocijakom stroji.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">📶</div>
+            <div>
+                <div class="feat-title">Funguje aj bez signálu</div>
+                <div class="feat-desc">Pri stroji bez wifi pracujete normálne. Keď sa zariadenie pripojí, všetko sa samo zosynchronizuje.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">🔄</div>
+            <div>
+                <div class="feat-title">Prenos dát cez QR kód <span class="feat-new">Nové</span></div>
+                <div class="feat-desc">Výkresy z vášho mobilu presuniete na firemný tablet alebo na nový účet. Naskenujete QR kód a nikomu nedávate heslo.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">🔒</div>
+            <div>
+                <div class="feat-title">Vy rozhodujete o svojich dátach <span class="feat-new">Nové</span></div>
+                <div class="feat-desc">Zálohovanie do cloudu, alebo režim len v zariadení. Vo firemnom pláne chráni mazanie admin heslo.</div>
+            </div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon">🌐</div>
+            <div>
+                <div class="feat-title">Slovensky aj anglicky <span class="feat-new">Nové</span></div>
+                <div class="feat-desc">Aplikácia aj stránka v slovenčine a angličtine. Jazyk prepnete jedným ťuknutím.</div>
             </div>
         </div>
         <div class="feat-card">
             <div class="feat-icon">📱</div>
             <div>
-                <div class="feat-title">Navrhnuté pre mobil</div>
-                <div class="feat-desc">Veľké tlačidlá, čitateľný text, zoom výkresu jedným kliknutím. Dizajnované pre pracovníka pri stroji.</div>
+                <div class="feat-title">Navrhnuté pre dielňu</div>
+                <div class="feat-desc">Veľké tlačidlá, čitateľný text, inštalácia na plochu ako bežná aplikácia. Pre mobil aj tablet pri stroji.</div>
             </div>
         </div>
     </div>
@@ -645,8 +701,8 @@
                 <div class="step-line"></div>
             </div>
             <div class="step-body">
-                <div class="step-title">Odfotíte alebo naskenujete výkres</div>
-                <div class="step-desc">Stačí fotka mobilom. Pridáte číslo výkresu, číslo CNC programu a poznámku.</div>
+                <div class="step-title">Odfotíte výkres</div>
+                <div class="step-desc">Stačí mobil. Pridáte číslo výkresu, číslo CNC programu, poznámku a nástroje.</div>
             </div>
         </div>
         <div class="step">
@@ -656,7 +712,7 @@
             </div>
             <div class="step-body">
                 <div class="step-title">Aplikácia uloží dáta</div>
-                <div class="step-desc">Lokálne do mobilu — funguje bez Wi-Fi. Alebo na váš server — synchronizácia pre celú dielňu.</div>
+                <div class="step-desc">Do zariadenia so zálohou v cloude, alebo len do zariadenia — podľa toho, čo si zvolíte.</div>
             </div>
         </div>
         <div class="step">
@@ -672,25 +728,65 @@
     </div>
 </section>
 
+<!-- ═══ PRENOS CEZ QR ═══ -->
+<section class="features">
+    <p class="section-label">Prenos dát</p>
+    <h2 class="section-title">Z vášho mobilu na firemný tablet</h2>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-left">
+                <div class="step-num">1</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-title">Tablet zobrazí QR kód</div>
+                <div class="step-desc">Na zariadení, ktoré má dáta prijať, otvoríte Prijať dáta. Kód platí 10 minút.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-left">
+                <div class="step-num">2</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-title">Mobilom ho naskenujete</div>
+                <div class="step-desc">Vyberiete všetko alebo len niektoré stroje. Vaše prihlasovacie údaje zostanú len vo vašom mobile.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-left">
+                <div class="step-num">3</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-title">Tablet potvrdí a je to</div>
+                <div class="step-desc">Výkresy, nástroje aj fotky sa skopírujú. Čo už na tablete je, sa nezdvojí, a vo vašom účte zostane všetko bez zmeny.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ═══ STORAGE ═══ -->
 <section class="storage">
     <p class="section-label">Kde sa ukladajú dáta</p>
     <h2 class="section-title">Vy si vyberiete</h2>
 
     <div class="storage-cards">
+        <div class="storage-card recommended">
+            <div class="icon">☁️</div>
+            <h3>Zariadenie<br>+ cloud</h3>
+            <p>Dáta sú v zariadení aj zálohované. Pokazený alebo stratený tablet? Prihlásite sa na novom a všetko tam je.</p>
+            <div class="badge green">Odporúčané</div>
+        </div>
         <div class="storage-card">
             <div class="icon">📱</div>
-            <h3>Lokálne<br>v mobile</h3>
-            <p>Dáta zostávajú vo vašom zariadení. Funguje bez internetu.</p>
-            <div class="badge">Predvolené</div>
-        </div>
-        <div class="storage-card">
-            <div class="icon">🌐</div>
-            <h3>Na vlastnom<br>serveri</h3>
-            <p>Zadáte URL vášho API. Celá dielňa zdieľa jednu databázu.</p>
-            <div class="badge">Vo vývoji</div>
+            <h3>Len<br>v zariadení</h3>
+            <p>Čísla výkresov, programy, poznámky a nástroje sa neodosielajú na server. Bez zálohy, preto so zvýšenou opatrnosťou.</p>
+            <div class="badge">Bez zálohy</div>
         </div>
     </div>
+    <p class="storage-note">Režim prepnete kedykoľvek v nastaveniach aplikácie. Fotky výkresov sa zatiaľ v oboch režimoch ukladajú do zabezpečeného cloudového úložiska.</p>
 </section>
 
 <!-- ═══ PRICING ═══ -->
@@ -712,6 +808,7 @@
                 <li>1 stroj</li>
                 <li>Max 100 výkresov</li>
                 <li>Max 60 nástrojov</li>
+                <li>Prenos dát cez QR kód</li>
                 <li>Funguje aj bez internetu</li>
             </ul>
             <div class="price-btns">
@@ -733,6 +830,7 @@
                 <li>Max 90 nástrojov</li>
                 <li>Ochrana mazania admin heslom</li>
                 <li>Záložný obnovovací kód</li>
+                <li>Prenos dát cez QR kód</li>
                 <li>Funguje aj bez internetu</li>
             </ul>
             <div class="price-btns">
