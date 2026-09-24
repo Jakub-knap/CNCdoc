@@ -481,7 +481,11 @@
         "Vyberte menej strojov a skúste znova.": "Select fewer machines and try again.",
         "Vyberte menej strojov, alebo nech prijímajúci účet prejde na plán Firma.": "Select fewer machines, or have the receiving account switch to the Company plan.",
         "Vybrať inak": "Choose differently",
-        "Max 150 výkresov na stroj": "Max 150 drawings per machine"
+        "Max 150 výkresov na stroj": "Max 150 drawings per machine",
+        "Spracúvam fotku...": "Processing photo...",
+        "Spracúvam fotky...": "Processing photos...",
+        "Počkajte, fotky sa ešte spracúvajú": "Please wait, the photos are still being processed",
+        "Fotku sa nepodarilo spracovať. Odfoťte ju priamo v appke alebo vyberte inú.": "The photo could not be processed. Take it directly in the app or choose another one."
     };
 
     // Slovenské plurály → anglické
