@@ -67,9 +67,9 @@ const DAY_MS     = 86400000;
 // (Sandbox / test linky. Pre OSTRÚ prevádzku vymeň za live linky.)
 const CHECKOUT_LINKS = {
     firma_monthly: "https://buy.stripe.com/test_14AcN6ed5fTl9zFdYC3Je00",
-    firma_yearly:  "https://buy.stripe.com/test_28E9AU8SL6iL5jpdYC3Je01",
+    firma_yearly:  "https://buy.stripe.com/14A9AM4zmehEf1K7jQfw405",
     solo_monthly:  "https://buy.stripe.com/test_5kQ4gAd914aDdPV9Im3Je02",
-    solo_yearly:   "https://buy.stripe.com/test_9B6cN61qjdLdbHNaMq3Je03",
+    solo_yearly:   "https://buy.stripe.com/00w9AM9TGflI2eY7jQfw404",
 };
 // Kam smeruje "Aktivovať" v appke (nech si používateľ vyberie plán).
 const UPGRADE_URL = "index.html#cennik";
