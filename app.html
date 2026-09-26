@@ -1168,6 +1168,27 @@
         .tile-hero .tt { font-size: 26px; font-weight: 800; line-height: 1.05; }
         .tile-hero .sb { font-size: 14px; color: #bfdbfe; margin-top: 4px; font-weight: 600; }
 
+        .tile-continue {
+            width: 100%; text-align: left; border: none; cursor: pointer;
+            background: linear-gradient(135deg,#f97316,#c2410c); border-radius: 20px;
+            padding: 20px 22px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(249,115,22,.35);
+            display: flex; align-items: center; gap: 16px; color: #fff; font-family: inherit;
+        }
+        .tile-continue:active { transform: scale(.98); }
+        .tile-continue .ic { font-size: 34px; }
+        .tile-continue .tt { font-size: 18px; font-weight: 800; line-height: 1.1; }
+        .tile-continue .sb { font-size: 15px; color: #ffedd5; margin-top: 3px; font-weight: 700; }
+
+        .recent-drawings-wrap { margin-bottom: 12px; }
+        .recent-drawings-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+        .recent-drawings-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .recent-drawing-chip {
+            border: 1px solid rgba(249,115,22,.4); background: rgba(249,115,22,.12); color: var(--light);
+            border-radius: 999px; padding: 8px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+            font-family: inherit;
+        }
+        .recent-drawing-chip:active { transform: scale(.96); }
+
         .tile-wide {
             width: 100%; text-align: left; cursor: pointer; border: 1px solid rgba(22,163,74,.4);
             background: rgba(22,163,74,.10); border-radius: 18px; padding: 18px 20px; margin-bottom: 14px;
@@ -1427,6 +1448,13 @@
                 </div>
             </div>
 
+            <div id="continue-tile-wrap" style="display:none;">
+                <button class="tile-continue" onclick="continueLastDrawing()">
+                    <span class="ic">↻</span>
+                    <span><div class="tt">Pokračovať vo výkrese</div><div class="sb" id="continue-tile-name">—</div></span>
+                </button>
+            </div>
+
             <button class="tile-hero" onclick="openSection('sec-search-drawing')">
                 <span class="ic">🔍</span>
                 <span><div class="tt">Nájsť výkres</div><div class="sb" id="tile-d-count">0 výkresov</div></span>
@@ -1505,6 +1533,10 @@
                     <select id="search-machine-filter" onchange="onSearchMachineChange()" style="display:none;margin-top:8px;">
                         <option value="">— Všetky stroje —</option>
                     </select>
+                </div>
+                <div class="recent-drawings-wrap" id="recent-drawings-wrap" style="display:none;">
+                    <div class="recent-drawings-label">🕓 Naposledy otvorené</div>
+                    <div class="recent-drawings-chips" id="recent-drawings-chips"></div>
                 </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
@@ -2585,6 +2617,66 @@ function normText(s) {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '') // odstráni diakritické znamienka
         .toLowerCase();
+}
+
+// ── NAPOSLEDY OTVORENÉ VÝKRESY ──
+// Uložené lokálne v zariadení (localStorage), aby ste sa vedeli rýchlo vrátiť
+// k rozrobenej súčiastke aj po zatvorení appky. Nezávisí od internetu.
+const RECENT_DRAWINGS_KEY = 'cnc_recent_drawings';
+const RECENT_DRAWINGS_MAX = 8;
+function getRecentDrawingIds() {
+    try { return JSON.parse(localStorage.getItem(RECENT_DRAWINGS_KEY) || '[]'); }
+    catch (e) { return []; }
+}
+function trackRecentDrawing(id) {
+    if (!id) return;
+    let ids = getRecentDrawingIds().filter(x => x !== id);
+    ids.unshift(id);
+    ids = ids.slice(0, RECENT_DRAWINGS_MAX);
+    try { localStorage.setItem(RECENT_DRAWINGS_KEY, JSON.stringify(ids)); } catch (e) {}
+}
+// Vráti naposledy otvorené výkresy (objekty), zoradené od najnovšieho, len tie čo ešte existujú.
+function getRecentDrawings(limit) {
+    const ids = getRecentDrawingIds();
+    const out = [];
+    for (const id of ids) {
+        const d = drawings.find(x => x._id === id);
+        if (d) out.push(d);
+        if (limit && out.length >= limit) break;
+    }
+    return out;
+}
+window.continueLastDrawing = () => {
+    const last = getRecentDrawings(1)[0];
+    if (!last) return;
+    openSection('sec-search-drawing');
+    openDetail(last.number);
+};
+function renderContinueTile() {
+    const wrap = document.getElementById('continue-tile-wrap');
+    if (!wrap) return;
+    const last = getRecentDrawings(1)[0];
+    if (!last) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    const nameEl = document.getElementById('continue-tile-name');
+    if (nameEl) nameEl.textContent = last.number;
+}
+function renderRecentDrawingChips() {
+    const wrap = document.getElementById('recent-drawings-wrap');
+    if (!wrap) return;
+    const list = getRecentDrawings(5);
+    if (!list.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    const box = document.getElementById('recent-drawings-chips');
+    box.innerHTML = '';
+    list.forEach(d => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'recent-drawing-chip';
+        chip.innerHTML = `🕓 ${d.number}`;
+        chip.onclick = () => openDetail(d.number);
+        box.appendChild(chip);
+    });
 }
 
 function limitReached(kind, count) {
@@ -3693,6 +3785,11 @@ window.renderDrawingSearch = () => {
     const text = normText(document.getElementById('inp-drawing-search').value);
     const machineF = document.getElementById('search-machine-filter').value;
     const box  = document.getElementById('drawing-search-results');
+    const recentWrap = document.getElementById('recent-drawings-wrap');
+    if (recentWrap) {
+        if (text) { recentWrap.style.display = 'none'; }
+        else { renderRecentDrawingChips(); }
+    }
     let pool = machineF ? drawings.filter(d => d.machine === machineF) : drawings;
     let filtered;
     if (text) {
@@ -3724,6 +3821,8 @@ window.openDetail = (number) => {
     const d = drawings.find(x => x.number === number);
     if (!d) return;
     currentDetailId = d._id;
+    trackRecentDrawing(d._id);
+    renderContinueTile();
     const titleEl = document.getElementById('modal-detail-title');
     if (titleEl) titleEl.textContent = 'Detail výkresu';
 
@@ -5189,6 +5288,7 @@ function updateCounts() {
     const tm = document.getElementById('tile-machines'); if (tm) tm.textContent = machines.length + (machines.length === 1 ? ' stroj' : ' strojov');
     const td = document.getElementById('tile-d-count');  if (td) td.textContent = drawings.length + ' výkresov' + dPend;
     const tt = document.getElementById('tile-t-count');  if (tt) tt.textContent = 'Nájsť nástroj';
+    renderContinueTile();
 }
 
 // ═══ DLAŽDICOVÁ NAVIGÁCIA ═══
