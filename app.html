@@ -1178,16 +1178,29 @@
         .tile-continue .ic { font-size: 34px; }
         .tile-continue .tt { font-size: 18px; font-weight: 800; line-height: 1.1; }
         .tile-continue .sb { font-size: 15px; color: #ffedd5; margin-top: 3px; font-weight: 700; }
+        .tile-continue-close {
+            position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%;
+            border: none; background: rgba(0,0,0,.22); color: #fff; font-size: 14px; line-height: 1;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit;
+        }
+        .tile-continue-close:active { background: rgba(0,0,0,.35); }
 
         .recent-drawings-wrap { margin-bottom: 12px; }
         .recent-drawings-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
         .recent-drawings-chips { display: flex; flex-wrap: wrap; gap: 8px; }
         .recent-drawing-chip {
+            display: inline-flex; align-items: center; gap: 6px;
             border: 1px solid rgba(249,115,22,.4); background: rgba(249,115,22,.12); color: var(--light);
-            border-radius: 999px; padding: 8px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+            border-radius: 999px; padding: 4px 6px 4px 14px; font-size: 13.5px; font-weight: 600;
             font-family: inherit;
         }
-        .recent-drawing-chip:active { transform: scale(.96); }
+        .recent-drawing-chip-label { cursor: pointer; }
+        .recent-drawing-chip-close {
+            width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer;
+            background: rgba(0,0,0,.12); color: var(--light); font-size: 12px; line-height: 1;
+            display: flex; align-items: center; justify-content: center; flex: none; font-family: inherit;
+        }
+        .recent-drawing-chip-close:active { background: rgba(0,0,0,.22); }
 
         .tile-wide {
             width: 100%; text-align: left; cursor: pointer; border: 1px solid rgba(22,163,74,.4);
@@ -1448,11 +1461,12 @@
                 </div>
             </div>
 
-            <div id="continue-tile-wrap" style="display:none;">
+            <div id="continue-tile-wrap" style="display:none; position:relative;">
                 <button class="tile-continue" onclick="continueLastDrawing()">
                     <span class="ic">↻</span>
                     <span><div class="tt">Pokračovať vo výkrese</div><div class="sb" id="continue-tile-name">—</div></span>
                 </button>
+                <button type="button" class="tile-continue-close" onclick="event.stopPropagation(); dismissContinueTile();" aria-label="Zavrieť">✕</button>
             </div>
 
             <button class="tile-hero" onclick="openSection('sec-search-drawing')">
