@@ -579,7 +579,9 @@
         "Slovensky, česky aj anglicky": "Slovak, Czech and English",
         "Aplikácia aj stránka v slovenčine, češtine a angličtine. Jazyk prepnete jedným ťuknutím.": "The app and the website in Slovak, Czech and English. Switch the language with one tap.",
         "Naposledy otvorené": "Recently opened",
-        "Pokračovať vo výkrese": "Continue drawing"
+        "Pokračovať vo výkrese": "Continue drawing",
+        "Odstrániť": "Remove",
+        "Skryť": "Hide"
     }, cz: {
         "Digitálna dielňa": "Digitální dílna",
         "Prihláste sa pre prístup k výkresom": "Přihlaste se pro přístup k výkresům",
@@ -1135,7 +1137,9 @@
         "Používame nevyhnutné cookies pre fungovanie aplikácie a voliteľne": "Používáme nezbytné cookies pro fungování aplikace a volitelně",
         "na meranie návštevnosti. Analytické cookies sa spustia len s vaším súhlasom.": "pro měření návštěvnosti. Analytické cookies se spustí jen s vaším souhlasem.",
         "Naposledy otvorené": "Naposledy otevřené",
-        "Pokračovať vo výkrese": "Pokračovat ve výkresu"
+        "Pokračovať vo výkrese": "Pokračovat ve výkresu",
+        "Odstrániť": "Odstranit",
+        "Skryť": "Skrýt"
     } };
     var D = DICT[lang];
 

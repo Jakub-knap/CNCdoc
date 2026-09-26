@@ -1168,22 +1168,25 @@
         .tile-hero .tt { font-size: 26px; font-weight: 800; line-height: 1.05; }
         .tile-hero .sb { font-size: 14px; color: #bfdbfe; margin-top: 4px; font-weight: 600; }
 
+        .continue-tile-card {
+            border-radius: 20px; overflow: hidden; margin-bottom: 14px;
+            box-shadow: 0 8px 24px rgba(249,115,22,.35);
+        }
         .tile-continue {
             width: 100%; text-align: left; border: none; cursor: pointer;
-            background: linear-gradient(135deg,#f97316,#c2410c); border-radius: 20px;
-            padding: 20px 22px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(249,115,22,.35);
-            display: flex; align-items: center; gap: 16px; color: #fff; font-family: inherit;
+            background: linear-gradient(135deg,#f97316,#c2410c); border-radius: 0;
+            padding: 20px 22px; display: flex; align-items: center; gap: 16px; color: #fff; font-family: inherit;
         }
-        .tile-continue:active { transform: scale(.98); }
+        .tile-continue:active { filter: brightness(.95); }
         .tile-continue .ic { font-size: 34px; }
         .tile-continue .tt { font-size: 18px; font-weight: 800; line-height: 1.1; }
         .tile-continue .sb { font-size: 15px; color: #ffedd5; margin-top: 3px; font-weight: 700; }
-        .tile-continue-close {
-            position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%;
-            border: none; background: rgba(0,0,0,.22); color: #fff; font-size: 14px; line-height: 1;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit;
+        .tile-continue-dismiss {
+            display: block; width: 100%; border: none; cursor: pointer; font-family: inherit;
+            background: rgba(0,0,0,.18); color: #ffedd5; font-size: 14px; font-weight: 700;
+            padding: 12px; text-align: center;
         }
-        .tile-continue-close:active { background: rgba(0,0,0,.35); }
+        .tile-continue-dismiss:active { background: rgba(0,0,0,.3); }
 
         .recent-drawings-wrap { margin-bottom: 12px; }
         .recent-drawings-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
@@ -1461,12 +1464,12 @@
                 </div>
             </div>
 
-            <div id="continue-tile-wrap" style="display:none; position:relative;">
+            <div id="continue-tile-wrap" class="continue-tile-card" style="display:none;">
                 <button class="tile-continue" onclick="continueLastDrawing()">
                     <span class="ic">↻</span>
                     <span><div class="tt">Pokračovať vo výkrese</div><div class="sb" id="continue-tile-name">—</div></span>
                 </button>
-                <button type="button" class="tile-continue-close" onclick="event.stopPropagation(); dismissContinueTile();" aria-label="Zavrieť">✕</button>
+                <button type="button" class="tile-continue-dismiss" onclick="dismissContinueTile()">✕ Skryť</button>
             </div>
 
             <button class="tile-hero" onclick="openSection('sec-search-drawing')">
@@ -2649,6 +2652,13 @@ function trackRecentDrawing(id) {
     ids = ids.slice(0, RECENT_DRAWINGS_MAX);
     try { localStorage.setItem(RECENT_DRAWINGS_KEY, JSON.stringify(ids)); } catch (e) {}
 }
+// Odstráni jeden výkres zo zoznamu "naposledy otvorené" (klik na ✕) — nezmaže samotný výkres.
+function removeRecentDrawing(id) {
+    const ids = getRecentDrawingIds().filter(x => x !== id);
+    try { localStorage.setItem(RECENT_DRAWINGS_KEY, JSON.stringify(ids)); } catch (e) {}
+    renderContinueTile();
+    renderRecentDrawingChips();
+}
 // Vráti naposledy otvorené výkresy (objekty), zoradené od najnovšieho, len tie čo ešte existujú.
 function getRecentDrawings(limit) {
     const ids = getRecentDrawingIds();
@@ -2666,6 +2676,12 @@ window.continueLastDrawing = () => {
     openSection('sec-search-drawing');
     openDetail(last.number);
 };
+// Klik na ✕ na veľkom tlačidle "Pokračovať" — schová len toto tlačidlo (odstráni najnovší záznam).
+window.dismissContinueTile = () => {
+    const last = getRecentDrawings(1)[0];
+    if (last) removeRecentDrawing(last._id);
+};
+window.removeRecentDrawing = removeRecentDrawing;
 function renderContinueTile() {
     const wrap = document.getElementById('continue-tile-wrap');
     if (!wrap) return;
@@ -2684,11 +2700,24 @@ function renderRecentDrawingChips() {
     const box = document.getElementById('recent-drawings-chips');
     box.innerHTML = '';
     list.forEach(d => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
+        const chip = document.createElement('span');
         chip.className = 'recent-drawing-chip';
-        chip.innerHTML = `🕓 ${d.number}`;
-        chip.onclick = () => openDetail(d.number);
+
+        const label = document.createElement('button');
+        label.type = 'button';
+        label.className = 'recent-drawing-chip-label';
+        label.innerHTML = `🕓 ${d.number}`;
+        label.onclick = () => openDetail(d.number);
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'recent-drawing-chip-close';
+        close.setAttribute('aria-label', 'Odstrániť');
+        close.textContent = '✕';
+        close.onclick = (e) => { e.stopPropagation(); removeRecentDrawing(d._id); };
+
+        chip.appendChild(label);
+        chip.appendChild(close);
         box.appendChild(chip);
     });
 }
