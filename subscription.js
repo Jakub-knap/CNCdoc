@@ -307,25 +307,44 @@ function ensureUpgradeModal() {
 
     const el = document.createElement("div");
     el.id = "sub-upgrade";
-    el.innerHTML = `
-        <div class="sub-up-card">
-            <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
-            <div class="sub-up-logo">CNC<span>dok</span></div>
-            <h2 class="sub-up-title">Aktivujte predplatné</h2>
-            <p class="sub-up-text">
-                Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
-                strojom a nástrojom si vyberte plán.
-            </p>
-            <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
-            <button class="sub-up-signout" type="button">Odhlásiť sa</button>
-            <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
-        </div>`;
+
+    if (IN_PLAY_STORE) {
+        // Play Store verzia: žiadne tlačidlo na platbu v appke (Play Billing policy).
+        // Iba vysvetlenie, že predplatné sa aktivuje na webe v prehliadači.
+        el.innerHTML = `
+            <div class="sub-up-card">
+                <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
+                <div class="sub-up-logo">CNC<span>dok</span></div>
+                <h2 class="sub-up-title">Aktivujte predplatné</h2>
+                <p class="sub-up-text">
+                    Skúšobná doba sa skončila. Predplatné si aktivujete na
+                    stránke <strong>cncdok.sk</strong> — otvorte ju v
+                    internetovom prehliadači (Chrome/Safari), nie v tejto
+                    appke. Po zaplatení sa prístup v appke odomkne automaticky.
+                </p>
+                <button class="sub-up-signout" type="button">Odhlásiť sa</button>
+            </div>`;
+    } else {
+        el.innerHTML = `
+            <div class="sub-up-card">
+                <button class="sub-up-x" type="button" aria-label="Zavrieť">✕</button>
+                <div class="sub-up-logo">CNC<span>dok</span></div>
+                <h2 class="sub-up-title">Aktivujte predplatné</h2>
+                <p class="sub-up-text">
+                    Skúšobná doba sa skončila. Pre ďalší prístup k výkresom,
+                    strojom a nástrojom si vyberte plán.
+                </p>
+                <button class="sub-up-btn" data-goto="cennik">Vybrať plán</button>
+                <button class="sub-up-signout" type="button">Odhlásiť sa</button>
+                <p class="sub-up-note">Po zaplatení sa prístup odomkne automaticky.</p>
+            </div>`;
+    }
     document.body.appendChild(el);
 
     el.addEventListener("click", (e) => { if (e.target === el) closeUpgrade(); });
     el.querySelector(".sub-up-x").addEventListener("click", closeUpgrade);
-    el.querySelector('[data-goto="cennik"]')
-      .addEventListener("click", () => { window.location.href = UPGRADE_URL; });
+    const gotoBtn = el.querySelector('[data-goto="cennik"]');
+    if (gotoBtn) gotoBtn.addEventListener("click", () => { window.location.href = UPGRADE_URL; });
     el.querySelector(".sub-up-signout").addEventListener("click", () => {
         if (typeof window.signOut === "function") window.signOut();
         else auth.signOut();
@@ -348,15 +367,11 @@ function startCheckout(plan) {
 //  APLIKOVANIE STAVU
 // ════════════════════════════════════════════════════════════════
 function applyMode(result) {
-    // Google Play verzia: žiadne platby cez Stripe v appke (Play Billing policy).
-    // Appka sa správa ako plne odomknutá, bez zámkov a bez výzvy na platbu.
-    if (IN_PLAY_STORE) {
-        hideStatus();
-        lockSections(false);
-        closeUpgrade();
-        return;
-    }
-
+    // POZOR: aj v Play Store appke sa trial/premium/free stav MUSÍ rátať
+    // rovnako ako na webe — inak appka po vypršaní trialu ostane navždy
+    // odomknutá pre každého. Rozdiel pre Play Store je LEN v tom, ako sa
+    // vyzýva na platbu (nikdy cez Stripe v appke, pozri ensureUpgradeModal
+    // a startCheckout) — nie v tom, či sa vôbec zamyká.
     if (result.mode === "premium") {
         setStatus("premium", "★ Premium účet", "Platnosť ›", () => openPremiumInfo(result));
         lockSections(false);
