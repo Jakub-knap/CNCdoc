@@ -160,6 +160,37 @@
             position: relative;
         }
 
+        .cta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            position: relative;
+        }
+
+        .cta-btn-play {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 16px 26px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.25);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: -0.2px;
+        }
+
+        .cta-btn-play:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .cta-btn-play svg { width: 20px; height: 20px; flex-shrink: 0; }
+
         /* ─── FEATURES ─── */
         .features {
             padding: 80px 24px;
@@ -622,7 +653,13 @@
         Všetky výkresy, nástroje a programy prehľadne v mobile alebo tablete — vždy po ruke, aj keď máte ruky od oleja.
     </p>
 
-    <a href="app.html" class="cta-btn">▶ Otvoriť aplikáciu</a>
+    <div class="cta-row">
+        <a href="app.html" class="cta-btn">▶ Otvoriť aplikáciu</a>
+        <a href="https://play.google.com/store/apps/details?id=sk.cncdok.twa" class="cta-btn-play" target="_blank" rel="noopener">
+            <svg viewBox="0 0 512 512" fill="currentColor"><path d="M325.3 234.3L104.6 13.6c-5-3-10.6-4.5-16.2-4.5-11.7 0-23 6.9-27.8 18.3L34.4 68.8 245.9 280.3 325.3 234.3zM34.4 443.2l26.2 41.4c4.8 11.4 16.1 18.3 27.8 18.3 5.6 0 11.2-1.5 16.2-4.5l220.7-220.7-79.4-46L34.4 443.2zM445.8 233.2l-63.3-36.6-83.5 59.4 83.5 59.4 63.3-36.6c9.8-5.7 15.9-16.3 15.9-27.8s-6.1-22.1-15.9-27.8zM261 274.9L34.4 68.8c-1.8 5.4-2.9 11.1-2.9 17v340.4c0 5.9 1.1 11.6 2.9 17L261 274.9z"/></svg>
+            Stiahnuť z Google Play
+        </a>
+    </div>
     <p class="cta-sub">Funguje aj bez internetu · Slovensky, česky aj anglicky</p>
 </section>
 
@@ -849,7 +886,13 @@
 <section class="footer-cta">
     <h2>Pripravený začať?</h2>
     <p>Otvorte aplikáciu a pridajte prvý výkres — trvá to 30 sekúnd.</p>
-    <a href="app.html" class="cta-btn">▶ Otvoriť CNCdok</a>
+    <div class="cta-row">
+        <a href="app.html" class="cta-btn">▶ Otvoriť CNCdok</a>
+        <a href="https://play.google.com/store/apps/details?id=sk.cncdok.twa" class="cta-btn-play" target="_blank" rel="noopener">
+            <svg viewBox="0 0 512 512" fill="currentColor"><path d="M325.3 234.3L104.6 13.6c-5-3-10.6-4.5-16.2-4.5-11.7 0-23 6.9-27.8 18.3L34.4 68.8 245.9 280.3 325.3 234.3zM34.4 443.2l26.2 41.4c4.8 11.4 16.1 18.3 27.8 18.3 5.6 0 11.2-1.5 16.2-4.5l220.7-220.7-79.4-46L34.4 443.2zM445.8 233.2l-63.3-36.6-83.5 59.4 83.5 59.4 63.3-36.6c9.8-5.7 15.9-16.3 15.9-27.8s-6.1-22.1-15.9-27.8zM261 274.9L34.4 68.8c-1.8 5.4-2.9 11.1-2.9 17v340.4c0 5.9 1.1 11.6 2.9 17L261 274.9z"/></svg>
+            Google Play
+        </a>
+    </div>
     <div style="margin-top:18px;">
         <a href="https://billing.stripe.com/p/login/6oUfZagi48Xk2eY5bIfw400" target="_blank" style="color:var(--muted,#8a94a3); font-size:13px; text-decoration:underline;">Spravovať alebo zrušiť predplatné</a>
     </div>

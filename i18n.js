@@ -581,7 +581,8 @@
         "Naposledy otvorené": "Recently opened",
         "Pokračovať vo výkrese": "Continue drawing",
         "Odstrániť": "Remove",
-        "Skryť": "Hide"
+        "Skryť": "Hide",
+        "Stiahnuť z Google Play": "Get it on Google Play"
     }, cz: {
         "Digitálna dielňa": "Digitální dílna",
         "Prihláste sa pre prístup k výkresom": "Přihlaste se pro přístup k výkresům",
@@ -1139,7 +1140,8 @@
         "Naposledy otvorené": "Naposledy otevřené",
         "Pokračovať vo výkrese": "Pokračovat ve výkresu",
         "Odstrániť": "Odstranit",
-        "Skryť": "Skrýt"
+        "Skryť": "Skrýt",
+        "Stiahnuť z Google Play": "Stáhnout z Google Play"
     } };
     var D = DICT[lang];
 
