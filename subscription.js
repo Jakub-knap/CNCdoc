@@ -322,6 +322,7 @@ function ensureUpgradeModal() {
                     internetovom prehliadači (Chrome/Safari), nie v tejto
                     appke. Po zaplatení sa prístup v appke odomkne automaticky.
                 </p>
+                <button class="sub-up-btn" data-goto="web">Otvoriť cncdok.sk</button>
                 <button class="sub-up-signout" type="button">Odhlásiť sa</button>
             </div>`;
     } else {
@@ -345,10 +346,32 @@ function ensureUpgradeModal() {
     el.querySelector(".sub-up-x").addEventListener("click", closeUpgrade);
     const gotoBtn = el.querySelector('[data-goto="cennik"]');
     if (gotoBtn) gotoBtn.addEventListener("click", () => { window.location.href = UPGRADE_URL; });
+    const gotoWebBtn = el.querySelector('[data-goto="web"]');
+    if (gotoWebBtn) gotoWebBtn.addEventListener("click", () => { openInExternalBrowser("https://cncdok.sk/"); });
     el.querySelector(".sub-up-signout").addEventListener("click", () => {
         if (typeof window.signOut === "function") window.signOut();
         else auth.signOut();
     });
+}
+
+// V Android TWA appke je doména cncdok.sk "overená" (Digital Asset Links),
+// takže obyčajný odkaz na ňu by appka otvorila znova sama v sebe (slučka).
+// Cez Android "intent" odkaz appku donútime otvoriť to v reálnom Chrome.
+function openInExternalBrowser(url) {
+    if (IN_PLAY_STORE) {
+        try {
+            const bare = url.replace(/^https?:\/\//, "");
+            const intentUrl =
+                "intent://" + bare +
+                "#Intent;scheme=https;package=com.android.chrome;" +
+                "S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+            window.location.href = intentUrl;
+        } catch (e) {
+            window.open(url, "_blank");
+        }
+    } else {
+        window.open(url, "_blank");
+    }
 }
 
 function openUpgrade()  { ensureUpgradeModal(); document.getElementById("sub-upgrade").classList.add("visible"); }
