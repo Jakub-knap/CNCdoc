@@ -347,7 +347,7 @@ function ensureUpgradeModal() {
     const gotoBtn = el.querySelector('[data-goto="cennik"]');
     if (gotoBtn) gotoBtn.addEventListener("click", () => { window.location.href = UPGRADE_URL; });
     const gotoWebBtn = el.querySelector('[data-goto="web"]');
-    if (gotoWebBtn) gotoWebBtn.addEventListener("click", () => { openInExternalBrowser("https://cncdok.sk/"); });
+    if (gotoWebBtn) gotoWebBtn.addEventListener("click", () => { openInExternalBrowser("https://cncdok.sk/index.html#cennik"); });
     el.querySelector(".sub-up-signout").addEventListener("click", () => {
         if (typeof window.signOut === "function") window.signOut();
         else auth.signOut();
