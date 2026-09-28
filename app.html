@@ -167,6 +167,45 @@
         }
         .login-lang { justify-content: center; margin-top: 18px; }
 
+        /* ── Prepínač jazyka na login obrazovke (rozbaľovacie menu) ── */
+        .login-lang-dropdown { position: relative; display: flex; justify-content: center; margin-top: 18px; }
+        .login-lang-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: var(--input); border: 1.5px solid var(--border); color: var(--muted);
+            border-radius: 999px; padding: 8px 14px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+            font-family: inherit;
+        }
+        .login-lang-btn .globe { font-size: 16px; line-height: 1; }
+        .login-lang-btn .flag { font-size: 16px; line-height: 1; }
+        .login-lang-btn .caret { font-size: 10px; opacity: .7; transition: transform .15s; }
+        .login-lang-dropdown.open .login-lang-btn .caret { transform: rotate(180deg); }
+        .login-lang-menu {
+            position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+            min-width: 178px; background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 6px; box-shadow: 0 12px 28px rgba(0,0,0,.35); z-index: 30;
+            display: none; flex-direction: column; gap: 2px;
+        }
+        .login-lang-dropdown.open .login-lang-menu { display: flex; }
+        .login-lang-menu button {
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            background: none; border: none; color: var(--muted); text-align: left;
+            border-radius: 8px; padding: 9px 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: inherit;
+        }
+        .login-lang-menu button:hover { background: rgba(255,255,255,.06); }
+        .login-lang-menu button .flag { font-size: 16px; line-height: 1; }
+        .login-lang-menu button .check { margin-left: auto; opacity: 0; color: var(--cut); }
+        html[lang="sk"] .login-lang-menu button[data-lang="sk"],
+        html[lang="cs"] .login-lang-menu button[data-lang="cz"],
+        html[lang="en"] .login-lang-menu button[data-lang="en"],
+        html[lang="pl"] .login-lang-menu button[data-lang="pl"],
+        html[lang="de"] .login-lang-menu button[data-lang="de"] { color: var(--cut); }
+        html[lang="sk"] .login-lang-menu button[data-lang="sk"] .check,
+        html[lang="cs"] .login-lang-menu button[data-lang="cz"] .check,
+        html[lang="en"] .login-lang-menu button[data-lang="en"] .check,
+        html[lang="pl"] .login-lang-menu button[data-lang="pl"] .check,
+        html[lang="de"] .login-lang-menu button[data-lang="de"] .check { opacity: 1; }
+
         /* ── PRENOS DÁT (QR) ── */
         .tr-title { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
         .tr-desc { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
@@ -1419,12 +1458,19 @@
     </div>
 
     <p class="login-note" style="margin-top:16px;">Vaše dáta sú uložené bezpečne na vašom účte.</p>
-    <div class="lang-switch login-lang" data-no-tr>
-        <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">Slovenčina</button>
-        <button type="button" class="lang-btn" data-lang="cz" onclick="setLanguage('cz')">Čeština</button>
-        <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</button>
-        <button type="button" class="lang-btn" data-lang="pl" onclick="setLanguage('pl')">Polski</button>
-        <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">Deutsch</button>
+    <div class="login-lang-dropdown" id="login-lang-dropdown" data-no-tr>
+        <div class="login-lang-menu">
+            <button type="button" data-lang="sk" onclick="setLanguage('sk')"><span class="flag">🇸🇰</span> Slovenčina <span class="check">✓</span></button>
+            <button type="button" data-lang="cz" onclick="setLanguage('cz')"><span class="flag">🇨🇿</span> Čeština <span class="check">✓</span></button>
+            <button type="button" data-lang="en" onclick="setLanguage('en')"><span class="flag">🇬🇧</span> English <span class="check">✓</span></button>
+            <button type="button" data-lang="pl" onclick="setLanguage('pl')"><span class="flag">🇵🇱</span> Polski <span class="check">✓</span></button>
+            <button type="button" data-lang="de" onclick="setLanguage('de')"><span class="flag">🇩🇪</span> Deutsch <span class="check">✓</span></button>
+        </div>
+        <button type="button" class="login-lang-btn" onclick="toggleLoginLangMenu(event)">
+            <span class="globe">🌐</span>
+            <span class="flag" id="login-lang-flag">🇸🇰</span>
+            <span class="caret">▾</span>
+        </button>
     </div>
 </div>
 
@@ -5653,6 +5699,25 @@ window.showToast = (msg, type='') => {
         });
     }
 })();
+
+// ── Rozbaľovacie menu jazyka na login obrazovke ──
+(function() {
+    var FLAGS = { sk: '🇸🇰', cz: '🇨🇿', en: '🇬🇧', pl: '🇵🇱', de: '🇩🇪' };
+    var cur = window.CNC_LANG || 'sk';
+    var flagEl = document.getElementById('login-lang-flag');
+    if (flagEl) flagEl.textContent = FLAGS[cur] || '🇸🇰';
+})();
+window.toggleLoginLangMenu = function (e) {
+    if (e) e.stopPropagation();
+    var el = document.getElementById('login-lang-dropdown');
+    if (el) el.classList.toggle('open');
+};
+document.addEventListener('click', function (e) {
+    var el = document.getElementById('login-lang-dropdown');
+    if (el && el.classList.contains('open') && !el.contains(e.target)) {
+        el.classList.remove('open');
+    }
+});
 </script>
 <!-- SUBSCRIPTION GATE (Trial / Free / Premium) -->
 <script type="module" src="subscription.js"></script>
