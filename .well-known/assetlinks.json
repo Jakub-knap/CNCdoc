@@ -1,11 +1,13 @@
 [{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "sk.cncdok.twa",
-        "sha256_cert_fingerprints": [
-          "F8:46:31:02:DB:33:5F:8E:20:4C:9E:FD:01:3D:0F:6A:E1:8B:A1:59:72:27:51:4A:6D:FE:CF:C4:79:A1:BD:D1",
-          "76:3C:D6:06:E6:5A:3C:6A:33:0C:47:00:2E:90:DE:EB:50:68:F2:08:B8:55:1B:CA:15:CE:CB:94:B9:B3:40:1F"
-        ]
-      }
-    }]
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "sk.cncdok.twa",
+    "sha256_cert_fingerprints": [
+      "F8:46:31:02:DB:33:5F:8E:20:4C:9E:FD:01:3D:0F:6A:E1:8B:A1:59:72:27:51:4A:6D:FE:CF:C4:79:A1:BD:D1",
+      "76:3C:D6:06:E6:5A:3C:6A:33:0C:47:00:2E:90:DE:EB:50:68:F2:08:B8:55:1B:CA:15:CE:CB:94:B9:B3:40:1F",
+      "71:FD:3D:D9:ED:6A:42:13:DA:9F:6B:8B:70:6E:BA:C0:20:FB:C2:42:91:99:C5:FA:AC:46:AF:DC:10:60:3D:21",
+      "3F:58:07:0E:30:97:BC:5C:DA:00:C7:77:4A:3A:9B:4B:A8:C5:BE:CA:64:BE:26:F5:60:E5:6F:D8:3A:77:2D:59"
+    ]
+  }
+}]
