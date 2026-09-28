@@ -594,7 +594,7 @@
         }
 
         /* ── Prepínač jazyka ── */
-        .lang-top { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; z-index: 5; }
+        .lang-top { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 200px; z-index: 5; }
         .lang-top button {
             background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: var(--muted);
             border-radius: 8px; padding: 6px 11px; font-size: 12px; font-weight: 700; cursor: pointer;
@@ -604,9 +604,13 @@
         .lang-top button[data-lang="sk"]::before { content: "🇸🇰"; }
         .lang-top button[data-lang="cz"]::before { content: "🇨🇿"; }
         .lang-top button[data-lang="en"]::before { content: "🇬🇧"; }
+        .lang-top button[data-lang="pl"]::before { content: "🇵🇱"; }
+        .lang-top button[data-lang="de"]::before { content: "🇩🇪"; }
         html[lang="sk"] .lang-top button[data-lang="sk"],
         html[lang="cs"] .lang-top button[data-lang="cz"],
-        html[lang="en"] .lang-top button[data-lang="en"] { color: var(--cut); border-color: var(--cut); background: rgba(249,115,22,.12); }
+        html[lang="en"] .lang-top button[data-lang="en"],
+        html[lang="pl"] .lang-top button[data-lang="pl"],
+        html[lang="de"] .lang-top button[data-lang="de"] { color: var(--cut); border-color: var(--cut); background: rgba(249,115,22,.12); }
 
         /* ── Štítok "Nové" pri funkcii ── */
         .feat-new {
@@ -639,6 +643,8 @@
         <button type="button" data-lang="sk" onclick="setLanguage('sk')">SK</button>
         <button type="button" data-lang="cz" onclick="setLanguage('cz')">CZ</button>
         <button type="button" data-lang="en" onclick="setLanguage('en')">EN</button>
+        <button type="button" data-lang="pl" onclick="setLanguage('pl')">PL</button>
+        <button type="button" data-lang="de" onclick="setLanguage('de')">DE</button>
     </div>
     <div class="logo-wrap">
         <div class="logo-icon">

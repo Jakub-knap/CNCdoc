@@ -122,6 +122,10 @@
         .settings-item:active { background: rgba(255,255,255,.08); }
         .settings-item-static { cursor: default; }
         .settings-item-static:hover { background: none; }
+        .settings-item-lang {
+            flex-direction: column; align-items: stretch; gap: 10px;
+        }
+        .settings-item-lang .settings-item-head { display: flex; align-items: center; gap: 12px; }
         .settings-item-icon { font-size: 19px; flex-shrink: 0; width: 24px; text-align: center; }
         .settings-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
         .settings-item-title { font-size: 14px; font-weight: 700; color: var(--white); }
@@ -142,7 +146,7 @@
         .settings-toggle input:checked + .settings-toggle-slider { background: rgba(249,115,22,.25); border-color: var(--cut); }
         .settings-toggle input:checked + .settings-toggle-slider::before { transform: translateX(18px); background: var(--cut); }
 
-        .lang-switch { display: flex; gap: 6px; flex-shrink: 0; }
+        .lang-switch { display: flex; gap: 6px; flex-wrap: wrap; }
         .lang-btn {
             background: var(--input); border: 1.5px solid var(--border); color: var(--muted);
             border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer;
@@ -152,9 +156,13 @@
         .lang-btn[data-lang="sk"]::before { content: "🇸🇰"; }
         .lang-btn[data-lang="cz"]::before { content: "🇨🇿"; }
         .lang-btn[data-lang="en"]::before { content: "🇬🇧"; }
+        .lang-btn[data-lang="pl"]::before { content: "🇵🇱"; }
+        .lang-btn[data-lang="de"]::before { content: "🇩🇪"; }
         html[lang="sk"] .lang-btn[data-lang="sk"],
         html[lang="cs"] .lang-btn[data-lang="cz"],
-        html[lang="en"] .lang-btn[data-lang="en"] {
+        html[lang="en"] .lang-btn[data-lang="en"],
+        html[lang="pl"] .lang-btn[data-lang="pl"],
+        html[lang="de"] .lang-btn[data-lang="de"] {
             border-color: var(--cut); color: var(--cut); background: rgba(249,115,22,.12);
         }
         .login-lang { justify-content: center; margin-top: 18px; }
@@ -1320,15 +1328,19 @@
             </span>
         </button>
 
-        <div class="settings-item settings-item-static">
-            <span class="settings-item-icon">🌐</span>
-            <span class="settings-item-text">
-                <span class="settings-item-title">Jazyk / Language</span>
+        <div class="settings-item settings-item-static settings-item-lang">
+            <span class="settings-item-head">
+                <span class="settings-item-icon">🌐</span>
+                <span class="settings-item-text">
+                    <span class="settings-item-title">Jazyk / Language</span>
+                </span>
             </span>
             <span class="lang-switch" data-no-tr>
                 <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">SK</button>
                 <button type="button" class="lang-btn" data-lang="cz" onclick="setLanguage('cz')">CZ</button>
                 <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+                <button type="button" class="lang-btn" data-lang="pl" onclick="setLanguage('pl')">PL</button>
+                <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">DE</button>
             </span>
         </div>
 
@@ -1411,6 +1423,8 @@
         <button type="button" class="lang-btn" data-lang="sk" onclick="setLanguage('sk')">Slovenčina</button>
         <button type="button" class="lang-btn" data-lang="cz" onclick="setLanguage('cz')">Čeština</button>
         <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</button>
+        <button type="button" class="lang-btn" data-lang="pl" onclick="setLanguage('pl')">Polski</button>
+        <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">Deutsch</button>
     </div>
 </div>
 
