@@ -1197,11 +1197,16 @@
             border-radius: 999px; padding: 4px 6px 4px 14px; font-size: 13.5px; font-weight: 600;
             font-family: inherit;
         }
-        .recent-drawing-chip-label { cursor: pointer; }
+        .recent-drawing-chip-label {
+            cursor: pointer; border: none; background: transparent; color: inherit;
+            font-size: inherit; font-weight: inherit; font-family: inherit; padding: 0;
+            display: inline-flex; align-items: center; -webkit-appearance: none; appearance: none;
+        }
         .recent-drawing-chip-close {
             width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer;
             background: rgba(0,0,0,.12); color: var(--light); font-size: 12px; line-height: 1;
             display: flex; align-items: center; justify-content: center; flex: none; font-family: inherit;
+            padding: 0; -webkit-appearance: none; appearance: none;
         }
         .recent-drawing-chip-close:active { background: rgba(0,0,0,.22); }
 
