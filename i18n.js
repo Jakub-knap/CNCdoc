@@ -582,7 +582,8 @@
         "Pokračovať vo výkrese": "Continue drawing",
         "Odstrániť": "Remove",
         "Skryť": "Hide",
-        "Stiahnuť z Google Play": "Get it on Google Play"
+        "Stiahnuť z Google Play": "Get it on Google Play",
+        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "The limit is 10 photos per drawing. Delete older photos, or create a new drawing (e.g. with a -2 suffix)."
     }, cz: {
         "Digitálna dielňa": "Digitální dílna",
         "Prihláste sa pre prístup k výkresom": "Přihlaste se pro přístup k výkresům",
@@ -1141,7 +1142,8 @@
         "Pokračovať vo výkrese": "Pokračovat ve výkresu",
         "Odstrániť": "Odstranit",
         "Skryť": "Skrýt",
-        "Stiahnuť z Google Play": "Stáhnout z Google Play"
+        "Stiahnuť z Google Play": "Stáhnout z Google Play",
+        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit je jen 10 fotek na jeden výkres. Vymažte staré fotky, nebo vytvořte nový výkres (např. s příponou -2)."
     } };
     var D = DICT[lang];
 
@@ -1209,6 +1211,7 @@
             subjNames: { 'Tento účet': 'This account', 'Prijímajúci účet': 'The receiving account' },
             planNames2: { 'plán Firma': 'Company plan', 'plán Jednotlivec': 'Individual plan', 'skúšobná verzia': 'trial' },
             fillIn: function (t) { return 'Fill in ' + t + '!'; },
+            photoLimitStatus: function (n, max) { return '✓ ' + n + '/' + max + ' photos — limit reached'; },
         },
         cz: {
             waiting: ' čeká na nahrání', step: 'Krok', of: 'z', optional: ' · volitelné',
@@ -1237,6 +1240,7 @@
             subjNames: { 'Tento účet': 'Tento účet', 'Prijímajúci účet': 'Přijímající účet' },
             planNames2: { 'plán Firma': 'plán Firma', 'plán Jednotlivec': 'plán Jednotlivec', 'skúšobná verzia': 'zkušební verze' },
             fillIn: function (t) { return 'Vyplňte ' + t + '!'; },
+            photoLimitStatus: function (n, max) { return '✓ ' + n + '/' + max + ' fotek — limit dosažen'; },
         },
     };
     var P = PH[lang];
@@ -1292,7 +1296,8 @@
         [/^Vyplňte ([\s\S]+)!$/, function (m) {
             var t = D[m[1]] || D[cap(m[1])];
             return P.fillIn(t ? t.toLowerCase() : m[1]);
-        }]
+        }],
+        [/^✓ (\d+)\/(\d+) fotiek — limit dosiahnutý$/, function (m) { return P.photoLimitStatus(m[1], m[2]); }]
     ];
 
     function translateCore(s) {

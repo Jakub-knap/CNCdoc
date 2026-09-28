@@ -3927,6 +3927,9 @@ window.openDetail = (number) => {
         ${toolsHtml}
     `;
     document.getElementById('modal-detail').classList.add('open');
+    // Vždy začni od vrchu (fotka), aj keď bolo okno predtým scrollnuté dole pri inom výkrese.
+    const modalBox = document.querySelector('#modal-detail .modal');
+    if (modalBox) modalBox.scrollTop = 0;
 };
 
 window.closeModal = () => document.getElementById('modal-detail').classList.remove('open');
@@ -4031,11 +4034,21 @@ window.addPhotoToDrawing = async (inputEl) => {
     if (!inputEl.files || !inputEl.files.length) return;
     const d = drawings.find(x => x._id === currentDetailId);
     if (!d) return;
-    const newFiles = Array.from(inputEl.files);
-    showToast(`Nahrávam ${newFiles.length} ${newFiles.length === 1 ? 'fotku' : 'fotky'}...`, '');
+    const filesRequested = Array.from(inputEl.files);
 
     const existingPhotos = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
     const existingPaths  = d.photoPaths ? [...d.photoPaths] : [];
+
+    const roomLeft = MAX_PHOTOS_PER_DRAWING - existingPhotos.length;
+    if (roomLeft <= 0) {
+        showToast(photoLimitMsg(), 'err');
+        inputEl.value = '';
+        return;
+    }
+    const newFiles = filesRequested.slice(0, roomLeft);
+    const skipped = filesRequested.length - newFiles.length;
+
+    showToast(`Nahrávam ${newFiles.length} ${newFiles.length === 1 ? 'fotku' : 'fotky'}...`, '');
 
     const newPhotos = [];
     const newPaths  = [];
@@ -4062,7 +4075,7 @@ window.addPhotoToDrawing = async (inputEl) => {
             photos: mergedPhotos, photoPaths: mergedPaths, fileData: mergedPhotos[0]
         });
         d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.fileData = mergedPhotos[0];
-        showToast('Fotky pridané ✓', 'ok');
+        showToast(skipped > 0 ? photoLimitMsg() : 'Fotky pridané ✓', skipped > 0 ? 'err' : 'ok');
         openDetail(d.number);
     } catch (e) {
         showToast('⚠ Nepodarilo sa uložiť: ' + (e.message || 'skúste znova'), 'err');
@@ -4279,9 +4292,18 @@ window.onDrawingFile = async (input) => {
     input.value = '';
     if (!files.length) return;
     const st = document.getElementById('ad-file-status');
-    photoJobs += files.length;
-    for (const f of files) {
-        if (st) st.textContent = files.length > 1 ? 'Spracúvam fotky...' : 'Spracúvam fotku...';
+
+    const roomLeft = MAX_PHOTOS_PER_DRAWING - window.pendingDrawingPhotos.length;
+    if (roomLeft <= 0) {
+        showToast(photoLimitMsg(), 'err');
+        return;
+    }
+    const toProcess = files.slice(0, roomLeft);
+    const skipped = files.length - toProcess.length;
+
+    photoJobs += toProcess.length;
+    for (const f of toProcess) {
+        if (st) st.textContent = toProcess.length > 1 ? 'Spracúvam fotky...' : 'Spracúvam fotku...';
         try {
             const dataUrl = await shrinkPhoto(f, 2400);
             window.pendingDrawingPhotos.push({ dataUrl });   // len zmenšená verzia, originál sa nedrží
@@ -4291,6 +4313,7 @@ window.onDrawingFile = async (input) => {
         photoJobs--;
         renderPhotoGallery('ad');
     }
+    if (skipped > 0) showToast(photoLimitMsg(), 'err');
 };
 
 function renderPhotoGallery(prefix) {
@@ -4308,7 +4331,13 @@ function renderPhotoGallery(prefix) {
         gallery.appendChild(div);
     });
     const st = document.getElementById(prefix + '-file-status');
-    if (st) st.textContent = photos.length ? `✓ ${photos.length} ${photos.length === 1 ? 'fotka pripravená' : 'fotky pripravené'}` : '';
+    if (st) {
+        if (photos.length >= MAX_PHOTOS_PER_DRAWING) {
+            st.textContent = `✓ ${photos.length}/${MAX_PHOTOS_PER_DRAWING} fotiek — limit dosiahnutý`;
+        } else {
+            st.textContent = photos.length ? `✓ ${photos.length} ${photos.length === 1 ? 'fotka pripravená' : 'fotky pripravené'}` : '';
+        }
+    }
 }
 
 window.removePendingPhoto = (i) => {
@@ -4535,6 +4564,10 @@ window.addEventListener('online', () => { processDeleteQueue(); });
 // Keď sa fotka nedá spracovať, vyhodí chybu — originál sa NIKDY nenahrá nezmenšený.
 const PHOTO_MAX_CHARS = 950000;   // ~700 KB súbor (base64 je o tretinu dlhší)
 let photoJobs = 0;                // koľko fotiek sa práve spracúva (Uložiť musí počkať)
+const MAX_PHOTOS_PER_DRAWING = 10; // max fotiek na jeden výkres (nový aj existujúci)
+function photoLimitMsg() {
+    return `Limit je len ${MAX_PHOTOS_PER_DRAWING} fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).`;
+}
 
 async function shrinkPhoto(file, maxSide) {
     if (!file) throw new Error('no_file');
