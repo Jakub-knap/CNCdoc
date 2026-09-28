@@ -598,7 +598,12 @@
         .lang-top button {
             background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: var(--muted);
             border-radius: 8px; padding: 6px 11px; font-size: 12px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
         }
+        .lang-top button::before { font-size: 14px; line-height: 1; }
+        .lang-top button[data-lang="sk"]::before { content: "🇸🇰"; }
+        .lang-top button[data-lang="cz"]::before { content: "🇨🇿"; }
+        .lang-top button[data-lang="en"]::before { content: "🇬🇧"; }
         html[lang="sk"] .lang-top button[data-lang="sk"],
         html[lang="cs"] .lang-top button[data-lang="cz"],
         html[lang="en"] .lang-top button[data-lang="en"] { color: var(--cut); border-color: var(--cut); background: rgba(249,115,22,.12); }
