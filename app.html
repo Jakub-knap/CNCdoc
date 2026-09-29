@@ -3683,6 +3683,7 @@ window.closePhotoLimitModal = () => {
 window.photoLimitGoToDrawing = () => {
     const num = window._photoLimitDrawingNumber;
     closePhotoLimitModal();
+    closeModal(); // zavri aj detail výkresu, ak bol otvorený pod týmto oknom
     openSection('sec-del-drawing');
     const inp = document.getElementById('inp-del-drawing');
     if (inp) {
@@ -4182,7 +4183,7 @@ window.addPhotoToDrawing = async (inputEl) => {
             photos: mergedPhotos, photoPaths: mergedPaths, fileData: mergedPhotos[0]
         });
         d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.fileData = mergedPhotos[0];
-        if (skipped > 0) { openDetail(d.number); openPhotoLimitModal(d.number); }
+        if (skipped > 0) { openPhotoLimitModal(d.number); }
         else { showToast('Fotky pridané ✓', 'ok'); openDetail(d.number); }
     } catch (e) {
         showToast('⚠ Nepodarilo sa uložiť: ' + (e.message || 'skúste znova'), 'err');
