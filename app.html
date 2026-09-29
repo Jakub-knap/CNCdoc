@@ -2047,7 +2047,7 @@
             Limit je 10 fotiek na jeden výkres. Vymažte staré fotky z tohto výkresu, alebo vytvorte nový výkres (napr. s príponou -2).
         </div>
         <div style="display:flex; flex-direction:column; gap:8px;">
-            <button class="btn btn-blue" id="photo-limit-goto-btn" style="margin:0;" onclick="photoLimitGoToDrawing()">Upraviť / vymazať fotky</button>
+            <button class="btn btn-blue" style="margin:0;" onclick="photoLimitGoToDrawing()">✏️ Upraviť / vymazať výkres</button>
             <button class="btn btn-ghost" style="margin:0;" onclick="closePhotoLimitModal()">Zavrieť</button>
         </div>
     </div>
@@ -3672,11 +3672,9 @@ window.closeOldDrawingsModal = () => {
 };
 
 // ════════ LIMIT FOTIEK NA VÝKRES — MODÁL (namiesto mizniaceho toastu) ════════
-window._photoLimitDrawingNumber = null; // číslo výkresu na presmerovanie, ak existuje (null = nový výkres)
+window._photoLimitDrawingNumber = null; // číslo výkresu na predvyplnenie hľadania, ak existuje (null = nový výkres)
 window.openPhotoLimitModal = (drawingNumber) => {
     window._photoLimitDrawingNumber = drawingNumber || null;
-    const btn = document.getElementById('photo-limit-goto-btn');
-    if (btn) btn.style.display = drawingNumber ? '' : 'none';
     document.getElementById('modal-photo-limit').classList.add('open');
 };
 window.closePhotoLimitModal = () => {
@@ -3685,9 +3683,11 @@ window.closePhotoLimitModal = () => {
 window.photoLimitGoToDrawing = () => {
     const num = window._photoLimitDrawingNumber;
     closePhotoLimitModal();
-    if (num) {
-        openSection('sec-search-drawing');
-        openDetail(num);
+    openSection('sec-del-drawing');
+    const inp = document.getElementById('inp-del-drawing');
+    if (inp) {
+        inp.value = num || '';
+        window.renderDelDrawing && window.renderDelDrawing();
     }
 };
 
