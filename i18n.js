@@ -584,7 +584,10 @@
         "Odstrániť": "Remove",
         "Skryť": "Hide",
         "Stiahnuť z Google Play": "Get it on Google Play",
-        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "The limit is 10 photos per drawing. Delete older photos, or create a new drawing (e.g. with a -2 suffix)."
+        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "The limit is 10 photos per drawing. Delete older photos, or create a new drawing (e.g. with a -2 suffix).",
+        "📸 Limit fotiek dosiahnutý": "📸 Photo limit reached",
+        "Limit je 10 fotiek na jeden výkres. Vymažte staré fotky z tohto výkresu, alebo vytvorte nový výkres (napr. s príponou -2).": "The limit is 10 photos per drawing. Delete old photos from this drawing, or create a new drawing (e.g. with a -2 suffix).",
+        "Upraviť / vymazať fotky": "Edit / delete photos"
     }, cz: {
         "Digitálna dielňa": "Digitální dílna",
         "Prihláste sa pre prístup k výkresom": "Přihlaste se pro přístup k výkresům",
@@ -1144,7 +1147,10 @@
         "Odstrániť": "Odstranit",
         "Skryť": "Skrýt",
         "Stiahnuť z Google Play": "Stáhnout z Google Play",
-        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit je jen 10 fotek na jeden výkres. Vymažte staré fotky, nebo vytvořte nový výkres (např. s příponou -2)."
+        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit je jen 10 fotek na jeden výkres. Vymažte staré fotky, nebo vytvořte nový výkres (např. s příponou -2).",
+        "📸 Limit fotiek dosiahnutý": "📸 Limit fotek dosažen",
+        "Limit je 10 fotiek na jeden výkres. Vymažte staré fotky z tohto výkresu, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit je 10 fotek na jeden výkres. Vymažte staré fotky z tohoto výkresu, nebo vytvořte nový výkres (např. s příponou -2).",
+        "Upraviť / vymazať fotky": "Upravit / smazat fotky"
     }, pl: {
         "Digitálna dielňa": "Cyfrowy warsztat",
         "Prihláste sa pre prístup k výkresom": "Zaloguj się, aby uzyskać dostęp do rysunków",
@@ -1704,7 +1710,10 @@
         "Odstrániť": "Usuń",
         "Skryť": "Ukryj",
         "Stiahnuť z Google Play": "Pobierz z Google Play",
-        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit to tylko 10 zdjęć na jeden rysunek. Usuń stare zdjęcia albo utwórz nowy rysunek (np. z przyrostkiem -2)."
+        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit to tylko 10 zdjęć na jeden rysunek. Usuń stare zdjęcia albo utwórz nowy rysunek (np. z przyrostkiem -2).",
+        "📸 Limit fotiek dosiahnutý": "📸 Osiągnięto limit zdjęć",
+        "Limit je 10 fotiek na jeden výkres. Vymažte staré fotky z tohto výkresu, alebo vytvorte nový výkres (napr. s príponou -2).": "Limit to 10 zdjęć na jeden rysunek. Usuń stare zdjęcia z tego rysunku albo utwórz nowy rysunek (np. z przyrostkiem -2).",
+        "Upraviť / vymazať fotky": "Edytuj / usuń zdjęcia"
     }, de: {
         "Digitálna dielňa": "Digitale Werkstatt",
         "Prihláste sa pre prístup k výkresom": "Melde dich an, um auf deine Zeichnungen zuzugreifen",
@@ -2264,7 +2273,10 @@
         "Odstrániť": "Entfernen",
         "Skryť": "Ausblenden",
         "Stiahnuť z Google Play": "Bei Google Play herunterladen",
-        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Das Limit liegt bei 10 Fotos pro Zeichnung. Lösche alte Fotos oder erstelle eine neue Zeichnung (z. B. mit dem Zusatz -2)."
+        "Limit je len 10 fotiek na jeden výkres. Vymažte staré fotky, alebo vytvorte nový výkres (napr. s príponou -2).": "Das Limit liegt bei 10 Fotos pro Zeichnung. Lösche alte Fotos oder erstelle eine neue Zeichnung (z. B. mit dem Zusatz -2).",
+        "📸 Limit fotiek dosiahnutý": "📸 Fotolimit erreicht",
+        "Limit je 10 fotiek na jeden výkres. Vymažte staré fotky z tohto výkresu, alebo vytvorte nový výkres (napr. s príponou -2).": "Das Limit liegt bei 10 Fotos pro Zeichnung. Lösche alte Fotos aus dieser Zeichnung oder erstelle eine neue Zeichnung (z. B. mit dem Zusatz -2).",
+        "Upraviť / vymazať fotky": "Fotos bearbeiten / löschen"
     } };
     var D = DICT[lang];
 

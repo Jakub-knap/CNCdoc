@@ -2036,6 +2036,23 @@
     </div>
 </div>
 
+<!-- MODAL: Limit fotiek na výkres dosiahnutý -->
+<div id="modal-photo-limit" class="modal-bg" style="z-index:460;" onclick="closePhotoLimitModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">📸 Limit fotiek dosiahnutý</div>
+            <button class="modal-close" onclick="closePhotoLimitModal()">✕</button>
+        </div>
+        <div style="font-size:14px;color:var(--light);margin-bottom:14px;line-height:1.55;">
+            Limit je 10 fotiek na jeden výkres. Vymažte staré fotky z tohto výkresu, alebo vytvorte nový výkres (napr. s príponou -2).
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn btn-blue" id="photo-limit-goto-btn" style="margin:0;" onclick="photoLimitGoToDrawing()">Upraviť / vymazať fotky</button>
+            <button class="btn btn-ghost" style="margin:0;" onclick="closePhotoLimitModal()">Zavrieť</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: Vybrať nástroje k výkresu -->
 <div id="modal-tool-picker" class="modal-bg" style="z-index:420;" onclick="closeToolPickerModal()">
     <div class="modal" onclick="event.stopPropagation()">
@@ -3654,6 +3671,26 @@ window.closeOldDrawingsModal = () => {
     document.getElementById('modal-old-drawings').classList.remove('open');
 };
 
+// ════════ LIMIT FOTIEK NA VÝKRES — MODÁL (namiesto mizniaceho toastu) ════════
+window._photoLimitDrawingNumber = null; // číslo výkresu na presmerovanie, ak existuje (null = nový výkres)
+window.openPhotoLimitModal = (drawingNumber) => {
+    window._photoLimitDrawingNumber = drawingNumber || null;
+    const btn = document.getElementById('photo-limit-goto-btn');
+    if (btn) btn.style.display = drawingNumber ? '' : 'none';
+    document.getElementById('modal-photo-limit').classList.add('open');
+};
+window.closePhotoLimitModal = () => {
+    document.getElementById('modal-photo-limit').classList.remove('open');
+};
+window.photoLimitGoToDrawing = () => {
+    const num = window._photoLimitDrawingNumber;
+    closePhotoLimitModal();
+    if (num) {
+        openSection('sec-search-drawing');
+        openDetail(num);
+    }
+};
+
 window.remindOldDrawingsLater = () => {
     const in30days = Date.now() + 30 * 24 * 60 * 60 * 1000;
     localStorage.setItem(OLD_SNOOZE_KEY, String(in30days));
@@ -4111,7 +4148,7 @@ window.addPhotoToDrawing = async (inputEl) => {
 
     const roomLeft = MAX_PHOTOS_PER_DRAWING - existingPhotos.length;
     if (roomLeft <= 0) {
-        showToast(photoLimitMsg(), 'err');
+        openPhotoLimitModal(d.number);
         inputEl.value = '';
         return;
     }
@@ -4145,8 +4182,8 @@ window.addPhotoToDrawing = async (inputEl) => {
             photos: mergedPhotos, photoPaths: mergedPaths, fileData: mergedPhotos[0]
         });
         d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.fileData = mergedPhotos[0];
-        showToast(skipped > 0 ? photoLimitMsg() : 'Fotky pridané ✓', skipped > 0 ? 'err' : 'ok');
-        openDetail(d.number);
+        if (skipped > 0) { openDetail(d.number); openPhotoLimitModal(d.number); }
+        else { showToast('Fotky pridané ✓', 'ok'); openDetail(d.number); }
     } catch (e) {
         showToast('⚠ Nepodarilo sa uložiť: ' + (e.message || 'skúste znova'), 'err');
     }
@@ -4365,7 +4402,7 @@ window.onDrawingFile = async (input) => {
 
     const roomLeft = MAX_PHOTOS_PER_DRAWING - window.pendingDrawingPhotos.length;
     if (roomLeft <= 0) {
-        showToast(photoLimitMsg(), 'err');
+        openPhotoLimitModal(null);
         return;
     }
     const toProcess = files.slice(0, roomLeft);
@@ -4383,7 +4420,7 @@ window.onDrawingFile = async (input) => {
         photoJobs--;
         renderPhotoGallery('ad');
     }
-    if (skipped > 0) showToast(photoLimitMsg(), 'err');
+    if (skipped > 0) openPhotoLimitModal(null);
 };
 
 function renderPhotoGallery(prefix) {
