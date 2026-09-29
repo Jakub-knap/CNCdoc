@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cncdoca.vercel.app/sitemap.xml
