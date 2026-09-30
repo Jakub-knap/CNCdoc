@@ -133,6 +133,10 @@
 
         .settings-divider { height: 1px; background: var(--border); margin: 8px 0; }
 
+        .settings-legal-links { display: flex; justify-content: center; gap: 8px; padding: 10px 4px 4px; font-size: 11.5px; color: var(--muted); }
+        .settings-legal-links a { color: var(--muted); text-decoration: underline; }
+        .settings-legal-links a:active { color: var(--light); }
+
         .settings-toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
         .settings-toggle input { opacity: 0; width: 0; height: 0; }
         .settings-toggle-slider {
@@ -320,8 +324,20 @@
 
         .login-sub {
             font-size: 15px; color: var(--muted);
-            margin-bottom: 48px; line-height: 1.6;
+            margin-bottom: 28px; line-height: 1.6;
         }
+
+        .login-tos {
+            display: flex; align-items: flex-start; gap: 9px;
+            max-width: 320px; margin-bottom: 20px;
+            font-size: 12.5px; color: var(--muted); line-height: 1.5;
+            cursor: pointer; text-align: left;
+        }
+        .login-tos input[type="checkbox"] {
+            width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px;
+            accent-color: var(--cut, #f97316); cursor: pointer;
+        }
+        .login-tos a { color: var(--cut, #f97316); text-decoration: underline; }
 
         .btn-google {
             display: flex; align-items: center; gap: 12px;
@@ -1418,6 +1434,13 @@
                 <span class="storage-opt-desc">Výkresy, fotky, programy, poznámky ani nástroje sa neodosielajú na server, zostanú len v tomto zariadení. <strong>Bez zálohy</strong> — ak mobil stratíte, pokazíte alebo vymažete dáta prehliadača, nedajú sa obnoviť. Iné zariadenia ich neuvidia. Na serveri je len váš prihlasovací účet a predplatné.</span>
             </span>
         </button>
+
+        <div class="settings-divider"></div>
+        <div class="settings-legal-links">
+            <a href="privacy.html" target="_blank" rel="noopener">Ochrana osobných údajov</a>
+            <span>·</span>
+            <a href="obchodne-podmienky.html" target="_blank" rel="noopener">Obchodné podmienky</a>
+        </div>
     </div>
 </div>
 
@@ -1431,6 +1454,11 @@
 <div class="login-screen" id="login-screen">
     <div class="login-logo">CNC<span>dok</span></div>
     <div class="login-sub">Digitálna dielňa<br>Prihláste sa pre prístup k výkresom</div>
+
+    <label class="login-tos" for="auth-tos-agree">
+        <input type="checkbox" id="auth-tos-agree">
+        <span>Súhlasím s <a href="obchodne-podmienky.html" target="_blank" rel="noopener" onclick="event.stopPropagation()">Obchodnými podmienkami</a> a <a href="privacy.html" target="_blank" rel="noopener" onclick="event.stopPropagation()">Zásadami ochrany osobných údajov</a></span>
+    </label>
 
     <button class="btn-google" onclick="signInGoogle()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1471,6 +1499,11 @@
             <span class="flag" id="login-lang-flag">🇸🇰</span>
             <span class="caret">▾</span>
         </button>
+    </div>
+    <div class="settings-legal-links" style="margin-top:10px;">
+        <a href="privacy.html" target="_blank" rel="noopener">Ochrana osobných údajov</a>
+        <span>·</span>
+        <a href="obchodne-podmienky.html" target="_blank" rel="noopener">Obchodné podmienky</a>
     </div>
 </div>
 
@@ -2936,6 +2969,9 @@ window.selectCategory = (id) => {
 
 // ════════ AUTH ════════
 window.signInGoogle = async () => {
+    const tosBox = document.getElementById('auth-tos-agree');
+    if (tosBox && !tosBox.checked) { showToast('Najprv odsúhlaste Obchodné podmienky a Zásady ochrany osobných údajov', 'err'); return; }
+    if (window._rememberTosAgreed) window._rememberTosAgreed();
     try {
         await signInWithPopup(auth, provider);
     } catch(e) {
@@ -2958,8 +2994,11 @@ window.handleEmailAuth = async () => {
     const email = document.getElementById('auth-email').value.trim();
     const pass  = document.getElementById('auth-password').value;
     const pass2 = document.getElementById('auth-password2').value;
+    const tosBox = document.getElementById('auth-tos-agree');
+    if (tosBox && !tosBox.checked) { showToast('Najprv odsúhlaste Obchodné podmienky a Zásady ochrany osobných údajov', 'err'); return; }
     if (!email || !pass) { showToast('Vyplňte email a heslo!', 'err'); return; }
     if (pass.length < 6)  { showToast('Heslo musí mať aspoň 6 znakov!', 'err'); return; }
+    if (window._rememberTosAgreed) window._rememberTosAgreed();
     try {
         if (authMode === 'register') {
             if (pass !== pass2) { showToast('Heslá sa nezhodujú!', 'err'); return; }
@@ -5745,6 +5784,17 @@ window.showToast = (msg, type='') => {
     var flagEl = document.getElementById('login-lang-flag');
     if (flagEl) flagEl.textContent = FLAGS[cur] || '🇸🇰';
 })();
+
+// ── Súhlas s podmienkami: raz odsúhlasené sa na tomto zariadení zapamätá ──
+(function() {
+    var box = document.getElementById('auth-tos-agree');
+    if (box) {
+        try { if (localStorage.getItem('cnc_tos_agreed') === '1') box.checked = true; } catch(e) {}
+    }
+})();
+window._rememberTosAgreed = function () {
+    try { localStorage.setItem('cnc_tos_agreed', '1'); } catch(e) {}
+};
 window.toggleLoginLangMenu = function (e) {
     if (e) e.stopPropagation();
     var el = document.getElementById('login-lang-dropdown');

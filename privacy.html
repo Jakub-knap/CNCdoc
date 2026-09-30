@@ -31,6 +31,9 @@
         li { font-size: 15px; color: #cbd5e1; margin-bottom: 6px; }
         strong { color: #fff; }
         a { color: #f97316; }
+        .box { background: #1a2332; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 18px; margin: 14px 0 20px; }
+        .box p { margin-bottom: 6px; }
+        .placeholder { color: #f97316; font-weight: 700; }
         .back { display: inline-block; margin-top: 32px; padding: 12px 20px; background: #1e2d3d; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e2e8f0; text-decoration: none; font-weight: 600; font-size: 14px; }
     </style>
 </head>
@@ -40,35 +43,68 @@
 </div>
 <div class="wrap">
     <h1>Zásady ochrany osobných údajov</h1>
-    <div class="updated">Naposledy aktualizované: júl 2026</div>
+    <div class="updated">Naposledy aktualizované: september 2026</div>
 
-    <p>Tieto zásady vysvetľujú, aké údaje aplikácia CNCdok spracúva a prečo. Zaväzujeme sa chrániť vaše súkromie a spracúvať údaje v súlade s GDPR.</p>
+    <p>Tieto zásady vysvetľujú, aké osobné údaje aplikácia CNCdok spracúva, na akom základe a aké máte práva. Spracúvanie prebieha v súlade s nariadením (EÚ) 2016/679 (GDPR) a zákonom č. 18/2018 Z. z. o ochrane osobných údajov.</p>
 
-    <h2>Aké údaje spracúvame</h2>
+    <h2>Prevádzkovateľ</h2>
+    <div class="box">
+        <p><strong>Jakub Knap</strong></p>
+        <p>IČO: 50 712 900 (fyzická osoba – podnikateľ, nie som platcom DPH)</p>
+        <p>Miesto podnikania: Andreja Svianteka 2566/16, 085 01 Bardejov</p>
+        <p>E-mail: <a href="mailto:cncdokumentacia@gmail.com">cncdokumentacia@gmail.com</a></p>
+    </div>
+
+    <h2>Aké údaje spracúvame a na akom právnom základe</h2>
     <ul>
-        <li><strong>Prihlasovacie údaje</strong> – email alebo Google účet, ktorým sa prihlasujete. Slúžia výhradne na identifikáciu vášho účtu.</li>
-        <li><strong>Vami zadané dáta</strong> – stroje, výkresy (vrátane fotiek), nástroje a poznámky, ktoré do aplikácie vložíte.</li>
-        <li><strong>Technické údaje</strong> – nastavenia aplikácie uložené vo vašom zariadení (napr. režim zobrazenia).</li>
+        <li><strong>Prihlasovacie a fakturačné údaje</strong> – email, prípadne meno z Google účtu, ktorým sa prihlasujete, a údaje o platbe spracované cez Stripe. Právny základ: plnenie zmluvy (čl. 6 ods. 1 písm. b) GDPR) – bez nich by sme nemohli poskytnúť prístup k účtu ani spracovať platbu.</li>
+        <li><strong>Vami zadané dáta</strong> – stroje, výkresy (vrátane fotiek), nástroje, CNC programy a poznámky, ktoré do aplikácie vložíte. Právny základ: plnenie zmluvy – ide o samotný obsah služby, ktorú si objednávate.</li>
+        <li><strong>Technické a prevádzkové údaje</strong> – nastavenia aplikácie, stav synchronizácie. Právny základ: oprávnený záujem (čl. 6 ods. 1 písm. f) GDPR) – zabezpečenie funkčnosti a bezpečnosti služby.</li>
+        <li><strong>Analytické cookies (Google Analytics)</strong> – merajú návštevnosť. Právny základ: váš súhlas (čl. 6 ods. 1 písm. a) GDPR), ktorý môžete kedykoľvek odvolať (pozri sekciu Cookies nižšie).</li>
     </ul>
 
+    <h2>Doba uchovávania</h2>
+    <p>Údaje spojené s vaším účtom uchovávame po dobu jeho existencie. Po zrušení/vymazaní účtu sa údaje odstránia bez zbytočného odkladu, s výnimkou údajov, ktoré sme povinní uchovávať dlhšie na základe zákona (napr. účtovné doklady o platbách podľa zákona o účtovníctve, spravidla 10 rokov). Fakturačné údaje spracované cez Stripe podliehajú aj retenčným pravidlám Stripe.</p>
+
     <h2>Kde sú údaje uložené</h2>
-    <p>Vaše dáta sú uložené v službe <strong>Google Firebase (Firestore)</strong> na serveroch v Európskej únii. Prístup k nim máte len vy prostredníctvom svojho účtu.</p>
+    <p>Vaše dáta sú uložené v službe <strong>Google Firebase (Firestore)</strong>. <span class="placeholder">[OVERIŤ: presnú lokalitu databázy vo Firebase Console → Firestore Database → nastavenia. Ak je región mimo EÚ, doplniť vetu o medzinárodnom prenose údajov a štandardných zmluvných doložkách (SCC), ktoré Google ako sprostredkovateľ poskytuje.]</span> Prístup k vašim dátam máte len vy prostredníctvom svojho účtu a my ako prevádzkovateľ v nevyhnutnom rozsahu pri riešení technickej podpory.</p>
+
+    <h2>Sprostredkovatelia (tretie strany)</h2>
+    <p>Na prevádzku aplikácie využívame nasledujúcich sprostredkovateľov, ktorí spracúvajú údaje v našom mene:</p>
+    <ul>
+        <li><strong>Google Firebase / Google Cloud</strong> – hosting databázy, autentifikácia, analytika (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">zásady ochrany súkromia Google</a>)</li>
+        <li><strong>Stripe</strong> – spracovanie platieb za predplatné (<a href="https://stripe.com/en-sk/privacy" target="_blank" rel="noopener">zásady ochrany súkromia Stripe</a>). Nemáme prístup k údajom vašej platobnej karty.</li>
+        <li><strong>Vercel</strong> – hosting webovej stránky a spracovanie technických prevádzkových logov.</li>
+    </ul>
 
     <h2>Cookies a analytika</h2>
     <p>Používame dva druhy cookies:</p>
     <ul>
         <li><strong>Nevyhnutné</strong> – potrebné na prihlásenie a fungovanie aplikácie. Bez nich aplikácia nefunguje, preto nevyžadujú súhlas.</li>
-        <li><strong>Analytické (Google Analytics)</strong> – merajú návštevnosť a používanie. Spúšťajú sa <strong>len s vaším súhlasom</strong>, ktorý môžete kedykoľvek odmietnuť.</li>
+        <li><strong>Analytické (Google Analytics)</strong> – merajú návštevnosť a používanie. Spúšťajú sa <strong>len s vaším súhlasom</strong>, ktorý môžete kedykoľvek odmietnuť alebo odvolať vymazaním údajov cookie lišty vo vašom prehliadači.</li>
     </ul>
 
-    <h2>Platby</h2>
-    <p>Platby za predplatné spracúva služba <strong>Stripe</strong>. Nemáme prístup k údajom vašej platobnej karty – tie spracúva výhradne Stripe podľa svojich zásad.</p>
+    <h2>Obsah, ktorý nahrávate</h2>
+    <p>Do aplikácie nahrávate výkresy, fotografie a dokumentáciu na vlastnú zodpovednosť. Nenahrávajte obsah, ktorý podlieha vývozným obmedzeniam, je utajovanou skutočnosťou, alebo ktorého uloženie v bežnom cloudovom úložisku (mimo vašej vlastnej infraštruktúry) je v rozpore so zákonom alebo s vašimi zmluvnými záväzkami voči tretej strane (napr. voči odberateľovi z obranného priemyslu). Podrobnosti a zodpovednosť za takýto obsah upravujú <a href="obchodne-podmienky.html">Obchodné podmienky</a>.</p>
 
     <h2>Vaše práva</h2>
-    <p>Máte právo na prístup k svojim údajom, ich opravu alebo vymazanie. Dáta si môžete kedykoľvek vymazať priamo v aplikácii. Pri vymazaní účtu sa odstránia všetky vaše údaje.</p>
+    <p>Vo vzťahu k svojim osobným údajom máte právo na:</p>
+    <ul>
+        <li>prístup k údajom, ktoré o vás spracúvame,</li>
+        <li>opravu nesprávnych alebo neúplných údajov,</li>
+        <li>vymazanie údajov ("právo na zabudnutie") – dáta si môžete kedykoľvek vymazať priamo v aplikácii, pri vymazaní účtu sa odstránia všetky vaše údaje,</li>
+        <li>obmedzenie spracúvania,</li>
+        <li>prenosnosť údajov k inému poskytovateľovi,</li>
+        <li>namietať proti spracúvaniu na základe oprávneného záujmu,</li>
+        <li>kedykoľvek odvolať udelený súhlas (napr. s analytickými cookies), bez vplyvu na zákonnosť spracúvania pred jeho odvolaním.</li>
+    </ul>
+    <p>Svoje práva si môžete uplatniť emailom na <a href="mailto:cncdokumentacia@gmail.com">cncdokumentacia@gmail.com</a>. Odpovieme najneskôr do 30 dní.</p>
+
+    <h2>Právo podať sťažnosť</h2>
+    <p>Ak sa domnievate, že spracúvanie vašich osobných údajov porušuje GDPR, máte právo podať sťažnosť dozornému orgánu: <strong>Úrad na ochranu osobných údajov Slovenskej republiky</strong>, Hraničná 12, 820 07 Bratislava 27, <a href="https://dataprotection.gov.sk" target="_blank" rel="noopener">dataprotection.gov.sk</a>.</p>
 
     <h2>Kontakt</h2>
-    <p>V prípade otázok ohľadom ochrany údajov nás kontaktujte na emailovej adrese uvedenej v aplikácii.</p>
+    <p>V prípade akýchkoľvek otázok ohľadom ochrany údajov nás kontaktujte na <a href="mailto:cncdokumentacia@gmail.com">cncdokumentacia@gmail.com</a>.</p>
 
     <a href="index.html" class="back">← Späť na hlavnú stránku</a>
 </div>
