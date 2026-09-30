@@ -1302,6 +1302,22 @@
         .tile-wide .ic { width: 48px; height: 48px; border-radius: 12px; background: rgba(22,163,74,.18); display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .tile-wide .tt { font-size: 20px; font-weight: 700; }
 
+        .tile-calc {
+            width: 100%; text-align: left; cursor: pointer; border: 1px solid var(--border);
+            background: var(--card); border-radius: 18px; padding: 16px 18px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 14px; color: var(--light); font-family: inherit;
+            transition: border-color .2s, transform .1s;
+        }
+        .tile-calc:active { transform: scale(.98); }
+        .tile-calc .ic {
+            width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+            background: rgba(249,115,22,.15); border: 1px solid rgba(249,115,22,.4);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tile-calc .ic svg { width: 25px; height: 25px; stroke: var(--cut); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+        .tile-calc .tt { font-size: 17px; font-weight: 700; line-height: 1.2; }
+        .tile-calc .sb { font-size: 12.5px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
         .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
         .tile {
             border: 1px solid var(--border); cursor: pointer; background: var(--card);
@@ -1609,8 +1625,14 @@
                 </button>
             </div>
 
-            <button class="tile-wide" onclick="openSection('sec-calc')">
-                <span class="ic">🧮</span><span class="tt">Kalkulačka otáčok a posuvu</span>
+            <button class="tile-calc" onclick="openSection('sec-calc')">
+                <span class="ic">
+                    <svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16 16 9"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>
+                </span>
+                <span>
+                    <div class="tt">Kalkulačka otáčok a posuvu</div>
+                    <div class="sb">Sústruženie · Vŕtanie · Frézovanie</div>
+                </span>
             </button>
 
             <div class="tile-del-row">
@@ -1900,7 +1922,9 @@
         <div class="section" id="sec-calc">
             <div class="section-head" onclick="toggleSection('sec-calc')">
                 <div class="section-head-left">
-                    <div class="section-icon si-blue">🧮</div>
+                    <div class="section-icon si-orange">
+                        <svg viewBox="0 0 24 24" style="width:19px;height:19px;stroke:var(--cut);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16 16 9"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>
+                    </div>
                     <div>
                         <div class="section-title">Kalkulačka otáčok a posuvu</div>
                         <div class="section-sub">Sústruženie · Vŕtanie · Frézovanie</div>
