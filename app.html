@@ -2176,6 +2176,22 @@
     </div>
 </div>
 
+<!-- SÚHLAS S PODMIENKAMI — MODÁL (namiesto mizniaceho toastu) -->
+<div class="modal-ov" id="tos-modal">
+    <div class="modal-box">
+        <div class="modal-title">📄 Súhlas s podmienkami</div>
+        <div class="modal-desc">Pred prihlásením alebo registráciou je potrebné odsúhlasiť Obchodné podmienky a Zásady ochrany osobných údajov.</div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin:6px 0 4px;">
+            <a href="obchodne-podmienky.html" target="_blank" rel="noopener" style="color:var(--cut,#f97316); font-size:14px; text-decoration:underline;">📄 Obchodné podmienky</a>
+            <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--cut,#f97316); font-size:14px; text-decoration:underline;">🔒 Zásady ochrany osobných údajov</a>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="document.getElementById('tos-modal').classList.remove('visible')">Zavrieť</button>
+            <button class="modal-btn-ok" onclick="agreeTosAndContinue()">Súhlasím, pokračovať</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <!-- FIREBASE -->
@@ -2970,7 +2986,7 @@ window.selectCategory = (id) => {
 // ════════ AUTH ════════
 window.signInGoogle = async () => {
     const tosBox = document.getElementById('auth-tos-agree');
-    if (tosBox && !tosBox.checked) { showToast('Najprv odsúhlaste Obchodné podmienky a Zásady ochrany osobných údajov', 'err'); return; }
+    if (tosBox && !tosBox.checked) { window._pendingAuthAction = 'google'; showTosModal(); return; }
     if (window._rememberTosAgreed) window._rememberTosAgreed();
     try {
         await signInWithPopup(auth, provider);
@@ -2995,7 +3011,7 @@ window.handleEmailAuth = async () => {
     const pass  = document.getElementById('auth-password').value;
     const pass2 = document.getElementById('auth-password2').value;
     const tosBox = document.getElementById('auth-tos-agree');
-    if (tosBox && !tosBox.checked) { showToast('Najprv odsúhlaste Obchodné podmienky a Zásady ochrany osobných údajov', 'err'); return; }
+    if (tosBox && !tosBox.checked) { window._pendingAuthAction = 'email'; showTosModal(); return; }
     if (!email || !pass) { showToast('Vyplňte email a heslo!', 'err'); return; }
     if (pass.length < 6)  { showToast('Heslo musí mať aspoň 6 znakov!', 'err'); return; }
     if (window._rememberTosAgreed) window._rememberTosAgreed();
@@ -5794,6 +5810,21 @@ window.showToast = (msg, type='') => {
 })();
 window._rememberTosAgreed = function () {
     try { localStorage.setItem('cnc_tos_agreed', '1'); } catch(e) {}
+};
+window.showTosModal = function () {
+    var m = document.getElementById('tos-modal');
+    if (m) m.classList.add('visible');
+};
+window.agreeTosAndContinue = function () {
+    var box = document.getElementById('auth-tos-agree');
+    if (box) box.checked = true;
+    window._rememberTosAgreed();
+    var m = document.getElementById('tos-modal');
+    if (m) m.classList.remove('visible');
+    var action = window._pendingAuthAction;
+    window._pendingAuthAction = null;
+    if (action === 'google') window.signInGoogle();
+    else if (action === 'email') window.handleEmailAuth();
 };
 window.toggleLoginLangMenu = function (e) {
     if (e) e.stopPropagation();
