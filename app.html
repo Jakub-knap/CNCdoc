@@ -553,13 +553,14 @@
         .fg { margin-bottom: 12px; }
 
         .calc-tabs { display: flex; width: 100%; background: var(--input); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 16px; }
-        .calc-tab { flex: 1; padding: 10px 2px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; color: var(--muted); transition: all .2s; font-family: inherit; }
+        .calc-tab { flex: 1 1 0; min-width: 0; padding: 10px 3px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; background: transparent; color: var(--muted); transition: all .2s; font-family: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .calc-tab.active { background: var(--cut); color: #fff; }
         .calc-panel { display: none; }
         .calc-panel.active { display: block; }
         .calc-row { display: flex; gap: 10px; }
         .calc-row .fg { flex: 1; min-width: 0; }
         .calc-hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+        .calc-field-desc { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin-top: 5px; }
         .calc-result { background: var(--iron); border: 1px solid var(--border); border-radius: 12px; padding: 4px 16px; margin-top: 6px; }
         .calc-result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 10px; }
         .calc-result-row:last-of-type { border-bottom: none; }
@@ -1917,19 +1918,20 @@
                 <!-- SÚSTRUŽENIE -->
                 <div class="calc-panel active" id="calc-panel-turn">
                     <div class="calc-hint">Nôž sa netočí, točí sa obrobok — preto sa do vzorca dáva <b>priemer obrobku</b>, nie priemer noža. Vc a f sú z krabičky plátkov.</div>
-                    <div class="calc-row">
-                        <div class="fg">
-                            <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
-                            <input type="text" inputmode="decimal" id="calc-turn-vc" oninput="calcCompute('turn')" placeholder="napr. 220">
-                        </div>
-                        <div class="fg">
-                            <label class="field-label">D — priemer obrobku (mm)</label>
-                            <input type="text" inputmode="decimal" id="calc-turn-d" oninput="calcCompute('turn')" placeholder="napr. 40">
-                        </div>
+                    <div class="fg">
+                        <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
+                        <input type="text" inputmode="decimal" id="calc-turn-vc" oninput="calcCompute('turn')" placeholder="napr. 220">
+                        <div class="calc-field-desc">Nájdeš na zadnej strane krabičky od platničiek, podľa obrábaného materiálu (napr. oceľ, nerez, hliník).</div>
+                    </div>
+                    <div class="fg">
+                        <label class="field-label">D — priemer obrobku (mm)</label>
+                        <input type="text" inputmode="decimal" id="calc-turn-d" oninput="calcCompute('turn')" placeholder="napr. 40">
+                        <div class="calc-field-desc">Priemer polotovaru/tyče, ktorú sústružíš — nie priemer noža. Pri sústružení sa totiž točí obrobok.</div>
                     </div>
                     <div class="fg">
                         <label class="field-label">f — posuv na otáčku (mm/ot)</label>
                         <input type="text" inputmode="decimal" id="calc-turn-f" oninput="calcCompute('turn')" placeholder="napr. 0.25">
+                        <div class="calc-field-desc">Tiež z krabičky — o koľko mm sa nôž posunie za jednu otáčku obrobku.</div>
                     </div>
                     <div class="calc-result">
                         <div class="calc-result-row"><span class="calc-result-label">Otáčky n</span><span class="calc-result-value" id="calc-turn-n">—</span></div>
@@ -1941,19 +1943,20 @@
                 <!-- VŔTANIE -->
                 <div class="calc-panel" id="calc-panel-drill">
                     <div class="calc-hint">Rovnaký princíp ako frézovanie — točí sa nástroj. Priemer je priemer vrtáka.</div>
-                    <div class="calc-row">
-                        <div class="fg">
-                            <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
-                            <input type="text" inputmode="decimal" id="calc-drill-vc" oninput="calcCompute('drill')" placeholder="napr. 80">
-                        </div>
-                        <div class="fg">
-                            <label class="field-label">D — priemer vrtáka (mm)</label>
-                            <input type="text" inputmode="decimal" id="calc-drill-d" oninput="calcCompute('drill')" placeholder="napr. 10">
-                        </div>
+                    <div class="fg">
+                        <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
+                        <input type="text" inputmode="decimal" id="calc-drill-vc" oninput="calcCompute('drill')" placeholder="napr. 80">
+                        <div class="calc-field-desc">Z krabičky od vrtáka, podľa materiálu ktorý vŕtaš.</div>
+                    </div>
+                    <div class="fg">
+                        <label class="field-label">D — priemer vrtáka (mm)</label>
+                        <input type="text" inputmode="decimal" id="calc-drill-d" oninput="calcCompute('drill')" placeholder="napr. 10">
+                        <div class="calc-field-desc">Priemer samotného vrtáka (napr. razítko na stopke alebo označenie na krabičke).</div>
                     </div>
                     <div class="fg">
                         <label class="field-label">f — posuv na otáčku (mm/ot)</label>
                         <input type="text" inputmode="decimal" id="calc-drill-f" oninput="calcCompute('drill')" placeholder="napr. 0.15">
+                        <div class="calc-field-desc">Z krabičky — o koľko mm postúpi vrták za jednu otáčku.</div>
                     </div>
                     <div class="calc-result">
                         <div class="calc-result-row"><span class="calc-result-label">Otáčky n</span><span class="calc-result-value" id="calc-drill-n">—</span></div>
@@ -1965,25 +1968,25 @@
                 <!-- FRÉZOVANIE -->
                 <div class="calc-panel" id="calc-panel-mill">
                     <div class="calc-hint">Pri fréze je na krabičke posuv na zub (fz), nie na otáčku — treba aj počet zubov frézy (z).</div>
-                    <div class="calc-row">
-                        <div class="fg">
-                            <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
-                            <input type="text" inputmode="decimal" id="calc-mill-vc" oninput="calcCompute('mill')" placeholder="napr. 180">
-                        </div>
-                        <div class="fg">
-                            <label class="field-label">D — priemer frézy (mm)</label>
-                            <input type="text" inputmode="decimal" id="calc-mill-d" oninput="calcCompute('mill')" placeholder="napr. 16">
-                        </div>
+                    <div class="fg">
+                        <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
+                        <input type="text" inputmode="decimal" id="calc-mill-vc" oninput="calcCompute('mill')" placeholder="napr. 180">
+                        <div class="calc-field-desc">Z krabičky od frézy, podľa obrábaného materiálu.</div>
                     </div>
-                    <div class="calc-row">
-                        <div class="fg">
-                            <label class="field-label">fz — posuv na zub (mm/zub)</label>
-                            <input type="text" inputmode="decimal" id="calc-mill-fz" oninput="calcCompute('mill')" placeholder="napr. 0.08">
-                        </div>
-                        <div class="fg">
-                            <label class="field-label">z — počet zubov frézy</label>
-                            <input type="text" inputmode="decimal" id="calc-mill-z" oninput="calcCompute('mill')" placeholder="napr. 4">
-                        </div>
+                    <div class="fg">
+                        <label class="field-label">D — priemer frézy (mm)</label>
+                        <input type="text" inputmode="decimal" id="calc-mill-d" oninput="calcCompute('mill')" placeholder="napr. 16">
+                        <div class="calc-field-desc">Priemer samotnej frézy (rezná časť), nie priemer stopky.</div>
+                    </div>
+                    <div class="fg">
+                        <label class="field-label">fz — posuv na zub (mm/zub)</label>
+                        <input type="text" inputmode="decimal" id="calc-mill-fz" oninput="calcCompute('mill')" placeholder="napr. 0.08">
+                        <div class="calc-field-desc">Z krabičky — pozor, pri fréze je to posuv na jeden zub, nie na celú otáčku.</div>
+                    </div>
+                    <div class="fg">
+                        <label class="field-label">z — počet zubov frézy</label>
+                        <input type="text" inputmode="decimal" id="calc-mill-z" oninput="calcCompute('mill')" placeholder="napr. 4">
+                        <div class="calc-field-desc">Koľko rezných zubov/plátkov má fréza — spočítaš priamo na nástroji.</div>
                     </div>
                     <div class="calc-result">
                         <div class="calc-result-row"><span class="calc-result-label">Otáčky n</span><span class="calc-result-value" id="calc-mill-n">—</span></div>
