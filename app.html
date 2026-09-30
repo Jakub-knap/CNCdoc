@@ -1272,22 +1272,24 @@
         .tile-hero .sb { font-size: 14px; color: #bfdbfe; margin-top: 4px; font-weight: 600; }
 
         .continue-tile-card {
-            border-radius: 20px; overflow: hidden; margin-bottom: 14px;
-            box-shadow: 0 8px 24px rgba(249,115,22,.35);
+            border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+            box-shadow: 0 4px 14px rgba(249,115,22,.28);
+            display: flex; align-items: stretch;
+            background: linear-gradient(135deg,#f97316,#c2410c);
         }
         .tile-continue {
-            width: 100%; text-align: left; border: none; cursor: pointer;
-            background: linear-gradient(135deg,#f97316,#c2410c); border-radius: 0;
-            padding: 20px 22px; display: flex; align-items: center; gap: 16px; color: #fff; font-family: inherit;
+            flex: 1; min-width: 0; text-align: left; border: none; cursor: pointer;
+            background: transparent; border-radius: 0;
+            padding: 12px 14px; display: flex; align-items: center; gap: 12px; color: #fff; font-family: inherit;
         }
         .tile-continue:active { filter: brightness(.95); }
-        .tile-continue .ic { font-size: 34px; }
-        .tile-continue .tt { font-size: 18px; font-weight: 800; line-height: 1.1; }
-        .tile-continue .sb { font-size: 15px; color: #ffedd5; margin-top: 3px; font-weight: 700; }
+        .tile-continue .ic { font-size: 22px; flex-shrink: 0; }
+        .tile-continue .tt { font-size: 13px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: .3px; color: #ffedd5; }
+        .tile-continue .sb { font-size: 15px; color: #fff; margin-top: 2px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tile-continue-dismiss {
-            display: block; width: 100%; border: none; cursor: pointer; font-family: inherit;
-            background: rgba(0,0,0,.18); color: #ffedd5; font-size: 14px; font-weight: 700;
-            padding: 12px; text-align: center;
+            flex-shrink: 0; width: 44px; border: none; cursor: pointer; font-family: inherit;
+            background: rgba(0,0,0,.18); color: #ffedd5; font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
         }
         .tile-continue-dismiss:active { background: rgba(0,0,0,.3); }
 
@@ -1621,9 +1623,9 @@
             <div id="continue-tile-wrap" class="continue-tile-card" style="display:none;">
                 <button class="tile-continue" onclick="continueLastDrawing()">
                     <span class="ic">↻</span>
-                    <span><div class="tt">Pokračovať vo výkrese</div><div class="sb" id="continue-tile-name">—</div></span>
+                    <span><div class="tt">Pokračovať</div><div class="sb" id="continue-tile-name">—</div></span>
                 </button>
-                <button type="button" class="tile-continue-dismiss" onclick="dismissContinueTile()">✕ Skryť</button>
+                <button type="button" class="tile-continue-dismiss" onclick="dismissContinueTile()" aria-label="Skryť">✕</button>
             </div>
 
             <button class="tile-hero" onclick="openSection('sec-search-drawing')">
@@ -2976,17 +2978,22 @@ window.continueLastDrawing = () => {
     openSection('sec-search-drawing');
     openDetail(last.number);
 };
-// Klik na ✕ na veľkom tlačidle "Pokračovať" — schová len toto tlačidlo (odstráni najnovší záznam).
+// Klik na ✕ na dlaždici "Pokračovať" — schová LEN dlaždicu (výkres zostáva v histórii "naposledy otvorené").
+// Kým neotvoríte iný výkres, dlaždica sa nebude znova ukazovať (nemusíte ju skrývať 10x za zmenu).
+const CONTINUE_DISMISSED_KEY = 'cnc_continue_dismissed_id';
 window.dismissContinueTile = () => {
     const last = getRecentDrawings(1)[0];
-    if (last) removeRecentDrawing(last._id);
+    try { localStorage.setItem(CONTINUE_DISMISSED_KEY, last ? last._id : '1'); } catch (e) {}
+    renderContinueTile();
 };
 window.removeRecentDrawing = removeRecentDrawing;
 function renderContinueTile() {
     const wrap = document.getElementById('continue-tile-wrap');
     if (!wrap) return;
     const last = getRecentDrawings(1)[0];
-    if (!last) { wrap.style.display = 'none'; return; }
+    let dismissedId = '';
+    try { dismissedId = localStorage.getItem(CONTINUE_DISMISSED_KEY) || ''; } catch (e) {}
+    if (!last || last._id === dismissedId) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
     const nameEl = document.getElementById('continue-tile-name');
     if (nameEl) nameEl.textContent = last.number;
