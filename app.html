@@ -810,35 +810,42 @@
 
         /* ── GALÉRIA FOTIEK ── */
         .photo-gallery {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex; flex-direction: column;
             gap: 8px;
             margin-bottom: 10px;
         }
         .photo-gallery:empty { display: none; margin: 0; }
         .photo-thumb {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 10px;
-            overflow: hidden;
+            display: flex; align-items: center; gap: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             background: var(--input);
+            padding: 7px;
         }
+        .photo-thumb .pt-img-wrap { position: relative; flex-shrink: 0; }
         .photo-thumb img {
-            width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer;
+            width: 50px; height: 50px; border-radius: 8px;
+            object-fit: cover; display: block; cursor: pointer;
         }
+        .photo-thumb .photo-caption-input {
+            flex: 1; min-width: 0;
+            background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+            padding: 9px 10px; font-size: 13px; color: var(--white);
+            font-family: 'Inter', sans-serif; -webkit-appearance: none;
+        }
+        .photo-thumb .photo-caption-input:focus { outline: none; border-color: var(--cut); }
         .photo-thumb .photo-del {
-            position: absolute; top: 4px; right: 4px;
-            width: 22px; height: 22px; border-radius: 50%;
-            background: rgba(0,0,0,.75); color: #fff;
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            background: transparent; border: 1px solid var(--border); color: var(--muted);
             display: flex; align-items: center; justify-content: center;
-            font-size: 13px; cursor: pointer; border: none;
+            font-size: 14px; cursor: pointer;
         }
+        .photo-thumb .photo-del:active { border-color: #7f1d1d; color: #fca5a5; }
         .photo-thumb .photo-num {
-            position: absolute; bottom: 4px; left: 4px;
-            background: rgba(0,0,0,.7); color: #fff;
-            font-size: 10px; font-weight: 700;
-            padding: 2px 6px; border-radius: 6px;
+            position: absolute; bottom: -3px; right: -3px;
+            background: var(--iron); color: var(--light); border: 1px solid var(--border);
+            font-size: 9px; font-weight: 700;
+            padding: 1px 5px; border-radius: 6px;
         }
         .photo-add-more {
             aspect-ratio: 1; border-radius: 10px;
@@ -904,6 +911,15 @@
             display: flex; gap: 8px; margin-bottom: 12px;
         }
         .detail-photo-actions .btn-sm { flex: 1; margin: 0; }
+        .dc-caption-box { margin-bottom: 10px; }
+        .dc-caption-box label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .3px; margin-bottom: 5px; }
+        .dc-caption-box input {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--input); color: var(--white);
+            font-family: 'Inter', sans-serif; font-size: 14px;
+        }
+        .dc-caption-box input:focus { outline: none; border-color: var(--cut); }
 
         /* ── INLINE EDITOVATEĽNÉ POLE V DETAILE ── */
         .d-field-editable {
@@ -4180,6 +4196,7 @@ window.openDetail = (number) => {
     // Carousel fotiek (podporuje aj staré výkresy s jedným fileData)
     const photos = (d.photos && d.photos.length) ? d.photos : (d.fileData ? [d.fileData] : []);
     window._detailPhotos = photos;
+    window._detailCaptions = photos.map((_, i) => (d.photoCaptions && d.photoCaptions[i]) || '');
     window._detailSlide = 0;
     let galleryHtml = '';
     if (photos.length) {
@@ -4191,12 +4208,17 @@ window.openDetail = (number) => {
             <button class="dc-arrow dc-arrow-left" onclick="event.stopPropagation(); prevSlide()">‹</button>
             <button class="dc-arrow dc-arrow-right" onclick="event.stopPropagation(); nextSlide()">›</button>` : '';
         const counter = photos.length > 1 ? `<div class="dc-counter" id="dc-counter">1 / ${photos.length}</div>` : '';
+        const captionLabel = photos.length > 1 ? `Poznámka k fotke ${1} / ${photos.length}` : 'Poznámka k fotke';
         galleryHtml = `
             <div class="detail-carousel">
                 <div class="dc-track" id="dc-track">${slides}</div>
                 ${arrows}
                 ${counter}
                 ${dots}
+            </div>
+            <div class="dc-caption-box">
+                <label id="dc-caption-label">${captionLabel}</label>
+                <input type="text" id="dc-caption-input" placeholder="napr. upnutie, prípravok, poloha..." value="${escAttr(window._detailCaptions[0] || '')}" oninput="onDetailCaptionInput(this.value)">
             </div>
             <div class="detail-photo-actions">
                 <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-cam').click()">📷 Odfotiť</button>
@@ -4377,12 +4399,15 @@ window.addPhotoToDrawing = async (inputEl) => {
 
     const mergedPhotos = [...existingPhotos, ...newPhotos];
     const mergedPaths  = [...existingPaths, ...newPaths];
+    // photoCaptions musí byť rovnako dlhý ako photos — doplň staré chýbajúce/nové prázdnym reťazcom
+    const existingCaptions = existingPhotos.map((_, i) => (d.photoCaptions && d.photoCaptions[i]) || '');
+    const mergedCaptions = [...existingCaptions, ...newPhotos.map(() => '')];
 
     try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), {
-            photos: mergedPhotos, photoPaths: mergedPaths, fileData: mergedPhotos[0]
+            photos: mergedPhotos, photoPaths: mergedPaths, photoCaptions: mergedCaptions, fileData: mergedPhotos[0]
         });
-        d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.fileData = mergedPhotos[0];
+        d.photos = mergedPhotos; d.photoPaths = mergedPaths; d.photoCaptions = mergedCaptions; d.fileData = mergedPhotos[0];
         if (skipped > 0) { openPhotoLimitModal(d.number); }
         else { showToast('Fotky pridané ✓', 'ok'); openDetail(d.number); }
     } catch (e) {
@@ -4401,7 +4426,33 @@ window.goToSlide = (i) => {
     document.querySelectorAll('.dc-dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
     const counter = document.getElementById('dc-counter');
     if (counter) counter.textContent = `${i + 1} / ${photos.length}`;
+    const capLabel = document.getElementById('dc-caption-label');
+    if (capLabel) capLabel.textContent = photos.length > 1 ? `Poznámka k fotke ${i + 1} / ${photos.length}` : 'Poznámka k fotke';
+    const capInput = document.getElementById('dc-caption-input');
+    if (capInput) capInput.value = (window._detailCaptions && window._detailCaptions[i]) || '';
 };
+
+// ════════ POZNÁMKA K FOTKE (v detaile výkresu) ════════
+let _captionSaveTimer = null;
+window.onDetailCaptionInput = (val) => {
+    const i = window._detailSlide || 0;
+    if (!window._detailCaptions) window._detailCaptions = [];
+    window._detailCaptions[i] = val;
+    clearTimeout(_captionSaveTimer);
+    _captionSaveTimer = setTimeout(savePhotoCaptions, 600);
+};
+
+async function savePhotoCaptions() {
+    const d = drawings.find(x => x._id === currentDetailId);
+    if (!d) return;
+    const captions = window._detailCaptions || [];
+    d.photoCaptions = [...captions]; // okamžitá lokálna aktualizácia, nestratí sa pri zlom pripojení
+    try {
+        await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', currentDetailId), { photoCaptions: captions });
+    } catch (e) {
+        // ticho — zápis sa zopakuje pri ďalšej synchronizácii, lokálna hodnota ostáva správna
+    }
+}
 
 window.nextSlide = () => {
     const photos = window._detailPhotos || [];
@@ -4614,7 +4665,7 @@ window.onDrawingFile = async (input) => {
         if (st) st.textContent = toProcess.length > 1 ? 'Spracúvam fotky...' : 'Spracúvam fotku...';
         try {
             const dataUrl = await shrinkPhoto(f, 2400);
-            window.pendingDrawingPhotos.push({ dataUrl });   // len zmenšená verzia, originál sa nedrží
+            window.pendingDrawingPhotos.push({ dataUrl, caption: '' });   // len zmenšená verzia, originál sa nedrží
         } catch (e) {
             showToast(PHOTO_FAIL_MSG, 'err');
         }
@@ -4633,8 +4684,11 @@ function renderPhotoGallery(prefix) {
         const div = document.createElement('div');
         div.className = 'photo-thumb';
         div.innerHTML = `
-            <img src="${p.dataUrl}" onclick="zoomImage('${p.dataUrl}')">
-            <div class="photo-num">${i + 1}</div>
+            <div class="pt-img-wrap">
+                <img src="${p.dataUrl}" onclick="zoomImage('${p.dataUrl}')">
+                <div class="photo-num">${i + 1}</div>
+            </div>
+            <input type="text" class="photo-caption-input" placeholder="Poznámka k fotke (napr. upnutie, prípravok)" value="${escAttr(p.caption || '')}" oninput="setPendingPhotoCaption(${i}, this.value)">
             <button class="photo-del" onclick="removePendingPhoto(${i})">✕</button>`;
         gallery.appendChild(div);
     });
@@ -4652,6 +4706,14 @@ window.removePendingPhoto = (i) => {
     window.pendingDrawingPhotos.splice(i, 1);
     renderPhotoGallery('ad');
 };
+
+window.setPendingPhotoCaption = (i, val) => {
+    if (window.pendingDrawingPhotos[i]) window.pendingDrawingPhotos[i].caption = val;
+};
+
+function escAttr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
 
 
 // ════════ KONTROLA DUPLICITY ČÍSLA VÝKRESU ════════
@@ -4690,11 +4752,13 @@ window.saveDrawing = async () => {
     // komprimujeme len rozumne na rýchlejší prenos, kvalita ostáva vysoká pre čitateľné kóty.
     const photos = [];      // URL adresy pre zobrazenie
     const photoPaths = [];  // cesty v Storage pre neskoršie mazanie
+    const photoCaptions = []; // poznámka k fotke (napr. "upnutie", "prípravok")
     try {
         for (const p of window.pendingDrawingPhotos) {
             const { url, path } = await uploadPhotoToStorage(p.dataUrl, 'drawings'); // už zmenšená pri výbere
             photos.push(url);
             photoPaths.push(path);
+            photoCaptions.push(p.caption || '');
         }
     } catch (e) {
         showToast('⚠ Nahrávanie fotiek zlyhalo: ' + (e.message || 'skúste znova'), 'err');
@@ -4705,6 +4769,7 @@ window.saveDrawing = async () => {
         machine, number, program, note,
         photos: photos,
         photoPaths: photoPaths,
+        photoCaptions: photoCaptions,
         fileData: photos[0] || null, // spätná kompatibilita so starým zobrazením (teraz URL)
         toolIds: [...selectedToolIds],
         createdAt: Date.now()
@@ -5003,18 +5068,21 @@ window.deleteEditPhoto = async (index) => {
 
     const photos = (d.photos && d.photos.length) ? [...d.photos] : (d.fileData ? [d.fileData] : []);
     const paths  = d.photoPaths ? [...d.photoPaths] : [];
+    const captions = photos.map((_, i) => (d.photoCaptions && d.photoCaptions[i]) || '');
 
     const removedPath = paths[index];
     photos.splice(index, 1);
     if (paths.length) paths.splice(index, 1);
+    captions.splice(index, 1);
 
     try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'drawings', editingId), {
             photos: photos,
             photoPaths: paths,
+            photoCaptions: captions,
             fileData: photos[0] || null
         });
-        d.photos = photos; d.photoPaths = paths; d.fileData = photos[0] || null;
+        d.photos = photos; d.photoPaths = paths; d.photoCaptions = captions; d.fileData = photos[0] || null;
         if (removedPath) deletePhotoFromStorage(removedPath);
         showToast('Fotka vymazaná ✓', 'ok');
         renderEditPhotos(d);
