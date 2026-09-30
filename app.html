@@ -816,13 +816,13 @@
         }
         .photo-gallery:empty { display: none; margin: 0; }
         .photo-thumb {
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: flex-start; gap: 10px;
             border-radius: 12px;
             border: 1px solid var(--border);
             background: var(--input);
             padding: 7px;
         }
-        .photo-thumb .pt-img-wrap { position: relative; flex-shrink: 0; }
+        .photo-thumb .pt-img-wrap { position: relative; flex-shrink: 0; margin-top: 1px; }
         .photo-thumb img {
             width: 50px; height: 50px; border-radius: 8px;
             object-fit: cover; display: block; cursor: pointer;
@@ -832,13 +832,14 @@
             background: var(--card); border: 1px solid var(--border); border-radius: 8px;
             padding: 9px 10px; font-size: 13px; color: var(--white);
             font-family: 'Inter', sans-serif; -webkit-appearance: none;
+            resize: vertical; min-height: 50px; max-height: 160px; line-height: 1.4;
         }
         .photo-thumb .photo-caption-input:focus { outline: none; border-color: var(--cut); }
         .photo-thumb .photo-del {
             width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
             background: transparent; border: 1px solid var(--border); color: var(--muted);
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; cursor: pointer;
+            font-size: 14px; cursor: pointer; margin-top: 1px;
         }
         .photo-thumb .photo-del:active { border-color: #7f1d1d; color: #fca5a5; }
         .photo-thumb .photo-num {
@@ -913,13 +914,15 @@
         .detail-photo-actions .btn-sm { flex: 1; margin: 0; }
         .dc-caption-box { margin-bottom: 10px; }
         .dc-caption-box label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .3px; margin-bottom: 5px; }
-        .dc-caption-box input {
+        .dc-caption-box textarea {
             width: 100%; padding: 10px 12px;
             border: 1px solid var(--border); border-radius: 10px;
             background: var(--input); color: var(--white);
-            font-family: 'Inter', sans-serif; font-size: 14px;
+            font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5;
+            resize: vertical; min-height: 42px; max-height: 200px;
+            -webkit-appearance: none;
         }
-        .dc-caption-box input:focus { outline: none; border-color: var(--cut); }
+        .dc-caption-box textarea:focus { outline: none; border-color: var(--cut); }
 
         /* ── INLINE EDITOVATEĽNÉ POLE V DETAILE ── */
         .d-field-editable {
@@ -4218,7 +4221,7 @@ window.openDetail = (number) => {
             </div>
             <div class="dc-caption-box">
                 <label id="dc-caption-label">${captionLabel}</label>
-                <input type="text" id="dc-caption-input" placeholder="napr. upnutie, prípravok, poloha..." value="${escAttr(window._detailCaptions[0] || '')}" oninput="onDetailCaptionInput(this.value)">
+                <textarea id="dc-caption-input" rows="1" placeholder="napr. upnutie, prípravok, poloha..." oninput="onDetailCaptionInput(this.value); autoGrowCaption(this);">${escAttr(window._detailCaptions[0] || '')}</textarea>
             </div>
             <div class="detail-photo-actions">
                 <button class="btn btn-sm" style="background:var(--input);border:1px solid var(--border);color:var(--light);" onclick="document.getElementById('detail-photo-cam').click()">📷 Odfotiť</button>
@@ -4260,6 +4263,9 @@ window.openDetail = (number) => {
     // Vždy začni od vrchu (fotka), aj keď bolo okno predtým scrollnuté dole pri inom výkrese.
     const modalBox = document.querySelector('#modal-detail .modal');
     if (modalBox) modalBox.scrollTop = 0;
+    // Ak má prvá fotka už uloženú dlhú poznámku, rovno ju zobraz celú (nie až po prvom stlačení klávesy).
+    const initCapInput = document.getElementById('dc-caption-input');
+    if (initCapInput) autoGrowCaption(initCapInput);
 };
 
 window.closeModal = () => document.getElementById('modal-detail').classList.remove('open');
@@ -4429,7 +4435,10 @@ window.goToSlide = (i) => {
     const capLabel = document.getElementById('dc-caption-label');
     if (capLabel) capLabel.textContent = photos.length > 1 ? `Poznámka k fotke ${i + 1} / ${photos.length}` : 'Poznámka k fotke';
     const capInput = document.getElementById('dc-caption-input');
-    if (capInput) capInput.value = (window._detailCaptions && window._detailCaptions[i]) || '';
+    if (capInput) {
+        capInput.value = (window._detailCaptions && window._detailCaptions[i]) || '';
+        autoGrowCaption(capInput);
+    }
 };
 
 // ════════ POZNÁMKA K FOTKE (v detaile výkresu) ════════
@@ -4440,6 +4449,13 @@ window.onDetailCaptionInput = (val) => {
     window._detailCaptions[i] = val;
     clearTimeout(_captionSaveTimer);
     _captionSaveTimer = setTimeout(savePhotoCaptions, 600);
+};
+
+// Rozťahuje výšku textarea podľa obsahu, nech dlhý text nejde do jedného nekonečného riadku
+window.autoGrowCaption = (el) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
 };
 
 async function savePhotoCaptions() {
@@ -4688,7 +4704,7 @@ function renderPhotoGallery(prefix) {
                 <img src="${p.dataUrl}" onclick="zoomImage('${p.dataUrl}')">
                 <div class="photo-num">${i + 1}</div>
             </div>
-            <input type="text" class="photo-caption-input" placeholder="Poznámka k fotke (napr. upnutie, prípravok)" value="${escAttr(p.caption || '')}" oninput="setPendingPhotoCaption(${i}, this.value)">
+            <textarea class="photo-caption-input" rows="2" placeholder="Poznámka k fotke (napr. upnutie, prípravok)" oninput="setPendingPhotoCaption(${i}, this.value)">${escAttr(p.caption || '')}</textarea>
             <button class="photo-del" onclick="removePendingPhoto(${i})">✕</button>`;
         gallery.appendChild(div);
     });
