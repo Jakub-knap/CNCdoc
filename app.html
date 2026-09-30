@@ -551,6 +551,21 @@
             color: var(--muted); letter-spacing: .3px; margin-bottom: 5px;
         }
         .fg { margin-bottom: 12px; }
+
+        .calc-tabs { display: flex; width: 100%; background: var(--input); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 16px; }
+        .calc-tab { flex: 1; padding: 10px 2px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; color: var(--muted); transition: all .2s; font-family: inherit; }
+        .calc-tab.active { background: var(--cut); color: #fff; }
+        .calc-panel { display: none; }
+        .calc-panel.active { display: block; }
+        .calc-row { display: flex; gap: 10px; }
+        .calc-row .fg { flex: 1; min-width: 0; }
+        .calc-hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+        .calc-result { background: var(--iron); border: 1px solid var(--border); border-radius: 12px; padding: 4px 16px; margin-top: 6px; }
+        .calc-result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+        .calc-result-row:last-of-type { border-bottom: none; }
+        .calc-result-label { font-size: 13px; color: var(--muted); }
+        .calc-result-value { font-size: 19px; font-weight: 800; color: var(--cut); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+        .calc-formula { font-size: 10.5px; color: var(--muted); text-align: center; padding: 10px 0 12px; opacity: .8; }
         input[type=text], input[type=file], textarea, select {
             width: 100%; padding: 12px 13px;
             border: 1px solid var(--border); border-radius: 10px;
@@ -1593,6 +1608,10 @@
                 </button>
             </div>
 
+            <button class="tile-wide" onclick="openSection('sec-calc')">
+                <span class="ic">🧮</span><span class="tt">Kalkulačka otáčok a posuvu</span>
+            </button>
+
             <div class="tile-del-row">
                 <button class="tile-del" onclick="openSection('sec-del-drawing')">✏️ Upraviť / vymazať výkres</button>
                 <button class="tile-del" onclick="openSection('sec-del-tool')">✏️ Upraviť / vymazať nástroj</button>
@@ -1872,6 +1891,105 @@
                 </div>
                 <div id="del-tool-results">
                     <div class="empty"><div class="ei">✏️</div><p>Zadajte priemer alebo názov</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KALKULAČKA OTÁČOK A POSUVU -->
+        <div class="section" id="sec-calc">
+            <div class="section-head" onclick="toggleSection('sec-calc')">
+                <div class="section-head-left">
+                    <div class="section-icon si-blue">🧮</div>
+                    <div>
+                        <div class="section-title">Kalkulačka otáčok a posuvu</div>
+                        <div class="section-sub">Sústruženie · Vŕtanie · Frézovanie</div>
+                    </div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="section-body">
+                <div class="calc-tabs">
+                    <button type="button" class="calc-tab active" id="calc-tab-turn" onclick="calcSwitch('turn')">⟳ Sústruženie</button>
+                    <button type="button" class="calc-tab" id="calc-tab-drill" onclick="calcSwitch('drill')">⬇ Vŕtanie</button>
+                    <button type="button" class="calc-tab" id="calc-tab-mill" onclick="calcSwitch('mill')">✥ Frézovanie</button>
+                </div>
+
+                <!-- SÚSTRUŽENIE -->
+                <div class="calc-panel active" id="calc-panel-turn">
+                    <div class="calc-hint">Nôž sa netočí, točí sa obrobok — preto sa do vzorca dáva <b>priemer obrobku</b>, nie priemer noža. Vc a f sú z krabičky plátkov.</div>
+                    <div class="calc-row">
+                        <div class="fg">
+                            <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
+                            <input type="text" inputmode="decimal" id="calc-turn-vc" oninput="calcCompute('turn')" placeholder="napr. 220">
+                        </div>
+                        <div class="fg">
+                            <label class="field-label">D — priemer obrobku (mm)</label>
+                            <input type="text" inputmode="decimal" id="calc-turn-d" oninput="calcCompute('turn')" placeholder="napr. 40">
+                        </div>
+                    </div>
+                    <div class="fg">
+                        <label class="field-label">f — posuv na otáčku (mm/ot)</label>
+                        <input type="text" inputmode="decimal" id="calc-turn-f" oninput="calcCompute('turn')" placeholder="napr. 0.25">
+                    </div>
+                    <div class="calc-result">
+                        <div class="calc-result-row"><span class="calc-result-label">Otáčky n</span><span class="calc-result-value" id="calc-turn-n">—</span></div>
+                        <div class="calc-result-row"><span class="calc-result-label">Posuvová rýchlosť Vf</span><span class="calc-result-value" id="calc-turn-vf">—</span></div>
+                        <div class="calc-formula">n = (Vc × 1000) / (π × D) &nbsp;·&nbsp; Vf = f × n</div>
+                    </div>
+                </div>
+
+                <!-- VŔTANIE -->
+                <div class="calc-panel" id="calc-panel-drill">
+                    <div class="calc-hint">Rovnaký princíp ako frézovanie — točí sa nástroj. Priemer je priemer vrtáka.</div>
+                    <div class="calc-row">
+                        <div class="fg">
+                            <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
+                            <input type="text" inputmode="decimal" id="calc-drill-vc" oninput="calcCompute('drill')" placeholder="napr. 80">
+                        </div>
+                        <div class="fg">
+                            <label class="field-label">D — priemer vrtáka (mm)</label>
+                            <input type="text" inputmode="decimal" id="calc-drill-d" oninput="calcCompute('drill')" placeholder="napr. 10">
+                        </div>
+                    </div>
+                    <div class="fg">
+                        <label class="field-label">f — posuv na otáčku (mm/ot)</label>
+                        <input type="text" inputmode="decimal" id="calc-drill-f" oninput="calcCompute('drill')" placeholder="napr. 0.15">
+                    </div>
+                    <div class="calc-result">
+                        <div class="calc-result-row"><span class="calc-result-label">Otáčky n</span><span class="calc-result-value" id="calc-drill-n">—</span></div>
+                        <div class="calc-result-row"><span class="calc-result-label">Posuvová rýchlosť Vf</span><span class="calc-result-value" id="calc-drill-vf">—</span></div>
+                        <div class="calc-formula">n = (Vc × 1000) / (π × D) &nbsp;·&nbsp; Vf = f × n</div>
+                    </div>
+                </div>
+
+                <!-- FRÉZOVANIE -->
+                <div class="calc-panel" id="calc-panel-mill">
+                    <div class="calc-hint">Pri fréze je na krabičke posuv na zub (fz), nie na otáčku — treba aj počet zubov frézy (z).</div>
+                    <div class="calc-row">
+                        <div class="fg">
+                            <label class="field-label">Vc — rezná rýchlosť (m/min)</label>
+                            <input type="text" inputmode="decimal" id="calc-mill-vc" oninput="calcCompute('mill')" placeholder="napr. 180">
+                        </div>
+                        <div class="fg">
+                            <label class="field-label">D — priemer frézy (mm)</label>
+                            <input type="text" inputmode="decimal" id="calc-mill-d" oninput="calcCompute('mill')" placeholder="napr. 16">
+                        </div>
+                    </div>
+                    <div class="calc-row">
+                        <div class="fg">
+                            <label class="field-label">fz — posuv na zub (mm/zub)</label>
+                            <input type="text" inputmode="decimal" id="calc-mill-fz" oninput="calcCompute('mill')" placeholder="napr. 0.08">
+                        </div>
+                        <div class="fg">
+                            <label class="field-label">z — počet zubov frézy</label>
+                            <input type="text" inputmode="decimal" id="calc-mill-z" oninput="calcCompute('mill')" placeholder="napr. 4">
+                        </div>
+                    </div>
+                    <div class="calc-result">
+                        <div class="calc-result-row"><span class="calc-result-label">Otáčky n</span><span class="calc-result-value" id="calc-mill-n">—</span></div>
+                        <div class="calc-result-row"><span class="calc-result-label">Posuvová rýchlosť Vf</span><span class="calc-result-value" id="calc-mill-vf">—</span></div>
+                        <div class="calc-formula">n = (Vc × 1000) / (π × D) &nbsp;·&nbsp; Vf = fz × z × n</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -5558,6 +5676,48 @@ function renderSectionContent(id) {
     const fn = SECTION_RENDER_MAP[id];
     if (fn) fn();
 }
+
+// ════════ KALKULAČKA OTÁČOK A POSUVU ════════
+// Vŕtanie a frézovanie: točí sa nástroj → D = priemer nástroja.
+// Sústruženie: točí sa obrobok, nôž stojí → D = priemer OBROBKU (iný princíp).
+window.calcSwitch = (type) => {
+    ['turn', 'drill', 'mill'].forEach(t => {
+        document.getElementById('calc-tab-' + t).classList.toggle('active', t === type);
+        document.getElementById('calc-panel-' + t).classList.toggle('active', t === type);
+    });
+};
+
+function calcNum(id) {
+    const el = document.getElementById(id);
+    if (!el) return NaN;
+    const v = el.value.trim().replace(',', '.');
+    if (!v) return NaN;
+    const n = parseFloat(v);
+    return isNaN(n) || n <= 0 ? NaN : n;
+}
+function calcFmt(n, decimals) {
+    if (isNaN(n) || !isFinite(n)) return '—';
+    return n.toLocaleString('sk-SK', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+window.calcCompute = (type) => {
+    const vc = calcNum('calc-' + type + '-vc');
+    const d  = calcNum('calc-' + type + '-d');
+    // n = (Vc × 1000) / (π × D) — rovnaký vzorec pre všetky 3 (líši sa len to, čí priemer sa dosadzuje)
+    const n = (!isNaN(vc) && !isNaN(d)) ? (vc * 1000) / (Math.PI * d) : NaN;
+    document.getElementById('calc-' + type + '-n').textContent = isNaN(n) ? '—' : calcFmt(n, 0) + ' ot/min';
+
+    let vf = NaN;
+    if (type === 'mill') {
+        const fz = calcNum('calc-mill-fz');
+        const z  = calcNum('calc-mill-z');
+        if (!isNaN(n) && !isNaN(fz) && !isNaN(z)) vf = fz * z * n;
+    } else {
+        const f = calcNum('calc-' + type + '-f');
+        if (!isNaN(n) && !isNaN(f)) vf = f * n;
+    }
+    document.getElementById('calc-' + type + '-vf').textContent = isNaN(vf) ? '—' : calcFmt(vf, vf < 100 ? 1 : 0) + ' mm/min';
+};
 
 window.openSection = (id) => {
     const sec = document.getElementById(id);
