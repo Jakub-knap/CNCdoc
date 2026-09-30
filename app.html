@@ -3001,7 +3001,7 @@ function renderContinueTile() {
 function renderRecentDrawingChips() {
     const wrap = document.getElementById('recent-drawings-wrap');
     if (!wrap) return;
-    const list = getRecentDrawings(5);
+    const list = getRecentDrawings(2);
     if (!list.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
     const box = document.getElementById('recent-drawings-chips');
