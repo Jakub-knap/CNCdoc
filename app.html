@@ -348,12 +348,13 @@
             font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
         }
         .btn-photo:active { transform: scale(.98); border-color: var(--cut); }
-        .tool-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tool-pick { display: flex; flex-direction: column; gap: 8px; }
         .tool-pick .tp-empty { font-size: 13px; color: var(--muted); }
         .tp-chip {
-            padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px;
-            background: var(--input); color: var(--light); font-size: 13px; cursor: pointer;
-            user-select: none;
+            display: block; width: 100%;
+            padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px;
+            background: var(--input); color: var(--light); font-size: 14px; line-height: 1.4;
+            cursor: pointer; user-select: none; text-align: left;
         }
         .tp-chip.sel { background: var(--green); border-color: var(--green); color: #06240f; font-weight: 700; }
         .det-tools { margin-top: 16px; }
@@ -2128,8 +2129,8 @@ function renderAll() {
 }
 
 // ════════ STROJE ════════
-let searchMachineFilter = '';
-let toolMachineFilter = '';
+let searchMachineFilter = localStorage.getItem('cnc_search_machine_filter') || '';
+let toolMachineFilter = localStorage.getItem('cnc_tool_machine_filter') || '';
 
 // Vykreslí "kartu" s aktuálne vybraným strojom (alebo "Všetky stroje") + tlačidlo Zmeniť.
 // Klik na celú kartu otvára modál s výberom (pozri openMachinePicker).
@@ -2174,8 +2175,8 @@ function renderMachines() {
     });
 
     // Odstráň z filtrov stroje, čo už neexistujú
-    if (searchMachineFilter && !machines.includes(searchMachineFilter)) searchMachineFilter = '';
-    if (toolMachineFilter && !machines.includes(toolMachineFilter)) toolMachineFilter = '';
+    if (searchMachineFilter && !machines.includes(searchMachineFilter)) { searchMachineFilter = ''; localStorage.removeItem('cnc_search_machine_filter'); }
+    if (toolMachineFilter && !machines.includes(toolMachineFilter)) { toolMachineFilter = ''; localStorage.removeItem('cnc_tool_machine_filter'); }
 
     // Filter "Stroj" pre Hľadaj výkres / Hľadaj nástroj — karta s aktuálnym strojom + modál na zmenu
     renderMachineFilterCurrent('search-machine-filter', searchMachineFilter);
@@ -2213,10 +2214,12 @@ window.closeMachinePicker = () => {
 window.pickMachine = (val) => {
     if (machinePickerTarget === 'search') {
         searchMachineFilter = val;
+        localStorage.setItem('cnc_search_machine_filter', val);
         renderMachineFilterCurrent('search-machine-filter', searchMachineFilter);
         renderDrawingSearch();
     } else if (machinePickerTarget === 'tool') {
         toolMachineFilter = val;
+        localStorage.setItem('cnc_tool_machine_filter', val);
         renderMachineFilterCurrent('tool-machine-filter', toolMachineFilter);
         renderToolSearch();
     }
@@ -2267,7 +2270,7 @@ window.renderDrawingSearch = () => {
     const machineF = searchMachineFilter;
     const box  = document.getElementById('drawing-search-results');
     let pool = machineF ? drawings.filter(d => d.machine === machineF) : drawings;
-    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>Vyberte stroj alebo zadajte číslo</p></div>`; return; }
+    if (!pool.length) { box.innerHTML = `<div class="empty"><div class="ei">📐</div><p>${machineF ? 'Tento stroj zatiaľ nemá žiadne výkresy' : 'Zatiaľ žiadne výkresy'}</p></div>`; return; }
     let filtered;
     if (text) {
         const byNum  = pool.filter(d => d.number.toLowerCase().includes(text));
@@ -2465,7 +2468,7 @@ window.renderToolSearch = () => {
     const machineF = toolMachineFilter;
     const box  = document.getElementById('tool-search-results');
     let pool = machineF ? tools.filter(t => t.machine === machineF) : tools;
-    if (!text && !machineF) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>Vyberte stroj alebo zadajte priemer/názov</p></div>`; return; }
+    if (!pool.length) { box.innerHTML = `<div class="empty"><div class="ei">🔧</div><p>${machineF ? 'Tento stroj zatiaľ nemá žiadne nástroje' : 'Zatiaľ žiadne nástroje'}</p></div>`; return; }
     const filtered = text
         ? pool.filter(t => (t.diameter||'').toLowerCase().includes(text) || (t.name||'').toLowerCase().includes(text) || (t.type||'').toLowerCase().includes(text) || (t.catName||'').toLowerCase().includes(text))
         : pool;
