@@ -837,7 +837,7 @@
         }
         .tile:active { transform: scale(.98); }
         .tile .ic { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .tile .tt { font-size: 17px; font-weight: 700; line-height: 1.15; }
+        .tile .tt { display: block; font-size: 17px; font-weight: 700; line-height: 1.15; }
         .tile .ic.blue  { background: rgba(37,99,235,.15);  border: 1px solid rgba(37,99,235,.4); }
         .tile .ic.green { background: rgba(22,163,74,.15);  border: 1px solid rgba(22,163,74,.4); }
         .tile-del-row { display: flex; gap: 12px; }
@@ -990,7 +990,7 @@
 
             <button class="tile-hero" onclick="openSection('sec-search-drawing')">
                 <span class="ic">🔍</span>
-                <span><div class="tt">Nájsť výkres</div><div class="sb" id="tile-d-count">0 výkresov</div></span>
+                <div><div class="tt">Nájsť výkres</div><div class="sb" id="tile-d-count">0 výkresov</div></div>
             </button>
 
             <button class="tile-wide" onclick="openSection('sec-add-drawing')">
@@ -999,10 +999,10 @@
 
             <div class="tile-grid">
                 <button class="tile" onclick="openSection('sec-search-tool')">
-                    <div class="ic blue">🔧</div><div class="tt" id="tile-t-count">Nájsť nástroj</div>
+                    <span class="ic blue">🔧</span><span class="tt" id="tile-t-count">Nájsť nástroj</span>
                 </button>
                 <button class="tile" onclick="openSection('sec-add-tool')">
-                    <div class="ic green">➕</div><div class="tt">Pridať nástroj</div>
+                    <span class="ic green">➕</span><span class="tt">Pridať nástroj</span>
                 </button>
             </div>
 
