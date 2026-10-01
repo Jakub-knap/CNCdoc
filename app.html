@@ -1032,9 +1032,7 @@
                 </div>
                 <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
                     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">⚠️ Vymazanie stroja — nebezpečná zóna</div>
-                    <select id="del-machine-select" style="margin-bottom:8px;">
-                        <option value="">— Vyberte stroj na vymazanie —</option>
-                    </select>
+                    <div class="mf-current" id="del-machine-select" onclick="openMachinePicker('del')" style="margin-bottom:8px;"></div>
                     <button class="btn" onclick="deleteMachineConfirm()" style="font-size:13px;padding:11px;background:var(--blue);color:#fff;border-radius:10px;">Vymazať vybraný stroj</button>
                     <div style="font-size:11px;color:var(--red);margin-top:6px;line-height:1.5;">Pozor: vymaže sa aj všetky výkresy a nástroje daného stroja!</div>
                 </div>
@@ -1083,7 +1081,7 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj</label>
-                    <select id="ad-machine" onchange="onDrawingMachineChange()"><option value="">— Vyberte stroj —</option></select>
+                    <div class="mf-current" id="ad-machine" onclick="openMachinePicker('ad')"></div>
                 </div>
                 <div class="fg">
                     <label class="field-label">Číslo výkresu</label>
@@ -1180,7 +1178,7 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj</label>
-                    <select id="at-machine"><option value="">— Vyberte stroj —</option></select>
+                    <div class="mf-current" id="at-machine" onclick="openMachinePicker('at')"></div>
                 </div>
                 <div class="fg">
                     <label class="field-label">Kategória nástroja</label>
@@ -2139,25 +2137,33 @@ function renderAll() {
 // ════════ STROJE ════════
 let searchMachineFilter = localStorage.getItem('cnc_search_machine_filter') || '';
 let toolMachineFilter = localStorage.getItem('cnc_tool_machine_filter') || '';
+let adMachineValue = '';   // vybraný stroj v "Pridaj výkres"
+let atMachineValue = '';   // vybraný stroj v "Pridaj nástroj"
+let delMachineValue = '';  // vybraný stroj v "Vymazanie stroja"
 
 // Jednotná SVG ikona ozubeného kolieska — používa sa pre stroje v celej appke
 const GEAR_SVG = '<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M12 2.5v2.3M12 19.2v2.3M4.2 6.2l1.9 1.4M17.9 16.4l1.9 1.4M2.5 12h2.3M19.2 12h2.3M4.2 17.8l1.9-1.4M17.9 7.6l1.9-1.4"/></svg>';
 const ALL_MACHINES_SVG = '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.3"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.3"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.3"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.3"/></svg>';
+const PICK_MACHINE_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 15.2v.1M12 8.3v3.6c1.4 0 2.3.9 2.3 1.9"/></svg>';
 
-// Vykreslí "kartu" s aktuálne vybraným strojom (alebo "Všetky stroje") + tlačidlo Zmeniť.
+// Vykreslí "kartu" s aktuálne vybraným strojom (alebo placeholderom) + tlačidlo Zmeniť/Vybrať.
 // Klik na celú kartu otvára modál s výberom (pozri openMachinePicker).
-function renderMachineFilterCurrent(containerId, selectedValue) {
+// placeholder: text keď nič nie je vybrané (napr. "Všetky stroje" alebo "— Vyberte stroj —")
+// placeholderIcon: ikona pre prázdny stav (default: ALL_MACHINES_SVG)
+function renderMachineFilterCurrent(containerId, selectedValue, placeholder, placeholderIcon) {
     const box = document.getElementById(containerId);
     if (!box) return;
     const hasSel = !!selectedValue;
+    const ph = placeholder !== undefined ? placeholder : 'Všetky stroje';
+    const phIcon = placeholderIcon !== undefined && placeholderIcon !== null ? placeholderIcon : (placeholder !== undefined ? PICK_MACHINE_SVG : ALL_MACHINES_SVG);
     box.classList.toggle('has-sel', hasSel);
     box.innerHTML = `
-        <div class="mf-current-icon">${hasSel ? GEAR_SVG : ALL_MACHINES_SVG}</div>
+        <div class="mf-current-icon">${hasSel ? GEAR_SVG : phIcon}</div>
         <div class="mf-current-body">
             <div class="mf-current-label">Stroj</div>
-            <div class="mf-current-value">${hasSel ? selectedValue : 'Všetky stroje'}</div>
+            <div class="mf-current-value">${hasSel ? selectedValue : ph}</div>
         </div>
-        <div class="mf-current-btn">Zmeniť ▾</div>`;
+        <div class="mf-current-btn">${hasSel ? 'Zmeniť' : 'Vybrať'} ▾</div>`;
 }
 
 function renderMachines() {
@@ -2174,47 +2180,51 @@ function renderMachines() {
             box.appendChild(chip);
         });
     }
-    // Fill the two dropdown selects (pridaj výkres/nástroj, vymaž stroj) — tie ostávajú natívne selecty
-    ['ad-machine','at-machine','del-machine-select'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (!sel) return;
-        const cur = sel.value;
-        sel.innerHTML = id === 'del-machine-select'
-            ? '<option value="">— Vyberte stroj na vymazanie —</option>'
-            : '<option value="">— Vyberte stroj —</option>';
-        machines.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
-        sel.value = cur;
-    });
-
-    // Odstráň z filtrov stroje, čo už neexistujú
+    // Odstráň zo všetkých výberov stroje, čo už neexistujú
     if (searchMachineFilter && !machines.includes(searchMachineFilter)) { searchMachineFilter = ''; localStorage.removeItem('cnc_search_machine_filter'); }
     if (toolMachineFilter && !machines.includes(toolMachineFilter)) { toolMachineFilter = ''; localStorage.removeItem('cnc_tool_machine_filter'); }
+    if (adMachineValue && !machines.includes(adMachineValue)) adMachineValue = '';
+    if (atMachineValue && !machines.includes(atMachineValue)) atMachineValue = '';
+    if (delMachineValue && !machines.includes(delMachineValue)) delMachineValue = '';
 
     // Filter "Stroj" pre Hľadaj výkres / Hľadaj nástroj — karta s aktuálnym strojom + modál na zmenu
     renderMachineFilterCurrent('search-machine-filter', searchMachineFilter);
     renderMachineFilterCurrent('tool-machine-filter', toolMachineFilter);
+    // Výber stroja pri pridávaní výkresu/nástroja a pri mazaní — rovnaká karta, výber je povinný
+    renderMachineFilterCurrent('ad-machine', adMachineValue, '— Vyberte stroj —', null);
+    renderMachineFilterCurrent('at-machine', atMachineValue, '— Vyberte stroj —', null);
+    renderMachineFilterCurrent('del-machine-select', delMachineValue, '— Vyberte stroj na vymazanie —', null);
 }
 
-// ── Modál "Vyberte stroj" (spoločný pre filter výkresov aj nástrojov) ──
-let machinePickerTarget = null; // 'search' | 'tool'
+// ── Modál "Vyberte stroj" (spoločný pre filter výkresov/nástrojov aj pre pridávanie/mazanie) ──
+// targety: 'search' a 'tool' majú aj voľbu "Všetky stroje"; 'ad', 'at', 'del' vyžadujú konkrétny stroj
+let machinePickerTarget = null;
+const MACHINE_PICKER_CONFIG = {
+    search: { getValue: () => searchMachineFilter, hasAll: true },
+    tool:   { getValue: () => toolMachineFilter,   hasAll: true },
+    ad:     { getValue: () => adMachineValue,      hasAll: false },
+    at:     { getValue: () => atMachineValue,      hasAll: false },
+    del:    { getValue: () => delMachineValue,     hasAll: false },
+};
 
 window.openMachinePicker = (target) => {
     machinePickerTarget = target;
-    const selectedValue = target === 'search' ? searchMachineFilter : toolMachineFilter;
+    const cfg = MACHINE_PICKER_CONFIG[target];
+    const selectedValue = cfg.getValue();
     const list = document.getElementById('machine-picker-list');
-    const allRow = `
+    const allRow = cfg.hasAll ? `
         <div class="mp-item${!selectedValue ? ' sel' : ''}" onclick="pickMachine('')">
             <div class="mp-item-icon">${ALL_MACHINES_SVG}</div>
             <div class="mp-item-name">Všetky stroje</div>
             <div class="mp-item-check">✓</div>
-        </div>`;
+        </div>` : '';
     const machineRows = machines.map(m => `
         <div class="mp-item${selectedValue === m ? ' sel' : ''}" onclick="pickMachine('${m.replace(/'/g, "\\'")}')">
             <div class="mp-item-icon">${GEAR_SVG}</div>
             <div class="mp-item-name">${m}</div>
             <div class="mp-item-check">✓</div>
         </div>`).join('');
-    list.innerHTML = allRow + machineRows;
+    list.innerHTML = allRow + machineRows || `<div class="empty"><div class="ei">🏭</div><p>Najprv pridajte stroj v sekcii Stroje</p></div>`;
     document.getElementById('modal-pick-machine').classList.add('open');
 };
 
@@ -2234,6 +2244,16 @@ window.pickMachine = (val) => {
         localStorage.setItem('cnc_tool_machine_filter', val);
         renderMachineFilterCurrent('tool-machine-filter', toolMachineFilter);
         renderToolSearch();
+    } else if (machinePickerTarget === 'ad') {
+        adMachineValue = val;
+        renderMachineFilterCurrent('ad-machine', adMachineValue, '— Vyberte stroj —', null);
+        onDrawingMachineChange();
+    } else if (machinePickerTarget === 'at') {
+        atMachineValue = val;
+        renderMachineFilterCurrent('at-machine', atMachineValue, '— Vyberte stroj —', null);
+    } else if (machinePickerTarget === 'del') {
+        delMachineValue = val;
+        renderMachineFilterCurrent('del-machine-select', delMachineValue, '— Vyberte stroj na vymazanie —', null);
     }
     closeMachinePicker();
 };
@@ -2251,8 +2271,7 @@ window.addMachine = async () => {
 };
 
 window.deleteMachineConfirm = async () => {
-    const sel = document.getElementById('del-machine-select');
-    const name = sel.value;
+    const name = delMachineValue;
     if (!name) { showToast('Vyberte stroj!', 'err'); return; }
     const dCnt = drawings.filter(d => d.machine === name).length;
     const tCnt = tools.filter(t => t.machine === name).length;
@@ -2270,7 +2289,7 @@ window.deleteMachineConfirm = async () => {
     }
     machines = machines.filter(m => m !== name);
     await saveToFirestore();
-    sel.value = '';
+    delMachineValue = '';
     renderMachines();
     updateCounts();
     showToast('Stroj "' + name + '" vymazaný', 'err');
@@ -2346,7 +2365,7 @@ window.onDrawingMachineChange = () => { selectedToolIds = []; renderDrawingToolP
 window.renderDrawingToolPicker = () => {
     const box = document.getElementById('ad-tools-pick');
     if (!box) return;
-    const machine = document.getElementById('ad-machine').value;
+    const machine = adMachineValue;
     if (!machine) { box.innerHTML = '<span class="tp-empty">Najprv vyberte stroj</span>'; return; }
     const pool = tools.filter(t => t.machine === machine);
     if (!pool.length) { box.innerHTML = '<span class="tp-empty">Pre tento stroj nie sú uložené nástroje</span>'; return; }
@@ -2376,7 +2395,7 @@ window.onDrawingFile = (input) => {
 };
 
 window.saveDrawing = async () => {
-    const machine = document.getElementById('ad-machine').value;
+    const machine = adMachineValue;
     const number  = document.getElementById('ad-number').value.trim();
     const program = document.getElementById('ad-program').value.trim();
     const note    = document.getElementById('ad-note').value.trim();
@@ -2398,7 +2417,8 @@ window.saveDrawing = async () => {
             .catch(() => showToast('Uložené lokálne, nahrá sa pri wifi', ''));
         showToast('Výkres uložený ✓', 'ok');
         ['ad-number','ad-program','ad-note'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('ad-machine').value = '';
+        adMachineValue = '';
+        renderMachineFilterCurrent('ad-machine', adMachineValue, '— Vyberte stroj —', null);
         document.getElementById('ad-file-cam').value = '';
         document.getElementById('ad-file-lib').value = '';
         document.getElementById('ad-file-status').textContent = '';
@@ -2581,7 +2601,7 @@ window.onToolFile = (input) => {
 };
 
 window.saveTool = async () => {
-    const machine = document.getElementById('at-machine').value;
+    const machine = atMachineValue;
     const diam    = document.getElementById('at-diam').value.trim();
     const subtype = document.getElementById('at-subtype').value;
     const note    = document.getElementById('at-note').value.trim();
@@ -2605,7 +2625,8 @@ window.saveTool = async () => {
         showToast('Nástroj uložený ✓', 'ok');
         document.getElementById('at-diam').value = '';
         document.getElementById('at-note').value = '';
-        document.getElementById('at-machine').value = '';
+        atMachineValue = '';
+        renderMachineFilterCurrent('at-machine', atMachineValue, '— Vyberte stroj —', null);
         document.getElementById('at-subtype').value = '';
         document.getElementById('tool-subtype-wrap').style.display = 'none';
         document.getElementById('at-file-cam').value = '';
