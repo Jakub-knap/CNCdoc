@@ -390,15 +390,57 @@
             border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
         }
 
-        /* ── MACHINE FILTER ROW (chip-tlačidlá namiesto natívneho selectu) ── */
-        .mf-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .mf-chip {
-            padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 20px;
-            background: var(--input); color: var(--light); font-size: 13px; font-weight: 600;
-            font-family: 'Inter', sans-serif; cursor: pointer; user-select: none;
+        /* ── MACHINE FILTER — pekná karta s aktuálnym strojom + tlačidlo Zmeniť ── */
+        .mf-current {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--input); border: 1.5px solid var(--border);
+            border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+            cursor: pointer; transition: border-color .15s;
         }
-        .mf-chip:active { transform: scale(.97); }
-        .mf-chip.sel { background: rgba(249,115,22,.15); border-color: var(--cut); color: var(--cut); }
+        .mf-current:active { transform: scale(.985); }
+        .mf-current.has-sel { border-color: rgba(249,115,22,.45); background: rgba(249,115,22,.08); }
+        .mf-current-icon {
+            width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+            background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center;
+            font-size: 19px;
+        }
+        .mf-current.has-sel .mf-current-icon { background: rgba(249,115,22,.18); }
+        .mf-current-body { flex: 1; min-width: 0; }
+        .mf-current-label {
+            font-size: 10.5px; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px;
+        }
+        .mf-current-value {
+            font-size: 15px; font-weight: 700; color: var(--white);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .mf-current.has-sel .mf-current-value { color: var(--cut); }
+        .mf-current-btn {
+            flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--light); font-size: 12.5px; font-weight: 700;
+            padding: 8px 12px; border-radius: 9px; font-family: 'Inter', sans-serif;
+        }
+
+        /* ── MODAL: výber stroja ── */
+        .mp-item {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--input); border: 1.5px solid var(--border);
+            border-radius: 13px; padding: 13px 14px; margin-bottom: 9px;
+            cursor: pointer; transition: all .15s;
+        }
+        .mp-item:active { transform: scale(.98); }
+        .mp-item.sel { border-color: var(--cut); background: rgba(249,115,22,.1); }
+        .mp-item-icon {
+            width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+            background: rgba(255,255,255,.06); display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .mp-item.sel .mp-item-icon { background: rgba(249,115,22,.2); }
+        .mp-item-name { flex: 1; font-size: 15px; font-weight: 700; color: var(--white); }
+        .mp-item.sel .mp-item-name { color: var(--cut); }
+        .mp-item-check { font-size: 18px; color: var(--cut); flex-shrink: 0; visibility: hidden; }
+        .mp-item.sel .mp-item-check { visibility: visible; }
 
         /* ── RESULT CARDS ── */
         .r-card {
@@ -1005,7 +1047,7 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj (voliteľné)</label>
-                    <div class="mf-row" id="search-machine-filter"></div>
+                    <div class="mf-current" id="search-machine-filter" onclick="openMachinePicker('search')"></div>
                 </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
@@ -1102,7 +1144,7 @@
             <div class="section-body">
                 <div class="fg">
                     <label class="field-label">Stroj (voliteľné)</label>
-                    <div class="mf-row" id="tool-machine-filter"></div>
+                    <div class="mf-current" id="tool-machine-filter" onclick="openMachinePicker('tool')"></div>
                 </div>
                 <div class="search-wrap">
                     <span class="s-icon">🔍</span>
@@ -1219,6 +1261,17 @@
         <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Ťuknutím pridáte alebo odoberiete nástroj. Označené sú priradené k výkresu.</div>
         <div id="edittools-pick" class="tool-pick" style="margin-bottom:16px;"></div>
         <button class="btn btn-success" onclick="saveEditTools()">✓ Uložiť nástroje</button>
+    </div>
+</div>
+
+<!-- MODAL: Výber stroja (filter pri hľadaní výkresu/nástroja) -->
+<div id="modal-pick-machine" class="modal-bg" style="z-index:400;" onclick="closeMachinePicker()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">⚙️ Vyberte stroj</div>
+            <button class="modal-close" onclick="closeMachinePicker()">✕</button>
+        </div>
+        <div id="machine-picker-list"></div>
     </div>
 </div>
 
@@ -2078,24 +2131,20 @@ function renderAll() {
 let searchMachineFilter = '';
 let toolMachineFilter = '';
 
-function renderMachineFilterRow(containerId, selectedValue, onSelect) {
+// Vykreslí "kartu" s aktuálne vybraným strojom (alebo "Všetky stroje") + tlačidlo Zmeniť.
+// Klik na celú kartu otvára modál s výberom (pozri openMachinePicker).
+function renderMachineFilterCurrent(containerId, selectedValue) {
     const box = document.getElementById(containerId);
     if (!box) return;
-    box.innerHTML = '';
-    const allChip = document.createElement('button');
-    allChip.type = 'button';
-    allChip.className = 'mf-chip' + (!selectedValue ? ' sel' : '');
-    allChip.textContent = '📋 Všetky stroje';
-    allChip.onclick = () => onSelect('');
-    box.appendChild(allChip);
-    machines.forEach(m => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'mf-chip' + (selectedValue === m ? ' sel' : '');
-        chip.textContent = '⚙️ ' + m;
-        chip.onclick = () => onSelect(m);
-        box.appendChild(chip);
-    });
+    const hasSel = !!selectedValue;
+    box.classList.toggle('has-sel', hasSel);
+    box.innerHTML = `
+        <div class="mf-current-icon">${hasSel ? '⚙️' : '📋'}</div>
+        <div class="mf-current-body">
+            <div class="mf-current-label">Stroj</div>
+            <div class="mf-current-value">${hasSel ? selectedValue : 'Všetky stroje'}</div>
+        </div>
+        <div class="mf-current-btn">Zmeniť ▾</div>`;
 }
 
 function renderMachines() {
@@ -2128,22 +2177,51 @@ function renderMachines() {
     if (searchMachineFilter && !machines.includes(searchMachineFilter)) searchMachineFilter = '';
     if (toolMachineFilter && !machines.includes(toolMachineFilter)) toolMachineFilter = '';
 
-    // Filter "Stroj" pre Hľadaj výkres / Hľadaj nástroj — tlačidlá namiesto natívneho selectu
-    renderMachineFilterRow('search-machine-filter', searchMachineFilter, onSearchMachineFilterSelect);
-    renderMachineFilterRow('tool-machine-filter', toolMachineFilter, onToolMachineFilterSelect);
+    // Filter "Stroj" pre Hľadaj výkres / Hľadaj nástroj — karta s aktuálnym strojom + modál na zmenu
+    renderMachineFilterCurrent('search-machine-filter', searchMachineFilter);
+    renderMachineFilterCurrent('tool-machine-filter', toolMachineFilter);
 }
 
-function onSearchMachineFilterSelect(val) {
-    searchMachineFilter = val;
-    renderMachineFilterRow('search-machine-filter', searchMachineFilter, onSearchMachineFilterSelect);
-    renderDrawingSearch();
-}
+// ── Modál "Vyberte stroj" (spoločný pre filter výkresov aj nástrojov) ──
+let machinePickerTarget = null; // 'search' | 'tool'
 
-function onToolMachineFilterSelect(val) {
-    toolMachineFilter = val;
-    renderMachineFilterRow('tool-machine-filter', toolMachineFilter, onToolMachineFilterSelect);
-    renderToolSearch();
-}
+window.openMachinePicker = (target) => {
+    machinePickerTarget = target;
+    const selectedValue = target === 'search' ? searchMachineFilter : toolMachineFilter;
+    const list = document.getElementById('machine-picker-list');
+    const allRow = `
+        <div class="mp-item${!selectedValue ? ' sel' : ''}" onclick="pickMachine('')">
+            <div class="mp-item-icon">📋</div>
+            <div class="mp-item-name">Všetky stroje</div>
+            <div class="mp-item-check">✓</div>
+        </div>`;
+    const machineRows = machines.map(m => `
+        <div class="mp-item${selectedValue === m ? ' sel' : ''}" onclick="pickMachine('${m.replace(/'/g, "\\'")}')">
+            <div class="mp-item-icon">⚙️</div>
+            <div class="mp-item-name">${m}</div>
+            <div class="mp-item-check">✓</div>
+        </div>`).join('');
+    list.innerHTML = allRow + machineRows;
+    document.getElementById('modal-pick-machine').classList.add('open');
+};
+
+window.closeMachinePicker = () => {
+    document.getElementById('modal-pick-machine').classList.remove('open');
+    machinePickerTarget = null;
+};
+
+window.pickMachine = (val) => {
+    if (machinePickerTarget === 'search') {
+        searchMachineFilter = val;
+        renderMachineFilterCurrent('search-machine-filter', searchMachineFilter);
+        renderDrawingSearch();
+    } else if (machinePickerTarget === 'tool') {
+        toolMachineFilter = val;
+        renderMachineFilterCurrent('tool-machine-filter', toolMachineFilter);
+        renderToolSearch();
+    }
+    closeMachinePicker();
+};
 
 window.addMachine = async () => {
     const inp = document.getElementById('new-machine');
