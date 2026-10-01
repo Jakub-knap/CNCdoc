@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>CNCdok</title>
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#f97316">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,8 +54,10 @@
             font-size: 18px; font-weight: 700;
             color: var(--white); text-decoration: none;
             flex-shrink: 0;
+            display: flex; align-items: center; gap: 8px;
         }
         .logo span { color: var(--cut); }
+        .logo img { width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; }
 
         .user-info {
             display: flex; align-items: center; gap: 6px;
@@ -319,8 +322,10 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 36px; font-weight: 700;
             color: var(--white); margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .login-logo span { color: var(--cut); }
+        .login-logo img { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; }
 
         .login-sub {
             font-size: 15px; color: var(--muted);
@@ -1394,7 +1399,7 @@
 
 <!-- TOPBAR -->
 <div class="topbar">
-    <a href="index.html" class="logo">CNC<span>dok</span></a>
+    <a href="index.html" class="logo"><img src="/icon-192.png" alt="">CNC<span>dok</span></a>
     <div class="user-info" id="topbar-user" style="display:none">
         <img class="user-avatar" id="user-avatar" src="" alt="" style="display:none;">
         <div class="user-avatar-letter" id="user-avatar-letter" style="display:none;">?</div>
@@ -1505,7 +1510,7 @@
 
 <!-- LOGIN -->
 <div class="login-screen" id="login-screen">
-    <div class="login-logo">CNC<span>dok</span></div>
+    <div class="login-logo"><img src="/icon-192.png" alt="">CNC<span>dok</span></div>
     <div class="login-sub">Digitálna dielňa<br>Prihláste sa pre prístup k výkresom</div>
 
     <label class="login-tos" for="auth-tos-agree">

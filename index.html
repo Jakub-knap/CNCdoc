@@ -28,6 +28,7 @@
     <meta name="google-play-app" content="app-id=sk.cncdok.twa">
 
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#f97316">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -115,18 +116,18 @@
         .logo-icon {
             width: 52px;
             height: 52px;
-            background: var(--cut);
-            border-radius: 10px;
+            border-radius: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 24px rgba(249,115,22,0.5);
+            box-shadow: 0 0 24px rgba(249,115,22,0.35);
+            overflow: hidden;
         }
 
-        .logo-icon svg {
-            width: 28px;
-            height: 28px;
-            fill: white;
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         .logo-text {
@@ -730,12 +731,7 @@
     </div>
     <div class="logo-wrap">
         <div class="logo-icon">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-                <path d="M14 2v6h6" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-                <line x1="8" y1="13" x2="16" y2="13" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-                <line x1="8" y1="17" x2="13" y2="17" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <img src="/icon-192.png" alt="CNCdok">
         </div>
         <div class="logo-text">CNC<span>dok</span></div>
     </div>
